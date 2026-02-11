@@ -1,0 +1,121 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - complementary [ref=e4]:
+    - generic [ref=e6]: sCare 管理后台
+    - menubar [ref=e7]:
+      - menuitem "工作台" [ref=e8] [cursor=pointer]:
+        - img [ref=e10]
+        - text: 工作台
+      - menuitem "服务管理" [ref=e14]:
+        - generic [ref=e15] [cursor=pointer]:
+          - img [ref=e17]
+          - generic [ref=e19]: 服务管理
+          - img [ref=e21]
+      - menuitem "站点管理" [ref=e23]:
+        - generic [ref=e24] [cursor=pointer]:
+          - img [ref=e26]
+          - generic [ref=e30]: 站点管理
+          - img [ref=e32]
+      - menuitem "内容管理" [ref=e34]:
+        - generic [ref=e35] [cursor=pointer]:
+          - img [ref=e37]
+          - generic [ref=e39]: 内容管理
+          - img [ref=e41]
+      - menuitem "系统管理" [ref=e43]:
+        - generic [ref=e44] [cursor=pointer]:
+          - img [ref=e46]
+          - generic [ref=e48]: 系统管理
+          - img [ref=e50]
+  - generic [ref=e52]:
+    - generic [ref=e53]:
+      - img [ref=e56] [cursor=pointer]
+      - button "系统管理员" [ref=e60] [cursor=pointer]:
+        - img [ref=e63]
+        - generic [ref=e65]: 系统管理员
+        - img [ref=e67]
+    - main [ref=e69]:
+      - generic [ref=e70]:
+        - generic [ref=e71]:
+          - heading "欢迎回来，系统管理员" [level=2] [ref=e72]
+          - paragraph [ref=e73]: 2026年02月07日 Saturday
+        - generic [ref=e74]:
+          - generic [ref=e78]:
+            - img [ref=e81]
+            - generic [ref=e83]:
+              - generic [ref=e84]: "0"
+              - generic [ref=e85]: 今日新增需求
+          - generic [ref=e89]:
+            - img [ref=e92]
+            - generic [ref=e95]:
+              - generic [ref=e96]: "0"
+              - generic [ref=e97]: 今日完成任务
+          - generic [ref=e101]:
+            - img [ref=e104]
+            - generic [ref=e108]:
+              - generic [ref=e109]: "1"
+              - generic [ref=e110]: 待认领任务
+          - generic [ref=e114]:
+            - img [ref=e117]
+            - generic [ref=e119]:
+              - generic [ref=e120]: "0"
+              - generic [ref=e121]: 进行中任务
+        - generic [ref=e122]:
+          - generic [ref=e124]:
+            - generic [ref=e127]: 任务状态分布
+            - generic [ref=e129]:
+              - generic [ref=e130]:
+                - generic [ref=e131]:
+                  - generic [ref=e133]: 待认领
+                  - generic [ref=e134]: "1"
+                - generic [ref=e135]:
+                  - generic [ref=e137]: 进行中
+                  - generic [ref=e138]: "0"
+                - generic [ref=e139]:
+                  - generic [ref=e141]: 已完成
+                  - generic [ref=e142]: "1"
+                - generic [ref=e143]:
+                  - generic [ref=e145]: 已取消
+                  - generic [ref=e146]: "0"
+              - generic [ref=e147]:
+                - generic [ref=e148]: 总计
+                - generic [ref=e149]: "2"
+          - generic [ref=e151]:
+            - generic [ref=e154]: 需求状态分布
+            - generic [ref=e156]:
+              - generic [ref=e157]:
+                - generic [ref=e158]:
+                  - generic [ref=e160]: 待处理
+                  - generic [ref=e161]: "1"
+                - generic [ref=e162]:
+                  - generic [ref=e164]: 已派发
+                  - generic [ref=e165]: "1"
+                - generic [ref=e166]:
+                  - generic [ref=e168]: 处理中
+                  - generic [ref=e169]: "1"
+                - generic [ref=e170]:
+                  - generic [ref=e172]: 已完成
+                  - generic [ref=e173]: "1"
+                - generic [ref=e174]:
+                  - generic [ref=e176]: 已取消
+                  - generic [ref=e177]: "0"
+              - generic [ref=e178]:
+                - generic [ref=e179]: 总计
+                - generic [ref=e180]: "4"
+        - generic [ref=e183]:
+          - generic [ref=e186]: 快捷操作
+          - generic [ref=e188]:
+            - button "任务池" [ref=e189] [cursor=pointer]:
+              - img [ref=e191]
+              - generic [ref=e193]: 任务池
+            - button "我的任务" [ref=e194] [cursor=pointer]:
+              - img [ref=e196]
+              - generic [ref=e198]: 我的任务
+            - button "站点管理" [ref=e199] [cursor=pointer]:
+              - img [ref=e201]
+              - generic [ref=e205]: 站点管理
+            - button "用户管理" [ref=e206] [cursor=pointer]:
+              - img [ref=e208]
+              - generic [ref=e210]: 用户管理
+```

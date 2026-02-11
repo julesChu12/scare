@@ -1,0 +1,62 @@
+/* CSS 变量定义 - 支持适老化字体大小调节 */
+:root {
+  /* 字体大小变量 */
+  --font-size-small: 14px;
+  --font-size-medium: 16px;
+  --font-size-large: 18px;
+
+  /* 默认使用中等字体 */
+  --font-size-base: var(--font-size-medium);
+
+  /* 标题字体大小 */
+  --font-size-title: calc(var(--font-size-base) + 8px);
+  --font-size-subtitle: calc(var(--font-size-base) + 4px);
+
+  /* 小字体 */
+  --font-size-sm: calc(var(--font-size-base) - 2px);
+  --font-size-xs: calc(var(--font-size-base) - 4px);
+
+  /* 主题色 */
+  --color-primary: #409EFF;
+  --color-success: #67C23A;
+  --color-warning: #E6A23C;
+  --color-danger: #F56C6C;
+  --color-info: #909399;
+
+  /* 背景色 */
+  --bg-color: #f5f5f5;
+  --bg-color-white: #ffffff;
+
+  /* 文字颜色 */
+  --text-color-primary: #303133;
+  --text-color-regular: #606266;
+  --text-color-secondary: #909399;
+  --text-color-placeholder: #C0C4CC;
+
+  /* 边框 */
+  --border-color: #DCDFE6;
+  --border-radius: 8px;
+  --border-radius-large: 16px;
+
+  /* 间距 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+}
+
+/* 小字体模式 */
+[data-font-size="small"] {
+  --font-size-base: var(--font-size-small);
+}
+
+/* 中等字体模式（默认） */
+[data-font-size="medium"] {
+  --font-size-base: var(--font-size-medium);
+}
+
+/* 大字体模式 */
+[data-font-size="large"] {
+  --font-size-base: var(--font-size-large);
+}

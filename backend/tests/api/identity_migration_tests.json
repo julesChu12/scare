@@ -1,0 +1,366 @@
+{
+  "info": {
+    "name": "sCare 多身份架构迁移测试",
+    "description": "测试 B端/C端登录、权限验证、多身份用户等场景",
+    "version": "1.0.0",
+    "base_url": "http://localhost:8080/api/v1"
+  },
+  "variables": {
+    "admin_phone": "13800000001",
+    "station_manager_phone": "13800000002",
+    "staff_phone": "13800000004",
+    "elderly_phone": "13800000008",
+    "multi_identity_phone": "13800000009",
+    "password": "Test@123"
+  },
+  "tests": [
+    {
+      "id": "health_check",
+      "name": "健康检查",
+      "request": {
+        "method": "GET",
+        "url": "/health"
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "msg": "ok",
+          "data.service": "sCare"
+        }
+      }
+    },
+    {
+      "id": "b_auth_admin_login",
+      "name": "B端 Admin 登录",
+      "request": {
+        "method": "POST",
+        "url": "/b/auth/login",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "phone": "{{admin_phone}}",
+          "password": "{{password}}"
+        }
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "msg": "ok",
+          "data.identities": ["admin"],
+          "data.primary": "admin",
+          "data.type": "b_end"
+        }
+      },
+      "save": {
+        "admin_token": "data.token"
+      }
+    },
+    {
+      "id": "b_auth_station_manager_login",
+      "name": "B端 Station Manager 登录",
+      "request": {
+        "method": "POST",
+        "url": "/b/auth/login",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "phone": "{{station_manager_phone}}",
+          "password": "{{password}}"
+        }
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "msg": "ok",
+          "data.identities": ["station_manager"],
+          "data.primary": "station_manager",
+          "data.type": "b_end"
+        }
+      },
+      "save": {
+        "station_manager_token": "data.token"
+      }
+    },
+    {
+      "id": "b_auth_staff_login",
+      "name": "B端 Staff 登录",
+      "request": {
+        "method": "POST",
+        "url": "/b/auth/login",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "phone": "{{staff_phone}}",
+          "password": "{{password}}"
+        }
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "msg": "ok",
+          "data.identities": ["staff"],
+          "data.primary": "staff",
+          "data.type": "b_end"
+        }
+      },
+      "save": {
+        "staff_token": "data.token"
+      }
+    },
+    {
+      "id": "b_auth_me",
+      "name": "B端 获取当前用户信息",
+      "request": {
+        "method": "GET",
+        "url": "/b/auth/me",
+        "headers": {
+          "Authorization": "Bearer {{admin_token}}"
+        }
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "msg": "ok",
+          "data.user.identities": ["admin"],
+          "data.user.primary": "admin"
+        }
+      }
+    },
+    {
+      "id": "c_auth_elderly_login",
+      "name": "C端 老年人密码登录",
+      "request": {
+        "method": "POST",
+        "url": "/c/auth/login",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "phone": "{{elderly_phone}}",
+          "password": "{{password}}",
+          "type": "password"
+        }
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "msg": "ok",
+          "data.customer_type": "elderly",
+          "data.type": "c_end"
+        }
+      },
+      "save": {
+        "elderly_token": "data.token"
+      }
+    },
+    {
+      "id": "multi_identity_b_login",
+      "name": "多身份用户 B端登录 (李奶奶 - staff)",
+      "description": "用户同时拥有 elderly 和 staff 身份，B端登录返回 staff 身份",
+      "request": {
+        "method": "POST",
+        "url": "/b/auth/login",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "phone": "{{multi_identity_phone}}",
+          "password": "{{password}}"
+        }
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "msg": "ok",
+          "data.identities": ["staff"],
+          "data.primary": "elderly",
+          "data.type": "b_end"
+        }
+      },
+      "notes": "primary 是 elderly（全局主身份），但 identities 只包含 B端身份 staff"
+    },
+    {
+      "id": "multi_identity_c_login",
+      "name": "多身份用户 C端登录 (李奶奶 - elderly)",
+      "description": "用户同时拥有 elderly 和 staff 身份，C端登录返回 elderly 身份",
+      "request": {
+        "method": "POST",
+        "url": "/c/auth/login",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "phone": "{{multi_identity_phone}}",
+          "password": "{{password}}",
+          "type": "password"
+        }
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "msg": "ok",
+          "data.customer_type": "elderly",
+          "data.type": "c_end"
+        }
+      }
+    },
+    {
+      "id": "permission_admin_access",
+      "name": "权限测试 - Admin 访问用户列表",
+      "request": {
+        "method": "GET",
+        "url": "/b/users?page=1&page_size=5",
+        "headers": {
+          "Authorization": "Bearer {{admin_token}}"
+        }
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "msg": "ok"
+        }
+      },
+      "notes": "Admin 拥有全部权限，应该成功"
+    },
+    {
+      "id": "permission_staff_forbidden",
+      "name": "权限测试 - Staff 访问用户列表 (应被拒绝)",
+      "request": {
+        "method": "GET",
+        "url": "/b/users?page=1&page_size=5",
+        "headers": {
+          "Authorization": "Bearer {{staff_token}}"
+        }
+      },
+      "expected": {
+        "status": 403,
+        "body": {
+          "msg": "forbidden"
+        }
+      },
+      "notes": "Staff 没有用户管理权限，应该被 RBAC 拒绝"
+    },
+    {
+      "id": "permission_c_end_skip_rbac",
+      "name": "权限测试 - C端跳过 RBAC",
+      "request": {
+        "method": "GET",
+        "url": "/c/requests",
+        "headers": {
+          "Authorization": "Bearer {{elderly_token}}"
+        }
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "msg": "ok"
+        }
+      },
+      "notes": "C端用户跳过 RBAC 权限验证"
+    },
+    {
+      "id": "permission_c_end_type_mismatch",
+      "name": "权限测试 - C端访问B端路由 (端类型不匹配)",
+      "request": {
+        "method": "GET",
+        "url": "/b/users",
+        "headers": {
+          "Authorization": "Bearer {{elderly_token}}"
+        }
+      },
+      "expected": {
+        "status": 403,
+        "body": {
+          "msg": "token end type mismatch"
+        }
+      },
+      "notes": "C端 token 不能访问 B端路由"
+    },
+    {
+      "id": "b_auth_no_identity",
+      "name": "B端登录 - 无B端身份用户",
+      "request": {
+        "method": "POST",
+        "url": "/b/auth/login",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "phone": "{{elderly_phone}}",
+          "password": "{{password}}"
+        }
+      },
+      "expected": {
+        "status": 403,
+        "body": {
+          "msg": "user has no B-end identity"
+        }
+      },
+      "notes": "elderly 用户没有 B端身份，无法 B端登录"
+    },
+    {
+      "id": "b_auth_invalid_password",
+      "name": "B端登录 - 密码错误",
+      "request": {
+        "method": "POST",
+        "url": "/b/auth/login",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "phone": "{{admin_phone}}",
+          "password": "WrongPassword"
+        }
+      },
+      "expected": {
+        "status": 401,
+        "body": {
+          "msg": "invalid credentials"
+        }
+      }
+    },
+    {
+      "id": "b_auth_refresh",
+      "name": "B端 刷新 Token",
+      "request": {
+        "method": "POST",
+        "url": "/b/auth/refresh",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "refresh_token": "{{admin_refresh_token}}"
+        }
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "msg": "ok"
+        }
+      },
+      "notes": "需要先从登录响应中保存 refresh_token"
+    }
+  ],
+  "test_users": {
+    "b_end": [
+      {"phone": "13800000001", "identity": "admin", "name": "系统管理员"},
+      {"phone": "13800000002", "identity": "station_manager", "name": "张站长", "station_id": 1},
+      {"phone": "13800000003", "identity": "station_manager", "name": "李站长", "station_id": 2},
+      {"phone": "13800000004", "identity": "staff", "name": "王小红", "station_id": 1},
+      {"phone": "13800000005", "identity": "staff", "name": "刘小明", "station_id": 1},
+      {"phone": "13800000006", "identity": "staff", "name": "陈小花", "station_id": 2},
+      {"phone": "13800000007", "identity": "staff", "name": "赵小强", "station_id": 2}
+    ],
+    "c_end": [
+      {"phone": "13800000008", "identity": "elderly", "name": "张大爷"},
+      {"phone": "13800000009", "identity": "elderly+staff", "name": "李奶奶", "notes": "多身份用户"},
+      {"phone": "13800000010", "identity": "elderly", "name": "王大爷"},
+      {"phone": "13800000011", "identity": "pregnant", "name": "孕妇用户"},
+      {"phone": "13800000012", "identity": "disabled", "name": "残障用户"},
+      {"phone": "13800000013", "identity": "child", "name": "儿童用户"}
+    ]
+  }
+}

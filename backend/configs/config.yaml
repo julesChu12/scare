@@ -1,0 +1,54 @@
+server:
+  port: 8080
+  mode: debug
+  name: scare-backend
+
+database:
+  host: localhost
+  port: 3306
+  user: root
+  password: your_password
+  dbname: elderly_care
+  charset: utf8mb4
+  max_idle_conns: 10
+  max_open_conns: 100
+
+redis:
+  host: localhost
+  port: 6379
+  password: ""
+  db: 0
+  pool_size: 100
+
+jwt:
+  secret: your_jwt_secret_key_here
+  expires_in: 24        # 小时
+  refresh_expires_in: 168  # 小时（7天）
+
+log:
+  level: debug
+  filename: app.log
+  max_size: 10
+  max_backups: 5
+  max_age: 30
+
+mail:
+  smtp_host: ""
+  smtp_port: 0
+  smtp_user: ""
+  smtp_pass: ""
+  smtp_tls: false
+
+storage:
+  driver: local
+  signed_url_expire_seconds: 3600
+  local:
+    base_path: ./storage
+    base_url: http://localhost:8080/static
+  oss:
+    endpoint: ""
+    bucket: ""
+    access_key_id: ""
+    access_key_secret: ""
+    region: ""
+    base_url: ""

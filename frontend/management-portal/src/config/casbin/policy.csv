@@ -1,0 +1,34 @@
+# 工作人员基础权限
+p, staff, /api/v1/dashboard, read
+p, staff, /api/v1/tasks, read
+p, staff, /api/v1/tasks/:id, read
+p, staff, /api/v1/tasks/:id/claim, post
+p, staff, /api/v1/tasks/:id/complete, post
+p, staff, /api/v1/my-tasks, read
+p, staff, /api/v1/my-tasks/:id, read
+p, staff, /api/v1/notifications, read
+p, staff, /api/v1/profile, read
+p, staff, /api/v1/profile, update
+
+# 站点负责人额外权限（继承 staff）
+g, station_manager, staff
+p, station_manager, /api/v1/station/:id/tasks, read
+p, station_manager, /api/v1/station/:id/staff, read
+p, station_manager, /api/v1/station/:id/staff, manage
+p, station_manager, /api/v1/tasks/:id/assign, post
+p, station_manager, /api/v1/tasks/:id/reassign, post
+p, station_manager, /api/v1/stats/station, read
+
+# 系统管理员权限（继承 station_manager）
+g, admin, station_manager
+p, admin, /api/v1/geofences, *
+p, admin, /api/v1/geofences/:id, *
+p, admin, /api/v1/stations, *
+p, admin, /api/v1/stations/:id, *
+p, admin, /api/v1/users, *
+p, admin, /api/v1/users/:id, *
+p, admin, /api/v1/roles, *
+p, admin, /api/v1/roles/:id, *
+p, admin, /api/v1/stats/global, read
+p, admin, /api/v1/system/settings, *
+p, admin, /api/v1/system/logs, read

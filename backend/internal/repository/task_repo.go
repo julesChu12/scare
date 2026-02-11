@@ -1,0 +1,321 @@
+package repository
+
+import (
+	"community-elderly-care-platform/internal/dao/model"
+	"community-elderly-care-platform/internal/dao/query"
+	"community-elderly-care-platform/internal/consts"
+
+	"gorm.io/gorm"
+)
+
+type TaskRepository struct {
+	q *query.Query
+}
+
+func NewTaskRepository(db *gorm.DB) *TaskRepository {
+	return &TaskRepository{
+		q: query.Use(db),
+	}
+}
+
+// Create 创建任务
+func (r *TaskRepository) Create(task *model.TaskAssignment) error {
+	// 使用 Omit 排除零值的时间字段和空的 JSON 字段
+	return r.q.TaskAssignment.Omit(r.q.TaskAssignment.ClaimedAt, r.q.TaskAssignment.CompletedAt, r.q.TaskAssignment.Images).Create(task)
+}
+
+// GetByID 根据ID获取任务
+func (r *TaskRepository) GetByID(id int64) (*model.TaskAssignment, error) {
+	t := r.q.TaskAssignment
+	return t.Where(t.ID.Eq(id)).First()
+}
+
+// GetByRequestID 根据需求ID获取任务
+func (r *TaskRepository) GetByRequestID(requestID int64) (*model.TaskAssignment, error) {
+	t := r.q.TaskAssignment
+	return t.Where(t.RequestID.Eq(requestID)).First()
+}
+
+// ListByStaff 根据工作人员ID获取任务列表（分页）
+func (r *TaskRepository) ListByStaff(staffID int64, offset, limit int) ([]*model.TaskAssignment, int64, error) {
+	t := r.q.TaskAssignment
+	
+	// 获取总数
+	total, err := t.Where(t.StaffID.Eq(staffID)).Count()
+	if err != nil {
+		return nil, 0, err
+	}
+	
+	// 分页查询
+	tasks, err := t.Where(t.StaffID.Eq(staffID)).
+		Order(t.ID.Desc()).
+		Offset(offset).
+		Limit(limit).
+		Find()
+	
+	if err != nil {
+		return nil, 0, err
+	}
+	
+	return tasks, total, nil
+}
+
+// ListDispatchedByStation 根据站点ID获取已分派的任务
+func (r *TaskRepository) ListDispatchedByStation(stationID int64, offset, limit int) ([]*model.TaskAssignment, int64, error) {
+	t := r.q.TaskAssignment
+	
+	// 获取总数
+	total, err := t.Where(t.StationID.Eq(stationID), t.Status.Eq(consts.TaskStatusDispatched)).Count()
+	if err != nil {
+		return nil, 0, err
+	}
+	
+	// 分页查询
+	tasks, err := t.Where(t.StationID.Eq(stationID), t.Status.Eq(consts.TaskStatusDispatched)).
+		Order(t.ID.Desc()).
+		Offset(offset).
+		Limit(limit).
+		Find()
+	
+	if err != nil {
+		return nil, 0, err
+	}
+	
+	return tasks, total, nil
+}
+
+// TaskPoolFilter 任务池筛选条件
+type TaskPoolFilter struct {
+	StationID int64  // 站点ID，0 表示所有站点（仅 admin）
+	Status    string // 任务状态，空表示默认 dispatched
+}
+
+// ListPool 根据筛选条件查询任务池
+func (r *TaskRepository) ListPool(filter TaskPoolFilter, offset, limit int) ([]*model.TaskAssignment, int64, error) {
+	t := r.q.TaskAssignment
+	
+	// 使用原生 DB 处理条件查询
+	db := t.UnderlyingDB().Model(&model.TaskAssignment{})
+	
+	// 站点筛选：0 表示所有站点
+	if filter.StationID > 0 {
+		db = db.Where("station_id = ?", filter.StationID)
+	}
+	
+	// 状态筛选：默认 dispatched
+	status := filter.Status
+	if status == "" {
+		status = consts.TaskStatusDispatched
+	}
+	db = db.Where("status = ?", status)
+	
+	// 获取总数
+	var total int64
+	if err := db.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	
+	// 分页查询
+	var tasks []*model.TaskAssignment
+	if err := db.Order("id desc").Offset(offset).Limit(limit).Find(&tasks).Error; err != nil {
+		return nil, 0, err
+	}
+	
+	return tasks, total, nil
+}
+
+// UpdateStatus 更新任务状态
+func (r *TaskRepository) UpdateStatus(id int64, status string) error {
+	t := r.q.TaskAssignment
+	_, err := t.Where(t.ID.Eq(id)).Update(t.Status, status)
+	return err
+}
+
+// WithTx 事务支持
+func (r *TaskRepository) WithTx(tx *gorm.DB) *TaskRepository {
+	return &TaskRepository{q: query.Use(tx)}
+}
+
+// CountByStatus 按状态统计任务数量
+func (r *TaskRepository) CountByStatus(stationID int64, status string, isAdmin bool) (int64, error) {
+	t := r.q.TaskAssignment
+	db := t.UnderlyingDB().Model(&model.TaskAssignment{}).Where("status = ?", status)
+
+	if !isAdmin && stationID > 0 {
+		db = db.Where("station_id = ?", stationID)
+	}
+
+	var count int64
+	if err := db.Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// CountTodayCompleted 统计今日完成的任务数量
+func (r *TaskRepository) CountTodayCompleted(stationID int64, isAdmin bool) (int64, error) {
+	t := r.q.TaskAssignment
+	db := t.UnderlyingDB().Model(&model.TaskAssignment{}).
+		Where("status = ?", consts.TaskStatusCompleted).
+		Where("DATE(completed_at) = CURDATE()")
+
+	if !isAdmin && stationID > 0 {
+		db = db.Where("station_id = ?", stationID)
+	}
+
+	var count int64
+	if err := db.Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// CountByStaffAndStatus 按工作人员和状态统计任务数量
+func (r *TaskRepository) CountByStaffAndStatus(staffID int64, status string) (int64, error) {
+	t := r.q.TaskAssignment
+	return t.Where(t.StaffID.Eq(staffID), t.Status.Eq(status)).Count()
+}
+
+// TaskWithRequest 任务及关联的服务请求
+type TaskWithRequest struct {
+	model.TaskAssignment
+	Request   *model.ServiceRequest `json:"request,omitempty"`
+	StaffName string                `json:"staff_name,omitempty"`
+}
+
+// TaskListFilter 任务列表筛选条件
+type TaskListFilter struct {
+	StationID   int64  // 站点ID，0 表示所有站点
+	Status      string // 任务状态
+	ServiceType string // 服务类型
+	RequestNo   string // 需求编号
+	StaffID     int64  // 工作人员ID
+}
+
+// ListWithRequest 查询任务列表并关联服务请求
+func (r *TaskRepository) ListWithRequest(filter TaskListFilter, offset, limit int) ([]*TaskWithRequest, int64, error) {
+	db := r.q.TaskAssignment.UnderlyingDB()
+
+	// 构建基础查询 - 不使用别名
+	query := db.Table("task_assignments").
+		Joins("LEFT JOIN service_requests ON task_assignments.request_id = service_requests.id").
+		Where("task_assignments.deleted_at IS NULL")
+
+	// 站点筛选
+	if filter.StationID > 0 {
+		query = query.Where("task_assignments.station_id = ?", filter.StationID)
+	}
+
+	// 状态筛选
+	if filter.Status != "" {
+		query = query.Where("task_assignments.status = ?", filter.Status)
+	}
+
+	// 服务类型筛选
+	if filter.ServiceType != "" {
+		query = query.Where("service_requests.service_type = ?", filter.ServiceType)
+	}
+
+	// 需求编号筛选
+	if filter.RequestNo != "" {
+		query = query.Where("service_requests.request_no LIKE ?", "%"+filter.RequestNo+"%")
+	}
+
+	// 工作人员筛选
+	if filter.StaffID > 0 {
+		query = query.Where("task_assignments.staff_id = ?", filter.StaffID)
+	}
+
+	// 获取总数
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// 分页查询任务
+	var tasks []*model.TaskAssignment
+	if err := query.Select("task_assignments.*").Order("task_assignments.id DESC").Offset(offset).Limit(limit).Find(&tasks).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// 批量查询关联的服务请求
+	if len(tasks) == 0 {
+		return []*TaskWithRequest{}, total, nil
+	}
+
+	requestIDs := make([]int64, 0, len(tasks))
+	staffIDs := make([]int64, 0, len(tasks))
+	for _, t := range tasks {
+		requestIDs = append(requestIDs, t.RequestID)
+		if t.StaffID > 0 {
+			staffIDs = append(staffIDs, t.StaffID)
+		}
+	}
+
+	// 查询服务请求 - 使用新的 DB 会话
+	var requests []*model.ServiceRequest
+	if err := db.Session(&gorm.Session{}).Table("service_requests").Where("id IN ?", requestIDs).Find(&requests).Error; err != nil {
+		return nil, 0, err
+	}
+	requestMap := make(map[int64]*model.ServiceRequest)
+	for _, req := range requests {
+		requestMap[req.ID] = req
+	}
+
+	// 查询工作人员姓名
+	staffMap := make(map[int64]string)
+	if len(staffIDs) > 0 {
+		var staffUsers []struct {
+			ID   int64
+			Name string
+		}
+		if err := db.Table("users").Select("id, name").Where("id IN ?", staffIDs).Find(&staffUsers).Error; err == nil {
+			for _, s := range staffUsers {
+				staffMap[s.ID] = s.Name
+			}
+		}
+	}
+
+	// 组装结果
+	result := make([]*TaskWithRequest, len(tasks))
+	for i, t := range tasks {
+		result[i] = &TaskWithRequest{
+			TaskAssignment: *t,
+			Request:        requestMap[t.RequestID],
+			StaffName:      staffMap[t.StaffID],
+		}
+	}
+
+	return result, total, nil
+}
+
+// GetByIDWithRequest 根据ID获取任务及关联的服务请求
+func (r *TaskRepository) GetByIDWithRequest(id int64) (*TaskWithRequest, error) {
+	t := r.q.TaskAssignment
+	task, err := t.Where(t.ID.Eq(id)).First()
+	if err != nil {
+		return nil, err
+	}
+
+	db := t.UnderlyingDB()
+
+	// 查询关联的服务请求 - 使用新的 DB 会话
+	var request model.ServiceRequest
+	if err := db.Session(&gorm.Session{}).Table("service_requests").Where("id = ?", task.RequestID).First(&request).Error; err == nil {
+		result := &TaskWithRequest{
+			TaskAssignment: *task,
+			Request:        &request,
+		}
+
+		// 查询工作人员姓名
+		if task.StaffID > 0 {
+			var staffName string
+			db.Session(&gorm.Session{}).Table("users").Select("name").Where("id = ?", task.StaffID).Scan(&staffName)
+			result.StaffName = staffName
+		}
+
+		return result, nil
+	}
+
+	return &TaskWithRequest{TaskAssignment: *task}, nil
+}

@@ -1,0 +1,3093 @@
+definitions:
+  geo.Point:
+    properties:
+      lat:
+        description: 纬度
+        type: number
+      lng:
+        description: 经度
+        type: number
+    type: object
+  handler.APIResponse:
+    properties:
+      data: {}
+      msg:
+        example: ok
+        type: string
+    type: object
+  handler.BatchUpdateSortRequest:
+    properties:
+      updates:
+        items:
+          properties:
+            id:
+              type: integer
+            sort:
+              type: integer
+          required:
+          - id
+          type: object
+        type: array
+    required:
+    - updates
+    type: object
+  handler.CreateMenuRequest:
+    properties:
+      component:
+        type: string
+      hidden:
+        type: boolean
+      icon:
+        type: string
+      name:
+        type: string
+      parent_id:
+        type: integer
+      path:
+        type: string
+      permission_code:
+        type: string
+      sort:
+        type: integer
+      status:
+        type: string
+    required:
+    - name
+    type: object
+  handler.RequestResponse:
+    properties:
+      address:
+        example: 北京市朝阳区幸福小区1号楼
+        type: string
+      appointment_time:
+        type: string
+      contact_name:
+        example: 张大爷
+        type: string
+      contact_phone:
+        example: "13800000008"
+        type: string
+      created_at:
+        type: string
+      description:
+        example: 需要午餐送餐
+        type: string
+      feedback:
+        type: string
+      id:
+        example: 1
+        type: integer
+      images:
+        type: string
+      rating:
+        example: 5
+        type: integer
+      reject_reason:
+        type: string
+      request_no:
+        example: REQ20260209001
+        type: string
+      service_type:
+        example: meal
+        type: string
+      station_id:
+        example: 1
+        type: integer
+      station_name:
+        example: 朝阳区幸福街道服务站
+        type: string
+      status:
+        example: dispatched
+        type: string
+      updated_at:
+        type: string
+      urgency:
+        example: normal
+        type: string
+      user_id:
+        example: 8
+        type: integer
+    type: object
+  handler.Response:
+    properties:
+      data: {}
+      msg:
+        type: string
+    type: object
+  handler.UpdateMenuRequest:
+    properties:
+      component:
+        type: string
+      hidden:
+        type: boolean
+      icon:
+        type: string
+      name:
+        type: string
+      parent_id:
+        type: integer
+      path:
+        type: string
+      permission_code:
+        type: string
+      sort:
+        type: integer
+      status:
+        type: string
+    required:
+    - name
+    type: object
+  handler.UserListResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/handler.UserResponse'
+        type: array
+      total:
+        example: 100
+        type: integer
+    type: object
+  handler.UserResponse:
+    properties:
+      age:
+        example: 36
+        type: integer
+      avatar:
+        example: https://example.com/avatar.jpg
+        type: string
+      b_end_identities:
+        example:
+        - staff
+        - station_manager
+        items:
+          type: string
+        type: array
+      birth_date:
+        example: "1990-01-01"
+        type: string
+      c_end_identities:
+        example:
+        - elderly
+        items:
+          type: string
+        type: array
+      created_at:
+        type: string
+      email:
+        example: zhangsan@example.com
+        type: string
+      gender:
+        example: male
+        type: string
+      id:
+        example: 1
+        type: integer
+      id_card_hash:
+        example: 2f0ab5...
+        type: string
+      id_card_masked:
+        example: 1101**********1234
+        type: string
+      id_card_token:
+        example: eyJ1aWQiOjF9.xxx
+        type: string
+      name:
+        example: 张三
+        type: string
+      phone:
+        example: "13800000001"
+        type: string
+      primary_identity:
+        example: staff
+        type: string
+      station_id:
+        example: 1
+        type: integer
+      status:
+        example: active
+        type: string
+      updated_at:
+        type: string
+    type: object
+  handler.bLoginRequest:
+    properties:
+      password:
+        type: string
+      phone:
+        type: string
+    required:
+    - password
+    - phone
+    type: object
+  handler.bRefreshRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  handler.bannerRequest:
+    properties:
+      image_url:
+        type: string
+      link_type:
+        type: string
+      link_value:
+        type: string
+      sort:
+        type: integer
+      station_id:
+        type: integer
+      status:
+        type: string
+      title:
+        type: string
+    required:
+    - image_url
+    type: object
+  handler.cLoginRequest:
+    properties:
+      code:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+      type:
+        description: '"password" or "code", default "code"'
+        type: string
+    required:
+    - phone
+    type: object
+  handler.cRefreshRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  handler.newsRequest:
+    properties:
+      content:
+        type: string
+      cover_url:
+        type: string
+      station_id:
+        type: integer
+      status:
+        type: string
+      summary:
+        type: string
+      title:
+        type: string
+      type:
+        type: string
+    required:
+    - title
+    type: object
+  handler.rateRequest:
+    properties:
+      feedback:
+        type: string
+      rating:
+        maximum: 5
+        minimum: 1
+        type: integer
+    required:
+    - rating
+    type: object
+  handler.requestCreate:
+    properties:
+      address:
+        type: string
+      contact_name:
+        type: string
+      contact_phone:
+        type: string
+      images:
+        items:
+          type: string
+        type: array
+      lat:
+        type: number
+      lng:
+        type: number
+      request_no:
+        type: string
+      service_type:
+        type: string
+    required:
+    - service_type
+    type: object
+  handler.stationRequest:
+    properties:
+      code:
+        type: string
+      latitude:
+        type: number
+      longitude:
+        type: number
+      name:
+        type: string
+      status:
+        type: string
+    required:
+    - name
+    type: object
+  handler.taskCompleteRequest:
+    properties:
+      images:
+        items:
+          type: string
+        type: array
+    type: object
+  handler.taskTransferRequest:
+    properties:
+      staff_id:
+        type: integer
+    required:
+    - staff_id
+    type: object
+  handler.updateStatusRequest:
+    properties:
+      reject_reason:
+        type: string
+      status:
+        type: string
+    required:
+    - status
+    type: object
+  handler.userCreateRequest:
+    properties:
+      email:
+        type: string
+      identity_type:
+        description: 身份类型
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      phone:
+        type: string
+      station_id:
+        type: integer
+      status:
+        type: string
+    required:
+    - identity_type
+    - password
+    - phone
+    type: object
+  handler.userUpdateRequest:
+    properties:
+      avatar:
+        type: string
+      birth_date:
+        description: 格式：2006-01-02
+        type: string
+      email:
+        type: string
+      gender:
+        type: string
+      id_card:
+        type: string
+      id_card_hash:
+        type: string
+      id_card_token:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      station_id:
+        type: integer
+      status:
+        type: string
+    type: object
+  handler.zoneRequest:
+    properties:
+      name:
+        type: string
+      points:
+        items:
+          $ref: '#/definitions/geo.Point'
+        type: array
+      priority:
+        type: integer
+      station_id:
+        type: integer
+      status:
+        type: string
+    required:
+    - name
+    - points
+    - station_id
+    type: object
+info:
+  contact: {}
+paths:
+  /api/v1/b/news:
+    post:
+      consumes:
+      - application/json
+      description: 创建新的新闻/公告
+      parameters:
+      - description: 新闻信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.newsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+      security:
+      - BearerAuth: []
+      summary: 创建新闻
+      tags:
+      - B端-新闻管理
+  /api/v1/b/news/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除新闻（软删除）
+      parameters:
+      - description: 新闻ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+      security:
+      - BearerAuth: []
+      summary: 删除新闻
+      tags:
+      - B端-新闻管理
+    put:
+      consumes:
+      - application/json
+      description: 更新新闻信息
+      parameters:
+      - description: 新闻ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 新闻信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.newsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+      security:
+      - BearerAuth: []
+      summary: 更新新闻
+      tags:
+      - B端-新闻管理
+  /api/v1/c/news:
+    get:
+      consumes:
+      - application/json
+      description: 获取已发布的新闻列表（分页）
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      - description: 新闻类型(news/notice/activity)
+        in: query
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      summary: 获取新闻列表
+      tags:
+      - C端-新闻
+  /api/v1/c/news/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 获取单条新闻的详细内容
+      parameters:
+      - description: 新闻ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+      summary: 获取新闻详情
+      tags:
+      - C端-新闻
+  /b/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: B端工作人员使用手机号和密码登录
+      parameters:
+      - description: 登录请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.bLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 登录成功，返回token和用户信息
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 用户名或密码错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "403":
+          description: 用户已禁用或无B端角色
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      summary: B端用户登录
+      tags:
+      - b_auth
+  /b/auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: 将当前访问令牌加入黑名单，使其失效
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 登出成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 用户登出
+      tags:
+      - b_auth
+      - c_auth
+  /b/auth/me:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前登录的B端用户详细信息及权限列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功，返回用户信息和权限
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "403":
+          description: 无B端角色
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "404":
+          description: 用户不存在
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取当前B端用户信息
+      tags:
+      - b_auth
+  /b/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: 使用刷新令牌获取新的访问令牌
+      parameters:
+      - description: 刷新令牌请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.bRefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 刷新成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 令牌无效或已过期
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      summary: 刷新访问令牌
+      tags:
+      - b_auth
+  /b/banners:
+    get:
+      consumes:
+      - application/json
+      description: 分页获取轮播图列表
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      - description: 站点ID筛选
+        in: query
+        name: station_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取轮播图列表（管理端）
+      tags:
+      - b_banner
+    post:
+      consumes:
+      - application/json
+      description: 创建新的轮播图
+      parameters:
+      - description: 轮播图信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.bannerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 创建轮播图
+      tags:
+      - b_banner
+  /b/banners/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定轮播图
+      parameters:
+      - description: 轮播图ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 删除轮播图
+      tags:
+      - b_banner
+    put:
+      consumes:
+      - application/json
+      description: 更新指定轮播图信息
+      parameters:
+      - description: 轮播图ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 轮播图信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.bannerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 更新轮播图
+      tags:
+      - b_banner
+  /b/menus:
+    get:
+      consumes:
+      - application/json
+      description: 获取完整菜单树，用于菜单管理
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取菜单树
+      tags:
+      - B端-菜单管理
+    post:
+      consumes:
+      - application/json
+      description: 创建新菜单
+      parameters:
+      - description: 菜单信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreateMenuRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.Response'
+      security:
+      - BearerAuth: []
+      summary: 创建菜单
+      tags:
+      - B端-菜单管理
+  /b/menus/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除菜单（软删除）
+      parameters:
+      - description: 菜单ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.Response'
+      security:
+      - BearerAuth: []
+      summary: 删除菜单
+      tags:
+      - B端-菜单管理
+    get:
+      consumes:
+      - application/json
+      description: 根据ID获取菜单详情
+      parameters:
+      - description: 菜单ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/handler.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取菜单详情
+      tags:
+      - B端-菜单管理
+    put:
+      consumes:
+      - application/json
+      description: 更新菜单信息
+      parameters:
+      - description: 菜单ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 菜单信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateMenuRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.Response'
+      security:
+      - BearerAuth: []
+      summary: 更新菜单
+      tags:
+      - B端-菜单管理
+  /b/menus/sort:
+    put:
+      consumes:
+      - application/json
+      description: 批量更新多个菜单的排序值
+      parameters:
+      - description: 排序信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.BatchUpdateSortRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.Response'
+      security:
+      - BearerAuth: []
+      summary: 批量更新菜单排序
+      tags:
+      - B端-菜单管理
+  /b/menus/user:
+    get:
+      consumes:
+      - application/json
+      description: 根据当前用户权限获取可见菜单树
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handler.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取用户菜单
+      tags:
+      - B端-菜单管理
+  /b/notifications:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户的通知列表，支持分页
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取通知列表
+      tags:
+      - c_notification
+      - b_notification
+  /b/notifications/{id}/read:
+    post:
+      consumes:
+      - application/json
+      description: 将指定的通知标记为已读状态
+      parameters:
+      - description: 通知ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 标记成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: ID无效
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 标记通知为已读
+      tags:
+      - c_notification
+      - b_notification
+  /b/permissions/tree:
+    get:
+      consumes:
+      - application/json
+      description: 获取系统所有权限的树形结构
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取权限树
+      tags:
+      - b_role
+  /b/requests:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户的服务需求列表，支持按状态筛选和分页
+      parameters:
+      - description: 状态筛选
+        in: query
+        name: status
+        type: string
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.RequestResponse'
+              type: object
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取服务需求列表
+      tags:
+      - c_request
+      - b_request
+  /b/requests/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 根据ID获取服务需求的详细信息
+      parameters:
+      - description: 需求ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.RequestResponse'
+              type: object
+        "400":
+          description: ID无效
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "404":
+          description: 需求不存在
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取服务需求详情
+      tags:
+      - c_request
+      - b_request
+  /b/requests/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: B端更新服务请求状态（如拒绝、完成等）
+      parameters:
+      - description: 需求ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 状态信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.updateStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.RequestResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 更新服务请求状态
+      tags:
+      - b_request
+  /b/roles/{role}/permissions:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定角色的权限列表
+      parameters:
+      - description: 角色标识
+        in: path
+        name: role
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取角色权限
+      tags:
+      - b_role
+    put:
+      consumes:
+      - application/json
+      description: 更新指定角色的权限列表，受影响用户需重新登录
+      parameters:
+      - description: 角色标识
+        in: path
+        name: role
+        required: true
+        type: string
+      - description: 权限列表
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            permissions:
+              items:
+                type: string
+              type: array
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 更新角色权限
+      tags:
+      - b_role
+  /b/stations:
+    get:
+      consumes:
+      - application/json
+      description: 分页获取服务站点列表
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取服务站点列表
+      tags:
+      - b_station
+    post:
+      consumes:
+      - application/json
+      description: 创建新的服务站点
+      parameters:
+      - description: 站点信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.stationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 创建服务站点
+      tags:
+      - b_station
+  /b/stations/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定的服务站点
+      parameters:
+      - description: 站点ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 删除服务站点
+      tags:
+      - b_station
+    get:
+      consumes:
+      - application/json
+      description: 获取指定服务站点的详细信息
+      parameters:
+      - description: 站点ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "404":
+          description: 站点不存在
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取服务站点详情
+      tags:
+      - b_station
+    put:
+      consumes:
+      - application/json
+      description: 更新指定服务站点的信息
+      parameters:
+      - description: 站点ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 站点信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.stationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 更新服务站点
+      tags:
+      - b_station
+  /b/statistics/dashboard:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户/站点的工作台统计数据，包括任务和需求统计
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取工作台统计数据
+      tags:
+      - b_statistics
+  /b/statistics/requests:
+    get:
+      consumes:
+      - application/json
+      description: 获取需求各状态数量统计
+      parameters:
+      - description: 站点ID（管理员可指定）
+        in: query
+        name: station_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取需求统计
+      tags:
+      - b_statistics
+  /b/statistics/tasks:
+    get:
+      consumes:
+      - application/json
+      description: 获取任务各状态数量统计
+      parameters:
+      - description: 站点ID（管理员可指定）
+        in: query
+        name: station_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取任务统计
+      tags:
+      - b_statistics
+  /b/statistics/today:
+    get:
+      consumes:
+      - application/json
+      description: 获取今日新增需求、完成任务等统计
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取今日统计
+      tags:
+      - b_statistics
+  /b/tasks:
+    get:
+      consumes:
+      - application/json
+      description: 获取任务列表，支持按状态、服务类型、需求编号等筛选
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      - description: 站点ID（管理员可指定）
+        in: query
+        name: station_id
+        type: integer
+      - description: 任务状态
+        in: query
+        name: status
+        type: string
+      - description: 服务类型
+        in: query
+        name: service_type
+        type: string
+      - description: 需求编号（模糊匹配）
+        in: query
+        name: request_no
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取任务列表
+      tags:
+      - b_task
+  /b/tasks/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 根据任务ID获取任务详情，包含关联的服务请求信息
+      parameters:
+      - description: 任务ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "404":
+          description: 任务不存在
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取任务详情
+      tags:
+      - b_task
+  /b/tasks/{id}/claim:
+    post:
+      consumes:
+      - application/json
+      description: 工作人员认领指定任务
+      parameters:
+      - description: 任务ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 认领成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 任务无效
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "409":
+          description: 任务已被认领
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 认领任务
+      tags:
+      - b_task
+  /b/tasks/{id}/complete:
+    post:
+      consumes:
+      - application/json
+      description: 标记任务为已完成，可上传服务图片
+      parameters:
+      - description: 任务ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 完成信息
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/handler.taskCompleteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 完成成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 任务无效
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "409":
+          description: 任务状态冲突
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 完成任务
+      tags:
+      - b_task
+  /b/tasks/{id}/transfer:
+    post:
+      consumes:
+      - application/json
+      description: 管理员或站长将任务转派给其他工作人员
+      parameters:
+      - description: 任务ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 转派信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.taskTransferRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 转派成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "409":
+          description: 任务状态冲突
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 转派任务
+      tags:
+      - b_task
+  /b/tasks/my:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户已认领的任务列表
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取我的任务列表
+      tags:
+      - b_task
+  /b/tasks/pool:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前站点待认领的任务列表，管理员可查看所有站点
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      - description: 站点ID（管理员可指定，0表示所有站点）
+        in: query
+        name: station_id
+        type: integer
+      - default: dispatched
+        description: 任务状态
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 缺少站点信息
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取任务池列表
+      tags:
+      - b_task
+  /b/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 上传文件到存储服务，B端和C端有不同的限制
+      parameters:
+      - description: 文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: 模块名称
+        in: query
+        name: module
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 上传成功，返回url和key
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 文件缺失或不符合要求
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 上传失败
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 上传文件
+      tags:
+      - c_upload
+      - b_upload
+  /b/users:
+    get:
+      consumes:
+      - application/json
+      description: 分页获取B端用户列表，支持筛选
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      - description: 身份筛选(elderly/family/staff/station_manager/admin)
+        in: query
+        name: role
+        type: string
+      - description: 状态筛选(active/inactive/suspended)
+        in: query
+        name: status
+        type: string
+      - description: 站点ID筛选
+        in: query
+        name: station_id
+        type: integer
+      - description: 关键词搜索(姓名/手机号)
+        in: query
+        name: keyword
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.UserListResponse'
+              type: object
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取B端用户列表
+      tags:
+      - b_user
+    post:
+      consumes:
+      - application/json
+      description: 创建新的B端工作人员账号
+      parameters:
+      - description: 用户信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.userCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.UserResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 创建B端用户
+      tags:
+      - b_user
+  /b/users/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 根据ID获取B端用户详细信息
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.UserResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "404":
+          description: 用户不存在
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取B端用户详情
+      tags:
+      - b_user
+    put:
+      consumes:
+      - application/json
+      description: 更新指定B端用户的信息
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 用户信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.userUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.UserResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 更新B端用户
+      tags:
+      - b_user
+  /b/users/{id}/identities:
+    put:
+      consumes:
+      - application/json
+      description: 授予或撤销用户身份，用户需重新登录
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 身份列表
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            identities:
+              items:
+                type: string
+              type: array
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 更新用户身份
+      tags:
+      - b_role
+  /b/zones:
+    get:
+      consumes:
+      - application/json
+      description: 分页获取地理围栏列表
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取服务围栏列表
+      tags:
+      - b_zone
+    post:
+      consumes:
+      - application/json
+      description: 创建新的地理围栏区域
+      parameters:
+      - description: 围栏信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.zoneRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 创建服务围栏
+      tags:
+      - b_zone
+  /b/zones/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定的地理围栏
+      parameters:
+      - description: 围栏ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 删除服务围栏
+      tags:
+      - b_zone
+    put:
+      consumes:
+      - application/json
+      description: 更新指定地理围栏的信息
+      parameters:
+      - description: 围栏ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 围栏信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.zoneRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 更新服务围栏
+      tags:
+      - b_zone
+  /c/auth/check:
+    get:
+      consumes:
+      - application/json
+      description: 验证Token有效性并返回用户信息，用于表单预填充
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Token有效
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: Token无效或过期
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "404":
+          description: 用户不存在
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 检查Token状态并返回用户信息
+      tags:
+      - c_auth
+  /c/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: 支持密码登录和验证码登录两种方式
+      parameters:
+      - description: 登录请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.cLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 登录成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 认证失败
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "404":
+          description: 用户不存在
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      summary: C端用户登录
+      tags:
+      - c_auth
+  /c/auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: 将当前访问令牌加入黑名单，使其失效
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 登出成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 用户登出
+      tags:
+      - b_auth
+      - c_auth
+  /c/auth/me:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前C端用户的详细信息
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "404":
+          description: 用户不存在
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取当前登录用户信息
+      tags:
+      - c_auth
+  /c/auth/quick-start:
+    post:
+      consumes:
+      - application/json
+      description: 一次性完成注册、登录和创建服务需求的全流程
+      parameters:
+      - description: 快速开通请求
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            address:
+              type: string
+            code:
+              type: string
+            description:
+              type: string
+            latitude:
+              format: float64
+              type: number
+            longitude:
+              format: float64
+              type: number
+            name:
+              type: string
+            phone:
+              type: string
+            service_type:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 快速开通成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      summary: 快速开通（注册+登录+创建服务请求）
+      tags:
+      - c_auth
+  /c/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: 使用刷新令牌获取新的访问令牌
+      parameters:
+      - description: 刷新令牌请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.cRefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 刷新成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 令牌无效
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      summary: 刷新访问令牌
+      tags:
+      - c_auth
+  /c/auth/send-code:
+    post:
+      consumes:
+      - application/json
+      description: 向手机号发送6位数字验证码，有效期5分钟
+      parameters:
+      - description: 手机号
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            phone:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 发送成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "429":
+          description: 发送频率限制
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      summary: 发送短信验证码
+      tags:
+      - c_auth
+  /c/banners:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前站点或全局的轮播图
+      parameters:
+      - description: 站点ID（0或不传表示全局）
+        in: query
+        name: station_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      summary: 获取轮播图列表
+      tags:
+      - public
+  /c/geocode:
+    post:
+      consumes:
+      - application/json
+      description: 将地址字符串转换为经纬度坐标
+      parameters:
+      - description: 地址
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            address:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 解析成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "404":
+          description: 地址未找到
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      summary: 地址解析
+      tags:
+      - c_profile
+  /c/geocode/reverse:
+    get:
+      consumes:
+      - application/json
+      description: 将经纬度坐标转换为地址信息
+      parameters:
+      - description: 纬度
+        format: float64
+        in: query
+        name: lat
+        required: true
+        type: number
+      - description: 经度
+        format: float64
+        in: query
+        name: lng
+        required: true
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 转换成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "404":
+          description: 位置未找到
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      summary: 逆地理编码
+      tags:
+      - c_profile
+  /c/notifications:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户的通知列表，支持分页
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取通知列表
+      tags:
+      - c_notification
+      - b_notification
+  /c/notifications/{id}/read:
+    post:
+      consumes:
+      - application/json
+      description: 将指定的通知标记为已读状态
+      parameters:
+      - description: 通知ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 标记成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: ID无效
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 标记通知为已读
+      tags:
+      - c_notification
+      - b_notification
+  /c/profile:
+    put:
+      consumes:
+      - application/json
+      description: 更新C端用户的个人资料信息
+      parameters:
+      - description: 个人资料更新
+        in: body
+        name: request
+        schema:
+          properties:
+            address:
+              type: string
+            id_number:
+              type: string
+            name:
+              type: string
+            user_type:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "404":
+          description: 档案不存在
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 更新个人资料
+      tags:
+      - c_profile
+  /c/requests:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户的服务需求列表，支持按状态筛选和分页
+      parameters:
+      - description: 状态筛选
+        in: query
+        name: status
+        type: string
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.RequestResponse'
+              type: object
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取服务需求列表
+      tags:
+      - c_request
+      - b_request
+    post:
+      consumes:
+      - application/json
+      description: C端用户创建新的服务需求，系统自动匹配站点并派发任务
+      parameters:
+      - description: 服务需求信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.requestCreate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.RequestResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "409":
+          description: 请求冲突
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 创建服务需求
+      tags:
+      - c_request
+  /c/requests/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 根据ID获取服务需求的详细信息
+      parameters:
+      - description: 需求ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.RequestResponse'
+              type: object
+        "400":
+          description: ID无效
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "404":
+          description: 需求不存在
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取服务需求详情
+      tags:
+      - c_request
+      - b_request
+  /c/requests/{id}/cancel:
+    post:
+      consumes:
+      - application/json
+      description: 取消待处理的服务需求
+      parameters:
+      - description: 需求ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 取消成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.RequestResponse'
+              type: object
+        "400":
+          description: ID无效
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "409":
+          description: 状态不允许取消
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 取消服务需求
+      tags:
+      - c_request
+  /c/requests/{id}/rate:
+    post:
+      consumes:
+      - application/json
+      description: 对已完成的服务进行评价
+      parameters:
+      - description: 需求ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 评价信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.rateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 评价成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.RequestResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "409":
+          description: 状态不允许评价
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 评价服务
+      tags:
+      - c_request
+  /c/stations/match:
+    get:
+      consumes:
+      - application/json
+      description: 根据经纬度匹配最近的服务站点
+      parameters:
+      - description: 纬度
+        format: float64
+        in: query
+        name: lat
+        type: number
+      - description: 经度
+        format: float64
+        in: query
+        name: lng
+        type: number
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 匹配成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      summary: 匹配服务站点
+      tags:
+      - public
+  /c/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 上传文件到存储服务，B端和C端有不同的限制
+      parameters:
+      - description: 文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: 模块名称
+        in: query
+        name: module
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 上传成功，返回url和key
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 文件缺失或不符合要求
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 上传失败
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 上传文件
+      tags:
+      - c_upload
+      - b_upload
+swagger: "2.0"

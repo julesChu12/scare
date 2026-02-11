@@ -1,0 +1,140 @@
+# ===================================
+# 操作系统文件
+# ===================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ===================================
+# 环境变量和配置
+# ===================================
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.test
+
+# ===================================
+# 日志文件
+# ===================================
+*.log
+logs/
+server.log
+build-errors.log
+
+# ===================================
+# 进程和运行时文件
+# ===================================
+*.pid
+server.pid
+*.sock
+
+# ===================================
+# Go 相关
+# ===================================
+# 编译后的二进制文件
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+dist/
+
+# Go 测试文件
+*.test
+*.out
+*.prof
+
+# Go 依赖和构建缓存
+vendor/
+tmp/
+*.a
+
+# Air 热加载临时文件
+tmp/
+build-errors.log
+
+# ===================================
+# Node.js / 前端相关
+# ===================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# 构建产物
+dist/
+dist-ssr/
+build/
+*.local
+
+# ===================================
+# IDE 和编辑器
+# ===================================
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# ===================================
+# 数据库文件
+# ===================================
+*.db
+*.sqlite
+*.sqlite3
+
+# ===================================
+# Docker
+# ===================================
+.dockerignore
+docker/volumes/
+dify/docker/volumes/
+
+# ===================================
+# 临时文件和备份
+# ===================================
+*.tmp
+*.bak
+*.backup
+*.old
+*.orig
+*~
+
+# ===================================
+# 文档生成
+# ===================================
+claudedocs/
+*.generated.*
+
+# ===================================
+# 其他
+# ===================================
+.cache/
+.parcel-cache/
+.next/
+.nuxt/
+.vuepress/dist/
+.serverless/
+.fusebox/
+.dynamodb/
+.tern-port
+coverage/
+.nyc_output/
+*.tgz
+*.tar.gz

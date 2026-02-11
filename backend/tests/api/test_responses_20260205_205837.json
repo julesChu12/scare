@@ -1,0 +1,65 @@
+{
+  "test_info": {
+    "timestamp": "2026-02-05T20:58:37+08:00",
+    "base_url": "http://localhost:8080/api/v1"
+  },
+  "responses": {
+    "health_check": {
+      "http_code": 200,
+      "body": "{\"msg\":\"ok\",\"data\":{\"service\":\"sCare\"}}"
+    },
+    "b_auth_admin_login": {
+      "http_code": 200,
+      "body": "{\"msg\":\"ok\",\"data\":{\"identities\":[\"admin\"],\"name\":\"\u7cfb\u7edf\u7ba1\u7406\u5458\",\"phone\":\"13800000001\",\"primary\":\"admin\",\"refresh_token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjEsImlkZW50aXRpZXMiOlsiYWRtaW4iXSwicHJpbWFyeSI6ImFkbWluIiwidHlwZSI6ImJfZW5kIiwic3RhdGlvbl9pZCI6MCwiZXhwIjoxNzcwOTAxMTE3LCJpYXQiOjE3NzAyOTYzMTcsImp0aSI6IjQwMDQ2NDI5LTdkOWEtNDE2My05MWViLWFiYTExZTI4MjZlMCJ9.9b4CktGbdNsC5cuvCpP9W6pGEarjwyhdZaWHh_YunOY\",\"station_id\":0,\"status\":\"active\",\"token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjEsImlkZW50aXRpZXMiOlsiYWRtaW4iXSwicHJpbWFyeSI6ImFkbWluIiwidHlwZSI6ImJfZW5kIiwic3RhdGlvbl9pZCI6MCwiZXhwIjoxNzcwMzgyNzE3LCJpYXQiOjE3NzAyOTYzMTcsImp0aSI6ImM3MmQzZTExLWRiYWYtNDM5OC05NjkxLTY3NmZmN2U2NjJjNiJ9.qkMWL_twSAUz8sbE_MLaRP8HL3VtIPnZXhMpda4WnYw\",\"type\":\"b_end\",\"user_id\":1}}"
+    },
+    "b_auth_station_manager_login": {
+      "http_code": 200,
+      "body": "{\"msg\":\"ok\",\"data\":{\"identities\":[\"station_manager\"],\"name\":\"\u674e\u7ad9\u957f\",\"phone\":\"13800000002\",\"primary\":\"station_manager\",\"refresh_token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjIsImlkZW50aXRpZXMiOlsic3RhdGlvbl9tYW5hZ2VyIl0sInByaW1hcnkiOiJzdGF0aW9uX21hbmFnZXIiLCJ0eXBlIjoiYl9lbmQiLCJzdGF0aW9uX2lkIjoxLCJleHAiOjE3NzA5MDExMTcsImlhdCI6MTc3MDI5NjMxNywianRpIjoiNTJlNjEzOTQtMDI5OC00ZjIxLWE1NTgtMjE1ODM1NTY1YmEwIn0.TAhc91mbvpS1bV4TFocGGo78e9nQzRkDRqUsuPJZFdI\",\"station_id\":1,\"status\":\"active\",\"token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjIsImlkZW50aXRpZXMiOlsic3RhdGlvbl9tYW5hZ2VyIl0sInByaW1hcnkiOiJzdGF0aW9uX21hbmFnZXIiLCJ0eXBlIjoiYl9lbmQiLCJzdGF0aW9uX2lkIjoxLCJleHAiOjE3NzAzODI3MTcsImlhdCI6MTc3MDI5NjMxNywianRpIjoiOWI5MDM0NDItZjAwMC00NTQ1LThmNGUtODMyM2M4NzA3NjVmIn0.vkaCr99JXj4K09WiM8wtaI1ckkltJqBY8OXM8GpbT8E\",\"type\":\"b_end\",\"user_id\":2}}"
+    },
+    "b_auth_staff_login": {
+      "http_code": 200,
+      "body": "{\"msg\":\"ok\",\"data\":{\"identities\":[\"staff\"],\"name\":\"\u738b\u5c0f\u7ea2\",\"phone\":\"13800000004\",\"primary\":\"staff\",\"refresh_token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjQsImlkZW50aXRpZXMiOlsic3RhZmYiXSwicHJpbWFyeSI6InN0YWZmIiwidHlwZSI6ImJfZW5kIiwic3RhdGlvbl9pZCI6MSwiZXhwIjoxNzcwOTAxMTE3LCJpYXQiOjE3NzAyOTYzMTcsImp0aSI6Ijc3YTE1ZmFkLWEzZjEtNGVmZC1hZjY5LWY2OWEzMGFlZjExMyJ9.EeDiqPh-aMIyIodbrgm1Nj6zn8aUK4SeCEfJhfOYYZI\",\"station_id\":1,\"status\":\"active\",\"token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjQsImlkZW50aXRpZXMiOlsic3RhZmYiXSwicHJpbWFyeSI6InN0YWZmIiwidHlwZSI6ImJfZW5kIiwic3RhdGlvbl9pZCI6MSwiZXhwIjoxNzcwMzgyNzE3LCJpYXQiOjE3NzAyOTYzMTcsImp0aSI6IjFlNTZhYjAzLWNhNGUtNDYyNy1hZTUyLTAxMGM2NDFlOWE2NiJ9.16PnitbjD8n9nKvBf5kueiHAxlDAB7rwu1TpXJS52WI\",\"type\":\"b_end\",\"user_id\":4}}"
+    },
+    "c_auth_elderly_login": {
+      "http_code": 200,
+      "body": "{\"msg\":\"ok\",\"data\":{\"customer_type\":\"elderly\",\"name\":\"\u5f20\u5927\u7237\",\"phone\":\"13800000008\",\"refresh_token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjgsImlkZW50aXRpZXMiOlsiZWxkZXJseSJdLCJwcmltYXJ5IjoiZWxkZXJseSIsInR5cGUiOiJjX2VuZCIsInN0YXRpb25faWQiOjAsImV4cCI6MTc3MDkwMTExNywiaWF0IjoxNzcwMjk2MzE3LCJqdGkiOiIzZGU4MGIyYi0wMGFhLTRiNTUtOGM5ZC1hMzZkYjFiMjIzYmEifQ.Gqo0xCgETtnSiKrqs5qYGY1D-pm-0xTKqhWU0VAYmVw\",\"status\":\"active\",\"token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjgsImlkZW50aXRpZXMiOlsiZWxkZXJseSJdLCJwcmltYXJ5IjoiZWxkZXJseSIsInR5cGUiOiJjX2VuZCIsInN0YXRpb25faWQiOjAsImV4cCI6MTc3MDM4MjcxNywiaWF0IjoxNzcwMjk2MzE3LCJqdGkiOiJmYjk1MzkxZC02NWE4LTRhMGEtODZjMy0yNmIzMWY4YzZmNmIifQ.xuHrszTRx1AYdh7NxNjc5lG8GT5HB3Y5jLSKNcP9glw\",\"type\":\"c_end\",\"user_id\":8}}"
+    },
+    "multi_identity_b_login": {
+      "http_code": 200,
+      "body": "{\"msg\":\"ok\",\"data\":{\"identities\":[\"staff\"],\"name\":\"\u674e\u5976\u5976\",\"phone\":\"13800000009\",\"primary\":\"elderly\",\"refresh_token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjksImlkZW50aXRpZXMiOlsic3RhZmYiXSwicHJpbWFyeSI6InN0YWZmIiwidHlwZSI6ImJfZW5kIiwic3RhdGlvbl9pZCI6MSwiZXhwIjoxNzcwOTAxMTE3LCJpYXQiOjE3NzAyOTYzMTcsImp0aSI6IjY2YzAzNmIzLWFjNzQtNDhmOC04YTY2LWU5N2YyY2M2NmMwNSJ9.QqnfXKRGXnGNMNpzITGSzCSkrLw2OpcHgbmN2b60h2I\",\"station_id\":1,\"status\":\"active\",\"token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjksImlkZW50aXRpZXMiOlsic3RhZmYiXSwicHJpbWFyeSI6InN0YWZmIiwidHlwZSI6ImJfZW5kIiwic3RhdGlvbl9pZCI6MSwiZXhwIjoxNzcwMzgyNzE3LCJpYXQiOjE3NzAyOTYzMTcsImp0aSI6Ijg1MjY4ZjIxLTdmMWMtNDEyNC05MzlhLWU4ZWMwNjVhNzhkNiJ9.7J6Db9xMJ0H37sJT3he8-0Z_1HqzDlrb1Sscq-X8u7o\",\"type\":\"b_end\",\"user_id\":9}}"
+    },
+    "multi_identity_c_login": {
+      "http_code": 200,
+      "body": "{\"msg\":\"ok\",\"data\":{\"customer_type\":\"elderly\",\"name\":\"\u674e\u5976\u5976\",\"phone\":\"13800000009\",\"refresh_token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjksImlkZW50aXRpZXMiOlsiZWxkZXJseSJdLCJwcmltYXJ5IjoiZWxkZXJseSIsInR5cGUiOiJjX2VuZCIsInN0YXRpb25faWQiOjAsImV4cCI6MTc3MDkwMTExNywiaWF0IjoxNzcwMjk2MzE3LCJqdGkiOiI3ZTI4OTg4Mi05NjcwLTRmOTYtYWE3MS05MTVkYWE0MGJmMjAifQ.zyZUls_VMaYnI1OufMGxqVomB2UGhSaRihBMt-mbDlY\",\"status\":\"active\",\"token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOjksImlkZW50aXRpZXMiOlsiZWxkZXJseSJdLCJwcmltYXJ5IjoiZWxkZXJseSIsInR5cGUiOiJjX2VuZCIsInN0YXRpb25faWQiOjAsImV4cCI6MTc3MDM4MjcxNywiaWF0IjoxNzcwMjk2MzE3LCJqdGkiOiI4ODM0Zjk1Yy1mZWQ3LTRiZWQtOWM2Ni1jMmFmMjhiZGM5Y2UifQ.89F4gxq10oUtX_jXycK_T5wxcijVHw5YinfDstPq8YA\",\"type\":\"c_end\",\"user_id\":9}}"
+    },
+    "permission_admin_access": {
+      "http_code": 200,
+      "body": "{\"msg\":\"ok\",\"data\":{\"items\":[{\"b_end_identities\":[],\"c_end_identities\":[\"child\"],\"created_at\":\"2026-02-05T00:09:13+08:00\",\"email\":\"\",\"id\":13,\"name\":\"\u5c0f\u660e\",\"phone\":\"13800000013\",\"primary_identity\":\"child\",\"station_id\":0,\"status\":\"active\",\"updated_at\":\"2026-02-05T00:09:13+08:00\"},{\"b_end_identities\":[],\"c_end_identities\":[\"disabled\"],\"created_at\":\"2026-02-05T00:09:13+08:00\",\"email\":\"\",\"id\":12,\"name\":\"\u8d75\u5148\u751f\",\"phone\":\"13800000012\",\"primary_identity\":\"disabled\",\"station_id\":0,\"status\":\"active\",\"updated_at\":\"2026-02-05T00:09:13+08:00\"},{\"b_end_identities\":[],\"c_end_identities\":[\"pregnant\"],\"created_at\":\"2026-02-05T00:09:13+08:00\",\"email\":\"\",\"id\":11,\"name\":\"\u5b59\u5973\u58eb\",\"phone\":\"13800000011\",\"primary_identity\":\"pregnant\",\"station_id\":0,\"status\":\"active\",\"updated_at\":\"2026-02-05T00:09:13+08:00\"},{\"b_end_identities\":[],\"c_end_identities\":[\"elderly\"],\"created_at\":\"2026-02-05T00:09:13+08:00\",\"email\":\"\",\"id\":10,\"name\":\"\u738b\u7237\u7237\",\"phone\":\"13800000010\",\"primary_identity\":\"elderly\",\"station_id\":0,\"status\":\"active\",\"updated_at\":\"2026-02-05T00:09:13+08:00\"},{\"b_end_identities\":[\"staff\"],\"c_end_identities\":[\"elderly\"],\"created_at\":\"2026-02-05T00:09:13+08:00\",\"email\":\"\",\"id\":9,\"name\":\"\u674e\u5976\u5976\",\"phone\":\"13800000009\",\"primary_identity\":\"elderly\",\"station_id\":1,\"status\":\"active\",\"updated_at\":\"2026-02-05T00:09:13+08:00\"}],\"total\":13}}"
+    },
+    "permission_staff_forbidden": {
+      "http_code": 403,
+      "body": "{\"data\":{\"identities\":[\"staff\"],\"method\":\"GET\",\"path\":\"/api/v1/b/users\"},\"msg\":\"forbidden\"}"
+    },
+    "permission_c_end_skip_rbac": {
+      "http_code": 200,
+      "body": "{\"msg\":\"ok\",\"data\":{\"items\":[],\"page\":1,\"page_size\":10,\"total\":0}}"
+    },
+    "permission_c_end_type_mismatch": {
+      "http_code": 403,
+      "body": "{\"data\":{\"expected\":\"b_end\",\"got\":\"c_end\"},\"msg\":\"token end type mismatch\"}"
+    },
+    "b_auth_no_identity": {
+      "http_code": 403,
+      "body": "{\"msg\":\"user has no B-end identity\",\"data\":null}"
+    },
+    "b_auth_invalid_password": {
+      "http_code": 401,
+      "body": "{\"msg\":\"invalid credentials\",\"data\":null}"
+    }
+  },
+  "summary": {
+    "passed": 13,
+    "failed": 0,
+    "total": 13
+  }
+}
