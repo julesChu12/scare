@@ -13,9 +13,11 @@ npm run dev          # 启动开发服务器 (port 3001, 代理 /api 和 /static
 npm run build        # 类型检查 (vue-tsc) + Vite 构建
 npm run lint         # ESLint 检查并自动修复
 npm run format       # Prettier 格式化 src/
+npx playwright test  # 运行 E2E 测试（需先启动后端和前端服务）
+npx playwright test --ui  # 以 UI 模式运行测试
 ```
 
-E2E 测试使用 Playwright，测试文件在 `tests/` 目录，无独立配置文件。
+E2E 测试使用 Playwright，测试文件在 `tests/` 目录，无独立配置文件。测试前需确保后端（localhost:8080）和前端（localhost:3001）服务已启动。
 
 ## 架构概览
 
@@ -29,12 +31,19 @@ Vue 3 + TypeScript 管理后台（B端），采用 Composition API (`<script set
 - **路由** (`src/router/index.ts`): 静态路由定义，每个路由通过 `meta.permission_code` 控制访问权限。
 - **布局** (`src/layouts/BasicLayout.vue`): 侧边栏 + 顶栏 + 内容区，侧边栏菜单从后端 API (`/b/menus/user`) 动态获取。
 
-### 权限体系（多层）
+### 权限体系（四层）
+
+自定义权限管理系统，权限数据从后端获取，前端负责 UI 控制：
 
 1. **路由守卫** (`src/router/guards/permission.guard.ts`): 检查登录状态和 `meta.permission_code`
 2. **v-permission 指令** (`src/directives/permission.ts`): DOM 级别权限控制，无权限则移除元素
 3. **usePermission composable** (`src/composables/usePermission.ts`): 提供 `hasPermission`、`hasAnyPermission` 等方法
-4. **Casbin 配置** (`src/config/casbin/`): 前端 RBAC 模型，三级角色：staff → station_manager → admin
+4. **后端最终验证**: 前端只做 UI 控制，后端返回 403 作为最终权限验证
+
+**权限特性**:
+- 权限列表从 `/b/auth/current` API 获取，存储在 `user.permissions` 数组
+- Admin 角色拥有所有权限，跳过权限检查
+- 三级角色：staff → station_manager → admin
 
 ### 页面组织
 
@@ -59,3 +68,11 @@ Vue 3 + TypeScript 管理后台（B端），采用 Composition API (`<script set
 
 - `@` 别名指向 `src/`
 - 代码分割：element-plus、vue-vendor（vue + router + pinia）、echarts 各自独立 chunk
+
+## 测试账号
+
+| 角色 | 手机号 | 密码 |
+|------|--------|------|
+| Admin | 13800000001 | Test@123 |
+| Station Manager | 13800000002 | Test@123 |
+| Staff | 13800000004 | Test@123 |
