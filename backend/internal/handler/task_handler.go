@@ -50,6 +50,17 @@ func (h *TaskHandler) GetByID(c *gin.Context) {
 		RespondError(c, http.StatusNotFound, "task not found")
 		return
 	}
+
+	// 安全修复：非管理员需验证任务是否属于自己站点
+	roles := GetUserRoles(c)
+	if !containsRole(roles, "admin") {
+		userStationID, _ := GetStationID(c)
+		if task.TaskAssignment.StationID != userStationID {
+			RespondError(c, http.StatusForbidden, "forbidden")
+			return
+		}
+	}
+
 	Respond(c, http.StatusOK, "ok", task)
 }
 

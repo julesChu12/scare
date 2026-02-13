@@ -17,6 +17,7 @@
             <!-- 认领按钮 -->
             <el-button
               v-if="task?.status === 'dispatched'"
+              v-permission="'service:task:claim'"
               type="primary"
               size="large"
               :loading="claiming"
@@ -27,6 +28,7 @@
             <!-- 完成按钮 -->
             <el-button
               v-if="task?.status === 'claimed'"
+              v-permission="'service:task:complete'"
               type="success"
               size="large"
               @click="handleCompleteTask"

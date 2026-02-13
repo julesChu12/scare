@@ -145,6 +145,7 @@
             </el-button>
             <el-button
               v-if="canManageTask(row)"
+              v-permission="'service:task:assign'"
               type="primary"
               size="small"
               link

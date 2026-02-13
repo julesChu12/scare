@@ -46,7 +46,7 @@
           />
 
           <div class="action-buttons" v-if="selectedRole !== 'admin'">
-            <el-button type="primary" :loading="submitting" @click="savePermissions">
+            <el-button v-permission="'system:role:permission:update'" type="primary" :loading="submitting" @click="savePermissions">
               保存配置
             </el-button>
             <el-button @click="resetPermissions">重置</el-button>

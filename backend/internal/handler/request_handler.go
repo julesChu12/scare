@@ -108,7 +108,26 @@ func (h *RequestHandler) List(c *gin.Context) {
 
 	if userType == "b_end" {
 		// B端：查询所有请求，支持站点筛选
-		stationID, _ := parseInt64Param(c.Query("station_id"))
+		// 安全修复：非管理员只能查看自己站点的数据
+		userStationID, _ := GetStationID(c)
+		roles := GetUserRoles(c)
+		isAdmin := containsRole(roles, "admin")
+
+		queryStationID, _ := parseInt64Param(c.Query("station_id"))
+
+		var stationID int64
+		if isAdmin {
+			// 管理员可以指定站点或查看所有（0）
+			stationID = queryStationID
+		} else {
+			// 非管理员强制使用自己的站点
+			if userStationID == 0 {
+				RespondError(c, http.StatusBadRequest, "missing station")
+				return
+			}
+			stationID = userStationID
+		}
+
 		requests, total, err := h.service.ListAll(stationID, status, page, pageSize)
 		if err != nil {
 			RespondError(c, http.StatusInternalServerError, "list requests failed")
@@ -167,6 +186,18 @@ func (h *RequestHandler) Get(c *gin.Context) {
 	if userType == "c_end" && request.UserID != userID {
 		RespondError(c, http.StatusForbidden, "forbidden")
 		return
+	}
+	// B端：非管理员需验证站点归属
+	if userType == "b_end" {
+		roles := GetUserRoles(c)
+		if !containsRole(roles, "admin") {
+			userStationID, _ := GetStationID(c)
+			// StationID > 0 表示已分配站点，需验证归属
+			if request.StationID > 0 && request.StationID != userStationID {
+				RespondError(c, http.StatusForbidden, "forbidden")
+				return
+			}
+		}
 	}
 	Respond(c, http.StatusOK, "ok", request)
 }

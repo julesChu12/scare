@@ -7,7 +7,7 @@
             <h3>用户管理</h3>
             <p>管理系统用户账号和角色分配</p>
           </div>
-          <el-button type="primary" @click="showCreateDialog">
+          <el-button v-permission="'system:user:create'" type="primary" @click="showCreateDialog">
             <el-icon><Plus /></el-icon>
             新建用户
           </el-button>
@@ -96,20 +96,10 @@
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
-            <el-button
-              type="primary"
-              link
-              size="small"
-              @click="showEditDialog(row)"
-            >
+            <el-button v-permission="'system:user:update'" type="primary" link size="small" @click="showEditDialog(row)">
               编辑
             </el-button>
-            <el-button
-              type="primary"
-              link
-              size="small"
-              @click="showRoleDialog(row)"
-            >
+            <el-button v-permission="'system:user:role:assign'" type="primary" link size="small" @click="showRoleDialog(row)">
               角色
             </el-button>
           </template>
