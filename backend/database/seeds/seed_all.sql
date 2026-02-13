@@ -45,8 +45,8 @@ SELECT '权限' AS 'Table', COUNT(*) AS 'Count' FROM `permissions`
 UNION ALL SELECT '角色', COUNT(*) FROM `roles`
 UNION ALL SELECT '角色权限', COUNT(*) FROM `role_permissions`
 UNION ALL SELECT '用户', COUNT(*) FROM `users`
-UNION ALL SELECT '老年人档案', COUNT(*) FROM `elderly_profiles`
-UNION ALL SELECT '用户角色', COUNT(*) FROM `user_roles`
+UNION ALL SELECT '用户身份', COUNT(*) FROM `user_identities`
+UNION ALL SELECT '客户档案', COUNT(*) FROM `customer_profiles`
 UNION ALL SELECT '服务站点', COUNT(*) FROM `service_stations`
 UNION ALL SELECT '服务围栏', COUNT(*) FROM `service_zones`
 UNION ALL SELECT '服务需求', COUNT(*) FROM `service_requests`
@@ -54,6 +54,7 @@ UNION ALL SELECT '任务分配', COUNT(*) FROM `task_assignments`
 UNION ALL SELECT '任务历史', COUNT(*) FROM `task_histories`
 UNION ALL SELECT '通知记录', COUNT(*) FROM `notifications`
 UNION ALL SELECT '新闻', COUNT(*) FROM `news` WHERE `deleted_at` IS NULL
+UNION ALL SELECT '轮播图', COUNT(*) FROM `banners` WHERE `deleted_at` IS NULL
 UNION ALL SELECT '菜单', COUNT(*) FROM `menus` WHERE `deleted_at` IS NULL;
 
 -- =====================================================
