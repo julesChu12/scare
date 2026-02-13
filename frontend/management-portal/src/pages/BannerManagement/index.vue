@@ -105,7 +105,8 @@
     <el-dialog
       v-model="dialogVisible"
       :title="isEdit ? '编辑轮播图' : '新增轮播图'"
-      width="500px"
+      width="800px"
+      top="5vh"
       @close="resetForm"
     >
       <el-form
@@ -114,59 +115,73 @@
         :rules="formRules"
         label-width="100px"
       >
-        <el-form-item label="标题" prop="title">
-          <el-input v-model="formData.title" placeholder="请输入标题" />
-        </el-form-item>
+        <el-row :gutter="24">
+          <!-- 左侧：表单信息 -->
+          <el-col :span="12">
+            <el-form-item label="标题" prop="title">
+              <el-input v-model="formData.title" placeholder="请输入标题" />
+            </el-form-item>
 
-        <el-form-item label="图片" prop="image_url">
-          <div class="image-upload">
-            <el-input v-model="formData.image_url" placeholder="请输入图片URL或上传图片" style="flex: 1" />
-            <el-upload
-              :action="uploadUrl"
-              :headers="uploadHeaders"
-              :show-file-list="false"
-              :on-success="handleImageUploadSuccess"
-              :on-error="handleUploadError"
-              :before-upload="beforeUpload"
-              accept="image/*"
-            >
-              <el-button type="primary" :icon="Upload" style="margin-left: 10px">
-                上传
-              </el-button>
-            </el-upload>
-          </div>
-          <div v-if="formData.image_url" class="image-preview">
-            <el-image
-              :src="getImageUrl(formData.image_url)"
-              fit="cover"
-              style="width: 200px; height: 100px; border-radius: 4px; margin-top: 10px"
-            />
-          </div>
-        </el-form-item>
+            <el-form-item label="链接类型" prop="link_type">
+              <el-select v-model="formData.link_type" placeholder="请选择链接类型" style="width: 100%">
+                <el-option label="无链接" value="none" />
+                <el-option label="内部页面" value="page" />
+                <el-option label="外部链接" value="url" />
+                <el-option label="新闻详情" value="news" />
+              </el-select>
+            </el-form-item>
 
-        <el-form-item label="链接类型" prop="link_type">
-          <el-select v-model="formData.link_type" placeholder="请选择链接类型" style="width: 100%">
-            <el-option label="无链接" value="none" />
-            <el-option label="内部页面" value="page" />
-            <el-option label="外部链接" value="url" />
-            <el-option label="新闻详情" value="news" />
-          </el-select>
-        </el-form-item>
+            <el-form-item v-if="formData.link_type !== 'none'" label="链接值" prop="link_value">
+              <el-input v-model="formData.link_value" placeholder="请输入链接值" />
+            </el-form-item>
 
-        <el-form-item v-if="formData.link_type !== 'none'" label="链接值" prop="link_value">
-          <el-input v-model="formData.link_value" placeholder="请输入链接值" />
-        </el-form-item>
+            <el-form-item label="排序" prop="sort">
+              <el-input-number v-model="formData.sort" :min="0" :max="999" style="width: 100%" />
+            </el-form-item>
 
-        <el-form-item label="排序" prop="sort">
-          <el-input-number v-model="formData.sort" :min="0" :max="999" />
-        </el-form-item>
+            <el-form-item label="状态" prop="status">
+              <el-radio-group v-model="formData.status">
+                <el-radio value="active">启用</el-radio>
+                <el-radio value="inactive">禁用</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
 
-        <el-form-item label="状态" prop="status">
-          <el-radio-group v-model="formData.status">
-            <el-radio value="active">启用</el-radio>
-            <el-radio value="inactive">禁用</el-radio>
-          </el-radio-group>
-        </el-form-item>
+          <!-- 右侧：图片上传 -->
+          <el-col :span="12">
+            <el-form-item label="轮播图片" prop="image_url" label-position="top" style="display: block;">
+              <div class="banner-upload-wrapper">
+                <el-upload
+                  class="banner-uploader"
+                  drag
+                  :action="uploadUrl"
+                  :headers="uploadHeaders"
+                  :show-file-list="false"
+                  :on-success="handleImageUploadSuccess"
+                  :on-error="handleUploadError"
+                  :before-upload="beforeUpload"
+                  accept="image/*"
+                >
+                  <div v-if="formData.image_url" class="banner-preview">
+                    <img :src="getImageUrl(formData.image_url)" class="preview-img" />
+                    <div class="hover-mask">
+                      <el-icon><Upload /></el-icon>
+                      <span>更换图片</span>
+                    </div>
+                  </div>
+                  <div v-else class="upload-placeholder">
+                    <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+                    <div class="el-upload__text">
+                      拖拽或点击上传 <br/>
+                      <small style="color: #909399">建议尺寸 1920x600</small>
+                    </div>
+                  </div>
+                </el-upload>
+                <el-input v-model="formData.image_url" placeholder="或输入图片URL" size="small" style="margin-top: 10px" />
+              </div>
+            </el-form-item>
+          </el-col>
+        </el-row>
       </el-form>
 
       <template #footer>
@@ -182,7 +197,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadProps } from 'element-plus'
-import { Plus, Refresh, Upload } from '@element-plus/icons-vue'
+import { Plus, Refresh, Upload, UploadFilled } from '@element-plus/icons-vue'
 import { bannerApi } from '@/api'
 import { useAuthStore } from '@/store/modules/auth'
 import type { Banner, BannerRequest } from '@/types/api'
@@ -466,20 +481,85 @@ onMounted(() => {
     }
   }
 
-  .pagination-container {
-    margin-top: 20px;
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .image-upload {
-    display: flex;
-    align-items: center;
+  .banner-upload-wrapper {
     width: 100%;
-  }
+    
+    .banner-uploader {
+      width: 100%;
+      
+      :deep(.el-upload) {
+        width: 100%;
+      }
+      
+      :deep(.el-upload-dragger) {
+        width: 100%;
+        height: 200px;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+      }
+    }
 
-  .image-preview {
-    margin-top: 10px;
+    .banner-preview {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      
+      .preview-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      
+      .hover-mask {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        opacity: 0;
+        transition: opacity 0.3s;
+        cursor: pointer;
+        
+        .el-icon {
+          font-size: 24px;
+          margin-bottom: 5px;
+        }
+      }
+      
+      &:hover .hover-mask {
+        opacity: 1;
+      }
+    }
+
+    .upload-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      
+      .el-icon--upload {
+        font-size: 40px;
+        color: #909399;
+        margin-bottom: 12px;
+      }
+      
+      .el-upload__text {
+        font-size: 14px;
+        color: #606266;
+        text-align: center;
+        line-height: 1.5;
+      }
+    }
   }
 }
 </style>

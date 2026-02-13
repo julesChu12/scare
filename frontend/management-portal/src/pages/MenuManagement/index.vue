@@ -3,37 +3,70 @@
     <el-card>
       <template #header>
         <div class="card-header">
-          <div>
-            <span class="title">菜单管理</span>
-            <span class="description">管理系统菜单配置，支持树形结构和排序</span>
+          <div class="header-left">
+            <h3>菜单管理</h3>
+            <p class="subtitle">配置系统导航菜单、路由路径及权限标识</p>
           </div>
-          <el-button type="primary" :icon="Plus" @click="handleCreate">
-            新建菜单
-          </el-button>
+          <div class="header-actions">
+            <el-button :icon="Refresh" @click="loadMenuTree">刷新</el-button>
+            <el-button type="primary" :icon="Plus" @click="handleCreate">
+              新建菜单
+            </el-button>
+          </div>
         </div>
       </template>
 
+      <!-- 搜索筛选 -->
+      <div class="filter-bar">
+        <el-input
+          v-model="searchKeyword"
+          placeholder="搜索菜单名称/路径"
+          clearable
+          style="width: 250px"
+          @clear="handleSearch"
+          @keyup.enter="handleSearch"
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
+        <el-button type="primary" @click="handleSearch">查询</el-button>
+      </div>
+
       <el-table
         v-loading="loading"
-        :data="menuTree"
+        :data="filteredMenuTree"
         row-key="id"
         border
         default-expand-all
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
       >
-        <el-table-column prop="name" label="菜单名称" min-width="180">
+        <el-table-column prop="name" label="菜单名称" min-width="180" />
+        
+        <el-table-column label="图标" width="70" align="center">
           <template #default="{ row }">
-            <el-icon v-if="row.icon" class="menu-icon">
+            <el-icon v-if="row.icon" class="menu-icon-display">
               <component :is="row.icon" />
             </el-icon>
-            <span>{{ row.name }}</span>
+            <span v-else>-</span>
           </template>
         </el-table-column>
-        <el-table-column prop="path" label="路由路径" min-width="150" />
-        <el-table-column prop="component" label="组件路径" min-width="200" />
+
+        <el-table-column prop="path" label="路由路径" min-width="150">
+          <template #default="{ row }">
+            <code class="path-code">{{ row.path }}</code>
+          </template>
+        </el-table-column>
+
+        <el-table-column prop="component" label="组件路径" min-width="200" show-overflow-tooltip>
+          <template #default="{ row }">
+            <span class="component-text">{{ row.component || '-' }}</span>
+          </template>
+        </el-table-column>
+
         <el-table-column prop="permission_code" label="权限标识" min-width="150">
           <template #default="{ row }">
-            <el-tag v-if="row.permission_code" type="info" size="small">
+            <el-tag v-if="row.permission_code" type="info" size="small" effect="plain">
               {{ row.permission_code }}
             </el-tag>
             <span v-else class="text-muted">-</span>
@@ -81,7 +114,7 @@
     <el-dialog
       v-model="dialogVisible"
       :title="isEdit ? '编辑菜单' : '新建菜单'"
-      width="600px"
+      width="700px"
       destroy-on-close
     >
       <el-form
@@ -90,63 +123,83 @@
         :rules="formRules"
         label-width="100px"
       >
-        <el-form-item label="上级菜单" prop="parent_id">
-          <el-tree-select
-            v-model="formData.parent_id"
-            :data="parentMenuOptions"
-            :props="{ label: 'name', value: 'id', children: 'children' }"
-            placeholder="选择上级菜单（不选则为顶级菜单）"
-            clearable
-            check-strictly
-            :render-after-expand="false"
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item label="菜单名称" prop="name">
-          <el-input v-model="formData.name" placeholder="请输入菜单名称" />
-        </el-form-item>
-        <el-form-item label="路由路径" prop="path">
-          <el-input v-model="formData.path" placeholder="请输入路由路径，如 /admin/menus" />
-        </el-form-item>
-        <el-form-item label="组件路径" prop="component">
-          <el-input v-model="formData.component" placeholder="请输入组件路径，如 @/pages/MenuManagement/index.vue" />
-        </el-form-item>
-        <el-form-item label="图标" prop="icon">
-          <el-select
-            v-model="formData.icon"
-            placeholder="选择图标"
-            clearable
-            filterable
-            style="width: 100%"
-          >
-            <el-option
-              v-for="icon in iconOptions"
-              :key="icon"
-              :label="icon"
-              :value="icon"
-            >
-              <el-icon class="icon-option">
-                <component :is="icon" />
-              </el-icon>
-              <span>{{ icon }}</span>
-            </el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="权限标识" prop="permission_code">
-          <el-input v-model="formData.permission_code" placeholder="请输入权限标识，如 menu:list" />
-        </el-form-item>
-        <el-form-item label="排序" prop="sort">
-          <el-input-number v-model="formData.sort" :min="0" :max="999" />
-        </el-form-item>
-        <el-form-item label="是否隐藏" prop="hidden">
-          <el-switch v-model="formData.hidden" />
-        </el-form-item>
-        <el-form-item label="状态" prop="status">
-          <el-radio-group v-model="formData.status">
-            <el-radio value="active">启用</el-radio>
-            <el-radio value="inactive">禁用</el-radio>
-          </el-radio-group>
-        </el-form-item>
+        <el-row :gutter="20">
+          <el-col :span="24">
+            <el-form-item label="上级菜单" prop="parent_id">
+              <el-tree-select
+                v-model="formData.parent_id"
+                :data="parentMenuOptions"
+                :props="{ label: 'name', value: 'id', children: 'children' }"
+                placeholder="选择上级菜单（不选则为顶级菜单）"
+                clearable
+                check-strictly
+                :render-after-expand="false"
+                style="width: 100%"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="菜单名称" prop="name">
+              <el-input v-model="formData.name" placeholder="请输入菜单名称" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="路由路径" prop="path">
+              <el-input v-model="formData.path" placeholder="请输入路由路径" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="组件路径" prop="component">
+              <el-input v-model="formData.component" placeholder="请输入组件路径" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="图标" prop="icon">
+              <el-select
+                v-model="formData.icon"
+                placeholder="选择图标"
+                clearable
+                filterable
+                style="width: 100%"
+              >
+                <el-option
+                  v-for="icon in iconOptions"
+                  :key="icon"
+                  :label="icon"
+                  :value="icon"
+                >
+                  <el-icon class="icon-option">
+                    <component :is="icon" />
+                  </el-icon>
+                  <span>{{ icon }}</span>
+                </el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="权限标识" prop="permission_code">
+              <el-input v-model="formData.permission_code" placeholder="如 menu:list" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="排序" prop="sort">
+              <el-input-number v-model="formData.sort" :min="0" :max="999" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="是否隐藏" prop="hidden">
+              <el-switch v-model="formData.hidden" active-text="是" inactive-text="否" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="状态" prop="status">
+              <el-radio-group v-model="formData.status">
+                <el-radio value="active">启用</el-radio>
+                <el-radio value="inactive">禁用</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+        </el-row>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -159,9 +212,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import { Plus } from '@element-plus/icons-vue'
+import { Plus, Search, Refresh } from '@element-plus/icons-vue'
 import { menuApi } from '@/api'
 import type { Menu, MenuRequest } from '@/types/api'
 
@@ -213,9 +266,41 @@ const dialogVisible = ref(false)
 const isEdit = ref(false)
 const editingId = ref<number | null>(null)
 
+// 搜索
+const searchKeyword = ref('')
+
 // 数据
 const menuTree = ref<Menu[]>([])
 const parentMenuOptions = ref<Menu[]>([])
+
+// 树形过滤逻辑
+const filteredMenuTree = computed(() => {
+  if (!searchKeyword.value) return menuTree.value
+
+  const keyword = searchKeyword.value.toLowerCase()
+  
+  function filterTree(tree: Menu[]): Menu[] {
+    return tree
+      .map(node => ({ ...node }))
+      .filter(node => {
+        const matches = 
+          node.name.toLowerCase().includes(keyword) || 
+          (node.path && node.path.toLowerCase().includes(keyword))
+        
+        if (node.children) {
+          node.children = filterTree(node.children)
+        }
+        
+        return matches || (node.children && node.children.length > 0)
+      })
+  }
+
+  return filterTree(menuTree.value)
+})
+
+const handleSearch = () => {
+  // Computed property handles search
+}
 
 // 表单
 const formRef = ref<FormInstance>()
@@ -366,44 +451,68 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .menu-management {
-  padding: 20px;
-}
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+    .header-left {
+      h3 {
+        margin: 0 0 4px 0;
+        font-size: 18px;
+        font-weight: 500;
+      }
+      .subtitle {
+        margin: 0;
+        font-size: 13px;
+        color: #909399;
+      }
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 12px;
+    }
+  }
 
-.card-header .title {
-  font-size: 18px;
-  font-weight: 600;
-}
+  .filter-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f0f0f0;
+  }
 
-.card-header .description {
-  margin-left: 12px;
-  font-size: 14px;
-  color: #909399;
-}
+  .menu-icon-display {
+    font-size: 18px;
+    color: #409eff;
+    vertical-align: middle;
+  }
 
-.menu-icon {
-  margin-right: 8px;
-  vertical-align: middle;
-}
+  .path-code {
+    padding: 2px 6px;
+    background-color: #f5f7fa;
+    border-radius: 4px;
+    color: #f56c6c;
+    font-family: monospace;
+    font-size: 12px;
+  }
 
-.text-muted {
-  color: #909399;
-}
+  .component-text {
+    font-size: 12px;
+    color: #606266;
+  }
 
-.icon-option {
-  margin-right: 8px;
-  vertical-align: middle;
-}
+  .text-muted {
+    color: #c0c4cc;
+    font-size: 12px;
+  }
 
-:deep(.el-table .cell) {
-  display: flex;
-  align-items: center;
+  .icon-option {
+    margin-right: 8px;
+    vertical-align: middle;
+  }
 }
 </style>

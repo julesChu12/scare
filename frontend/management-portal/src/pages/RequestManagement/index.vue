@@ -231,7 +231,6 @@
       v-model="formVisible"
       :title="formTitle"
       width="600px"
-      :close-on-click-modal="false"
     >
       <el-form
         ref="formRef"

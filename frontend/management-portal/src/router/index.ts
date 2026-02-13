@@ -72,26 +72,26 @@ const routes: RouteRecordRaw[] = [
         },
       },
       // ========== 数据中心 ==========
-      // 统计概览
+      // 统计分析
       {
-        path: '/statistics/overview',
+        path: '/data/statistics',
         name: 'StatisticsOverview',
         component: () => import('@/pages/StatisticsOverview/index.vue'),
         meta: {
-          title: '统计概览',
+          title: '统计分析',
           icon: 'DataLine',
-          permission_code: 'statistics:overview',
+          permission_code: 'data:statistics:view',
         },
       },
-      // 报表导出
+      // 报表管理
       {
-        path: '/statistics/reports',
+        path: '/data/reports',
         name: 'StatisticsReports',
         component: () => import('@/pages/StatisticsReports/index.vue'),
         meta: {
-          title: '报表导出',
+          title: '报表管理',
           icon: 'Download',
-          permission_code: 'statistics:reports',
+          permission_code: 'data:report:list',
         },
       },
       // ========== 居民管理 ==========
@@ -207,6 +207,17 @@ const routes: RouteRecordRaw[] = [
           title: '通知管理',
           icon: 'Bell',
           permission_code: 'content:notification:list',
+        },
+      },
+      // 通知中心（菜单入口，指向同一页面）
+      {
+        path: '/notifications',
+        name: 'NotificationCenter',
+        component: () => import('@/pages/NotificationManagement/index.vue'),
+        meta: {
+          title: '通知中心',
+          icon: 'Bell',
+          permission_code: 'public:notification',
         },
       },
       // ========== 个人中心 ==========

@@ -164,90 +164,112 @@
     <el-dialog
       v-model="dialogVisible"
       :title="isEdit ? '编辑新闻' : '新增新闻'"
-      width="800px"
-      top="5vh"
+      width="1100px"
+      top="2vh"
       @close="resetForm"
     >
       <el-form
         ref="formRef"
         :model="formData"
         :rules="formRules"
-        label-width="100px"
+        label-position="top"
+        style="height: 600px; overflow: hidden;"
       >
-        <el-form-item label="标题" prop="title">
-          <el-input v-model="formData.title" placeholder="请输入新闻标题" maxlength="200" show-word-limit />
-        </el-form-item>
+        <el-row :gutter="24" style="height: 100%">
+          <!-- 左侧：元数据 -->
+          <el-col :span="6" style="height: 100%; overflow-y: auto; padding-right: 10px; border-right: 1px solid #f0f0f0;">
+            <el-form-item label="标题" prop="title">
+              <el-input v-model="formData.title" placeholder="请输入新闻标题" maxlength="200" show-word-limit />
+            </el-form-item>
 
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="类型" prop="type">
-              <el-select v-model="formData.type" placeholder="请选择类型" style="width: 100%">
-                <el-option label="新闻" value="news" />
-                <el-option label="公告" value="notice" />
-                <el-option label="活动" value="activity" />
-              </el-select>
+            <el-row :gutter="12">
+              <el-col :span="24">
+                <el-form-item label="类型" prop="type">
+                  <el-select v-model="formData.type" placeholder="请选择类型" style="width: 100%">
+                    <el-option label="新闻" value="news" />
+                    <el-option label="公告" value="notice" />
+                    <el-option label="活动" value="activity" />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :span="24">
+                <el-form-item label="状态" prop="status">
+                  <el-select v-model="formData.status" placeholder="请选择状态" style="width: 100%">
+                    <el-option label="草稿" value="draft" />
+                    <el-option label="发布" value="published" />
+                    <el-option label="归档" value="archived" />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+            </el-row>
+
+            <el-form-item label="封面图" prop="cover_url">
+              <div class="cover-upload-wrapper">
+                <el-input
+                  v-model="formData.cover_url"
+                  placeholder="图片URL或上传"
+                  size="small"
+                  style="margin-bottom: 8px"
+                />
+                <el-upload
+                  class="upload-box"
+                  drag
+                  :action="uploadUrl"
+                  :headers="uploadHeaders"
+                  :show-file-list="false"
+                  :on-success="handleCoverUploadSuccess"
+                  :on-error="handleUploadError"
+                  :before-upload="beforeUpload"
+                  accept="image/*"
+                >
+                  <div v-if="formData.cover_url" class="cover-preview-box">
+                    <img :src="getImageUrl(formData.cover_url)" class="preview-img" />
+                    <div class="hover-mask">
+                      <el-icon><Upload /></el-icon>
+                      <span>更换封面</span>
+                    </div>
+                  </div>
+                  <div v-else class="upload-placeholder">
+                    <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+                    <div class="el-upload__text">拖拽或点击上传</div>
+                  </div>
+                </el-upload>
+              </div>
+            </el-form-item>
+
+            <el-form-item label="摘要" prop="summary">
+              <el-input
+                v-model="formData.summary"
+                type="textarea"
+                :rows="4"
+                placeholder="请输入新闻摘要（建议100字以内）"
+                maxlength="500"
+                show-word-limit
+              />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
-            <el-form-item label="状态" prop="status">
-              <el-select v-model="formData.status" placeholder="请选择状态" style="width: 100%">
-                <el-option label="草稿" value="draft" />
-                <el-option label="发布" value="published" />
-                <el-option label="归档" value="archived" />
-              </el-select>
+
+          <!-- 右侧：富文本编辑器 -->
+          <el-col :span="18" style="height: 100%; display: flex; flex-direction: column;">
+            <el-form-item label="正文内容" prop="content" style="flex: 1; margin-bottom: 0; display: flex; flex-direction: column;">
+              <div style="border: 1px solid #dcdfe6; border-radius: 4px; display: flex; flex-direction: column; height: 100%; width: 100%;">
+                <Toolbar
+                  style="border-bottom: 1px solid #dcdfe6"
+                  :editor="editorRef"
+                  :defaultConfig="toolbarConfig"
+                  :mode="mode"
+                />
+                <Editor
+                  style="flex: 1; overflow-y: hidden;"
+                  v-model="formData.content"
+                  :defaultConfig="editorConfig"
+                  :mode="mode"
+                  @onCreated="handleCreated"
+                />
+              </div>
             </el-form-item>
           </el-col>
         </el-row>
-
-        <el-form-item label="封面图" prop="cover_url">
-          <div class="cover-upload">
-            <el-input
-              v-model="formData.cover_url"
-              placeholder="请输入封面图URL或上传图片"
-              style="flex: 1"
-            />
-            <el-upload
-              :action="uploadUrl"
-              :headers="uploadHeaders"
-              :show-file-list="false"
-              :on-success="handleCoverUploadSuccess"
-              :on-error="handleUploadError"
-              :before-upload="beforeUpload"
-              accept="image/*"
-            >
-              <el-button type="primary" :icon="Upload" style="margin-left: 10px">
-                上传
-              </el-button>
-            </el-upload>
-          </div>
-          <div v-if="formData.cover_url" class="cover-preview">
-            <el-image
-              :src="getImageUrl(formData.cover_url)"
-              fit="cover"
-              style="width: 200px; height: 120px; border-radius: 4px; margin-top: 10px"
-            />
-          </div>
-        </el-form-item>
-
-        <el-form-item label="摘要" prop="summary">
-          <el-input
-            v-model="formData.summary"
-            type="textarea"
-            :rows="2"
-            placeholder="请输入新闻摘要（可选）"
-            maxlength="500"
-            show-word-limit
-          />
-        </el-form-item>
-
-        <el-form-item label="内容" prop="content">
-          <el-input
-            v-model="formData.content"
-            type="textarea"
-            :rows="10"
-            placeholder="请输入新闻内容"
-          />
-        </el-form-item>
       </el-form>
 
       <template #footer>
@@ -261,15 +283,70 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, shallowRef, onBeforeUnmount } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadProps } from 'element-plus'
-import { Plus, Refresh, Upload } from '@element-plus/icons-vue'
+import { Plus, Refresh, Upload, UploadFilled } from '@element-plus/icons-vue'
 import { newsApi } from '@/api'
 import { useAuthStore } from '@/store/modules/auth'
 import type { News, NewsRequest, NewsType, NewsStatus } from '@/types/api'
 import dayjs from 'dayjs'
+import '@wangeditor/editor/dist/css/style.css' // 引入 css
+import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 
 const authStore = useAuthStore()
+
+// 编辑器实例，必须用 shallowRef
+const editorRef = shallowRef()
+const mode = 'default' // 或 'simple'
+
+// 工具栏配置
+const toolbarConfig = {}
+
+// 编辑器配置
+const editorConfig = {
+  placeholder: '请输入内容...',
+  MENU_CONF: {
+    uploadImage: {
+      // 上传图片配置
+      server: `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api/v1'}/b/upload`,
+      fieldName: 'file',
+      headers: {
+        Authorization: `Bearer ${authStore.token}`,
+      },
+      // 自定义插入图片
+      customInsert(res: any, insertFn: any) {
+        // res 即服务端的返回结果
+        if (res.code === 0 && res.data && res.data.url) {
+          // 从 res 中找到 url 文件的服务端地址
+          // 我们的 API 返回的是相对路径或完整 URL，需要处理
+          let url = res.data.url
+          if (!url.startsWith('http')) {
+             // 拼接完整路径用于显示
+             const baseUrl = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:3001'
+             url = `${baseUrl}${url}`
+          }
+          const alt = ''
+          const href = ''
+          // 插入图片
+          insertFn(url, alt, href)
+        } else {
+          ElMessage.error('图片上传失败: ' + (res.msg || '未知错误'))
+        }
+      },
+    },
+  },
+}
+
+// 组件销毁时，也及时销毁编辑器
+onBeforeUnmount(() => {
+  const editor = editorRef.value
+  if (editor == null) return
+  editor.destroy()
+})
+
+const handleCreated = (editor: any) => {
+  editorRef.value = editor // 记录 editor 实例，重要！
+}
 
 // 上传配置
 const uploadUrl = computed(() => `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api/v1'}/b/upload`)
@@ -368,6 +445,7 @@ function handleAdd() {
   isEdit.value = false
   editingId.value = null
   resetForm()
+  refreshEditorToken()
   dialogVisible.value = true
 }
 
@@ -386,7 +464,23 @@ function handleEdit(news: News) {
     status: news.status,
     station_id: news.station_id,
   })
+  refreshEditorToken()
   dialogVisible.value = true
+}
+
+/**
+ * 刷新编辑器上传 Token
+ */
+function refreshEditorToken() {
+  const editor = editorRef.value
+  if (editor) {
+    // 重新设置 headers
+    // 注意：menu key 是 'uploadImage'
+    const menuConfig = editor.getMenuConfig('uploadImage')
+    menuConfig.headers = {
+      Authorization: `Bearer ${authStore.token}`,
+    }
+  }
 }
 
 /**
@@ -697,6 +791,85 @@ onMounted(() => {
 
   .cover-preview {
     margin-top: 10px;
+  }
+
+  .cover-upload-wrapper {
+    width: 100%;
+    
+    .upload-box {
+      width: 100%;
+      
+      :deep(.el-upload) {
+        width: 100%;
+      }
+      
+      :deep(.el-upload-dragger) {
+        width: 100%;
+        height: 140px;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+    }
+
+    .cover-preview-box {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+      
+      .preview-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      
+      .hover-mask {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        opacity: 0;
+        transition: opacity 0.3s;
+        cursor: pointer;
+        
+        .el-icon {
+          font-size: 24px;
+          margin-bottom: 5px;
+        }
+      }
+      
+      &:hover .hover-mask {
+        opacity: 1;
+      }
+    }
+
+    .upload-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      
+      .el-icon--upload {
+        font-size: 32px;
+        color: #909399;
+        margin-bottom: 8px;
+      }
+      
+      .el-upload__text {
+        font-size: 12px;
+        color: #606266;
+      }
+    }
   }
 }
 </style>

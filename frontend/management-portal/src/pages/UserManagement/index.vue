@@ -121,59 +121,73 @@
     </el-card>
 
     <!-- 新建用户对话框 -->
-    <el-dialog v-model="createDialogVisible" title="新建用户" width="500px">
+    <el-dialog v-model="createDialogVisible" title="新建用户" width="700px">
       <el-form
         ref="createFormRef"
         :model="createForm"
         :rules="createRules"
         label-width="80px"
       >
-        <el-form-item label="姓名" prop="name">
-          <el-input v-model="createForm.name" placeholder="请输入姓名" />
-        </el-form-item>
-        <el-form-item label="手机号" prop="phone">
-          <el-input v-model="createForm.phone" placeholder="请输入手机号" />
-        </el-form-item>
-        <el-form-item label="密码" prop="password">
-          <el-input
-            v-model="createForm.password"
-            type="password"
-            placeholder="请输入密码"
-            show-password
-          />
-        </el-form-item>
-        <el-form-item label="所属站点" prop="station_id">
-          <el-select
-            v-model="createForm.station_id"
-            placeholder="请选择站点"
-            clearable
-            style="width: 100%"
-          >
-            <el-option
-              v-for="station in stations"
-              :key="station.id"
-              :label="station.name"
-              :value="station.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="角色" prop="role">
-          <el-select
-            v-model="createForm.role"
-            placeholder="请选择角色"
-            style="width: 100%"
-          >
-            <el-option label="工作人员" value="staff" />
-            <el-option label="站点管理员" value="station_manager" />
-            <el-option label="系统管理员" value="admin" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="状态" prop="status">
-          <el-radio-group v-model="createForm.status">
-            <el-radio value="active">正常</el-radio>
-            <el-radio value="inactive">禁用</el-radio>
-          </el-radio-group>
-        </el-form-item>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="姓名" prop="name">
+              <el-input v-model="createForm.name" placeholder="请输入姓名" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="手机号" prop="phone">
+              <el-input v-model="createForm.phone" placeholder="请输入手机号" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="密码" prop="password">
+              <el-input
+                v-model="createForm.password"
+                type="password"
+                placeholder="请输入密码"
+                show-password
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="所属站点" prop="station_id">
+              <el-select
+                v-model="createForm.station_id"
+                placeholder="请选择站点"
+                clearable
+                style="width: 100%"
+              >
+                <el-option
+                  v-for="station in stations"
+                  :key="station.id"
+                  :label="station.name"
+                  :value="station.id"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="角色" prop="role">
+              <el-select
+                v-model="createForm.role"
+                placeholder="请选择角色"
+                style="width: 100%"
+              >
+                <el-option label="工作人员" value="staff" />
+                <el-option label="站点管理员" value="station_manager" />
+                <el-option label="系统管理员" value="admin" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="状态" prop="status">
+              <el-radio-group v-model="createForm.status">
+                <el-radio value="active">正常</el-radio>
+                <el-radio value="inactive">禁用</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+        </el-row>
       </el-form>
       <template #footer>
         <el-button @click="createDialogVisible = false">取消</el-button>
@@ -184,48 +198,54 @@
     </el-dialog>
 
     <!-- 编辑用户对话框 -->
-    <el-dialog v-model="editDialogVisible" title="编辑用户" width="500px">
+    <el-dialog v-model="editDialogVisible" title="编辑用户" width="700px">
       <el-form
         ref="editFormRef"
         :model="editForm"
         :rules="editRules"
         label-width="80px"
       >
-        <el-form-item label="姓名" prop="name">
-          <el-input v-model="editForm.name" placeholder="请输入姓名" />
-        </el-form-item>
-        <el-form-item label="头像">
-          <image-upload v-model="editForm.avatar" :limit="1" />
-        </el-form-item>
-        <el-form-item label="性别" prop="gender">
-          <el-select
-            v-model="editForm.gender"
-            placeholder="请选择性别"
-            style="width: 100%"
-          >
-            <el-option label="男" value="male" />
-            <el-option label="女" value="female" />
-            <el-option label="其他" value="other" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="出生日期" prop="birth_date">
-          <el-date-picker
-            v-model="editForm.birth_date"
-            type="date"
-            placeholder="选择日期"
-            value-format="YYYY-MM-DD"
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item label="身份证号" prop="id_card">
-          <el-input v-model="editForm.id_card" placeholder="请输入身份证号" />
-        </el-form-item>
-        <el-form-item label="状态" prop="status">
-          <el-radio-group v-model="editForm.status">
-            <el-radio value="active">正常</el-radio>
-            <el-radio value="inactive">禁用</el-radio>
-          </el-radio-group>
-        </el-form-item>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="姓名" prop="name">
+              <el-input v-model="editForm.name" placeholder="请输入姓名" />
+            </el-form-item>
+            <el-form-item label="性别" prop="gender">
+              <el-select
+                v-model="editForm.gender"
+                placeholder="请选择性别"
+                style="width: 100%"
+              >
+                <el-option label="男" value="male" />
+                <el-option label="女" value="female" />
+                <el-option label="其他" value="other" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="出生日期" prop="birth_date">
+              <el-date-picker
+                v-model="editForm.birth_date"
+                type="date"
+                placeholder="选择日期"
+                value-format="YYYY-MM-DD"
+                style="width: 100%"
+              />
+            </el-form-item>
+            <el-form-item label="身份证号" prop="id_card">
+              <el-input v-model="editForm.id_card" placeholder="请输入身份证号" />
+            </el-form-item>
+            <el-form-item label="状态" prop="status">
+              <el-radio-group v-model="editForm.status">
+                <el-radio value="active">正常</el-radio>
+                <el-radio value="inactive">禁用</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="头像">
+              <image-upload v-model="editForm.avatar" :limit="1" />
+            </el-form-item>
+          </el-col>
+        </el-row>
       </el-form>
       <template #footer>
         <el-button @click="editDialogVisible = false">取消</el-button>
@@ -236,38 +256,42 @@
     </el-dialog>
 
     <!-- 身份分配对话框 -->
-    <el-dialog v-model="roleDialogVisible" title="身份分配" width="500px">
+    <el-dialog v-model="roleDialogVisible" title="身份分配" width="600px">
       <div class="role-dialog-content">
         <p class="user-info" style="margin-bottom: 20px">
-          用户：{{ currentUser?.name }} ({{ currentUser?.phone }})
+          用户：<strong>{{ currentUser?.name }}</strong> <span class="text-muted">({{ currentUser?.phone }})</span>
         </p>
 
-        <!-- B端身份 -->
-        <div class="identity-section">
-          <h4 style="margin-bottom: 10px; color: #606266">
-            B端身份 (管理职能)
-          </h4>
-          <el-checkbox-group v-model="selectedBIdentities">
-            <el-checkbox value="admin">系统管理员</el-checkbox>
-            <el-checkbox value="station_manager">站点管理员</el-checkbox>
-            <el-checkbox value="staff">工作人员</el-checkbox>
-          </el-checkbox-group>
-        </div>
+        <el-row :gutter="40">
+          <!-- B端身份 -->
+          <el-col :span="12" style="border-right: 1px solid #f0f0f0">
+            <div class="identity-section">
+              <h4 style="margin-bottom: 15px; color: #606266">
+                B端身份 (管理职能)
+              </h4>
+              <el-checkbox-group v-model="selectedBIdentities">
+                <el-checkbox value="admin">系统管理员</el-checkbox>
+                <el-checkbox value="station_manager">站点管理员</el-checkbox>
+                <el-checkbox value="staff">工作人员</el-checkbox>
+              </el-checkbox-group>
+            </div>
+          </el-col>
 
-        <el-divider />
-
-        <!-- C端身份 -->
-        <div class="identity-section">
-          <h4 style="margin-bottom: 10px; color: #606266">
-            C端身份 (服务对象)
-          </h4>
-          <el-checkbox-group v-model="selectedCIdentities">
-            <el-checkbox value="elderly">长者</el-checkbox>
-            <el-checkbox value="child">幼儿</el-checkbox>
-            <el-checkbox value="pregnant">孕妇</el-checkbox>
-            <el-checkbox value="disabled">残障人士</el-checkbox>
-          </el-checkbox-group>
-        </div>
+          <!-- C端身份 -->
+          <el-col :span="12">
+            <div class="identity-section">
+              <h4 style="margin-bottom: 15px; color: #606266">
+                C端身份 (服务对象)
+              </h4>
+              <el-checkbox-group v-model="selectedCIdentities">
+                <el-checkbox value="elderly">长者</el-checkbox>
+                <el-checkbox value="child">幼儿</el-checkbox>
+                <el-checkbox value="pregnant">孕妇</el-checkbox>
+                <el-checkbox value="disabled">残障人士</el-checkbox>
+              </el-checkbox-group>
+            </div>
+          </el-col>
+        </el-row>
       </div>
       <template #footer>
         <el-button @click="roleDialogVisible = false">取消</el-button>

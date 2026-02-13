@@ -3,22 +3,30 @@
     <el-card>
       <template #header>
         <div class="card-header">
-          <div>
-            <h3>通知管理</h3>
-            <p class="subtitle">系统通知列表</p>
+          <div class="header-left">
+            <h3>通知中心</h3>
+            <p class="subtitle">查看系统公告、任务提醒及各类预警信息</p>
           </div>
           <div class="header-actions">
-            <el-button
-              type="primary"
-              :icon="Refresh"
-              :loading="loading"
-              @click="loadNotifications"
-            >
+            <el-button :icon="Check" @click="handleMarkAllRead" :disabled="!hasUnread">
+              全部标记已读
+            </el-button>
+            <el-button :icon="Refresh" :loading="loading" @click="loadNotifications">
               刷新
             </el-button>
           </div>
         </div>
       </template>
+
+      <!-- 搜索筛选 -->
+      <div class="filter-bar">
+        <el-radio-group v-model="filterType" @change="handleFilter">
+          <el-radio-button value="">全部</el-radio-button>
+          <el-radio-button value="system">系统</el-radio-button>
+          <el-radio-button value="task">任务</el-radio-button>
+          <el-radio-button value="alert">告警</el-radio-button>
+        </el-radio-group>
+      </div>
 
       <!-- 通知列表 -->
       <el-table
@@ -26,74 +34,61 @@
         :data="notificationList"
         stripe
         style="width: 100%"
-        empty-text="暂无通知"
+        :row-class-name="tableRowClassName"
       >
         <!-- ID -->
         <el-table-column prop="id" label="ID" width="80" />
 
+        <!-- 类型图标 -->
+        <el-table-column width="50" align="center">
+          <template #default="{ row }">
+            <el-icon :class="['type-icon', row.type]">
+              <component :is="getTypeIcon(row.type)" />
+            </el-icon>
+          </template>
+        </el-table-column>
+
         <!-- 标题 -->
-        <el-table-column prop="title" label="标题" min-width="200" />
-
-        <!-- 类型 -->
-        <el-table-column label="类型" width="100">
+        <el-table-column prop="title" label="标题" min-width="200">
           <template #default="{ row }">
-            <el-tag :type="getTypeTag(row.type)" size="small">
-              {{ getTypeText(row.type) }}
-            </el-tag>
+            <span :class="{ 'unread-title': !row.is_read }">{{ row.title }}</span>
+            <el-tag v-if="!row.is_read" size="small" type="danger" effect="dark" style="margin-left: 8px">NEW</el-tag>
           </template>
         </el-table-column>
 
-        <!-- 内容 -->
-        <el-table-column label="内容" min-width="250">
+        <!-- 内容摘要 -->
+        <el-table-column label="内容" min-width="300" show-overflow-tooltip>
           <template #default="{ row }">
-            <el-tooltip :content="row.content" placement="top" :show-after="500">
-              <span class="content-text">{{ row.content }}</span>
-            </el-tooltip>
+            <span class="content-preview">{{ row.content }}</span>
           </template>
         </el-table-column>
 
-        <!-- 状态 -->
-        <el-table-column label="状态" width="90">
+        <!-- 时间 -->
+        <el-table-column label="接收时间" width="180">
           <template #default="{ row }">
-            <el-tag :type="row.is_read ? 'info' : 'warning'" size="small">
-              {{ row.is_read ? '已读' : '未读' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-
-        <!-- 创建时间 -->
-        <el-table-column label="创建时间" width="160">
-          <template #default="{ row }">
-            {{ formatDateTime(row.created_at) }}
-          </template>
-        </el-table-column>
-
-        <!-- 阅读时间 -->
-        <el-table-column label="阅读时间" width="160">
-          <template #default="{ row }">
-            {{ row.read_at ? formatDateTime(row.read_at) : '-' }}
+            <span class="time-text">{{ formatDateTime(row.created_at) }}</span>
           </template>
         </el-table-column>
 
         <!-- 操作 -->
-        <el-table-column label="操作" width="120" fixed="right">
+        <el-table-column label="操作" width="150" fixed="right" align="center">
           <template #default="{ row }">
             <el-button
-              v-if="!row.is_read"
               type="primary"
+              size="small"
+              link
+              @click="handleViewDetail(row)"
+            >
+              详情
+            </el-button>
+            <el-button
+              v-if="!row.is_read"
+              type="success"
               size="small"
               link
               @click="handleMarkRead(row)"
             >
               标记已读
-            </el-button>
-            <el-button
-              type="info"
-              size="small"
-              link
-              @click="handleViewDetail(row)"
-            >
-              查看
             </el-button>
           </template>
         </el-table-column>
@@ -117,7 +112,7 @@
     <el-dialog
       v-model="detailDialogVisible"
       title="通知详情"
-      width="500px"
+      width="600px"
     >
       <el-descriptions v-if="currentNotification" :column="1" border>
         <el-descriptions-item label="标题">
@@ -158,9 +153,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import { Refresh } from '@element-plus/icons-vue'
+import { ref, reactive, onMounted, computed } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Refresh, Check, Bell, Message, Warning, List } from '@element-plus/icons-vue'
 import { notificationApi } from '@/api'
 import type { Notification } from '@/types/api'
 import dayjs from 'dayjs'
@@ -168,8 +163,14 @@ import dayjs from 'dayjs'
 // 加载状态
 const loading = ref(false)
 
+// 筛选
+const filterType = ref('')
+
 // 通知列表
 const notificationList = ref<Notification[]>([])
+
+// 计算是否有未读
+const hasUnread = computed(() => notificationList.value.some(n => !n.is_read))
 
 // 分页参数
 const pagination = reactive({
@@ -177,6 +178,59 @@ const pagination = reactive({
   pageSize: 10,
   total: 0,
 })
+
+/**
+ * 获取图标
+ */
+function getTypeIcon(type: string) {
+  const map: Record<string, any> = {
+    system: Bell,
+    task: List,
+    alert: Warning,
+    message: Message
+  }
+  return map[type] || Bell
+}
+
+/**
+ * 筛选
+ */
+function handleFilter() {
+  pagination.page = 1
+  loadNotifications()
+}
+
+/**
+ * 全部标记已读
+ */
+async function handleMarkAllRead() {
+  try {
+    await ElMessageBox.confirm('确定将所有通知标记为已读吗？', '确认操作', {
+      type: 'info'
+    })
+    
+    // 由于后端可能没有批量接口，我们对未读列表进行并行操作
+    const unreads = notificationList.value.filter(n => !n.is_read)
+    await Promise.all(unreads.map(n => notificationApi.markAsRead(n.id)))
+    
+    ElMessage.success('已全部标记为已读')
+    loadNotifications()
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('Failed to mark all as read:', error)
+    }
+  }
+}
+
+/**
+ * 表格行样式
+ */
+function tableRowClassName({ row }: { row: Notification }) {
+  if (!row.is_read) {
+    return 'unread-row'
+  }
+  return ''
+}
 
 // 详情对话框
 const detailDialogVisible = ref(false)
@@ -191,7 +245,8 @@ async function loadNotifications() {
     const response = await notificationApi.getNotifications({
       page: pagination.page,
       page_size: pagination.pageSize,
-    })
+      type: filterType.value || undefined
+    } as any)
     const { items, total } = response.data
     pagination.total = total
     notificationList.value = items
@@ -302,16 +357,17 @@ onMounted(() => {
     align-items: center;
     justify-content: space-between;
 
-    h3 {
-      margin: 0 0 5px 0;
-      font-size: 18px;
-      font-weight: 500;
-    }
-
-    .subtitle {
-      margin: 0;
-      font-size: 13px;
-      color: #909399;
+    .header-left {
+      h3 {
+        margin: 0 0 4px 0;
+        font-size: 18px;
+        font-weight: 500;
+      }
+      .subtitle {
+        margin: 0;
+        font-size: 13px;
+        color: #909399;
+      }
     }
 
     .header-actions {
@@ -320,12 +376,37 @@ onMounted(() => {
     }
   }
 
-  .content-text {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  .filter-bar {
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .type-icon {
+    font-size: 18px;
+    &.system { color: #409eff; }
+    &.task { color: #67c23a; }
+    &.alert { color: #f56c6c; }
+    &.message { color: #e6a23c; }
+  }
+
+  .unread-title {
+    font-weight: 600;
+    color: #303133;
+  }
+
+  .content-preview {
+    color: #606266;
+    font-size: 13px;
+  }
+
+  .time-text {
+    font-size: 12px;
+    color: #909399;
+  }
+
+  :deep(.unread-row) {
+    background-color: #fdf6ec !important;
   }
 
   .pagination-container {

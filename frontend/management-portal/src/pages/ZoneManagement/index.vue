@@ -37,6 +37,7 @@
       :title="dialogType === 'add' ? '新增围栏' : '编辑围栏'"
       width="1000px"
       top="5vh"
+      destroy-on-close
     >
       <el-form
         ref="formRef"

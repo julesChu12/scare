@@ -41,10 +41,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, shallowRef, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import AMapLoader from '@amap/amap-jsapi-loader'
 import { EditPen, Check } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+
+// 配置安全密钥
+const securityCode = import.meta.env.VITE_AMAP_SECURITY_JS_CODE
+if (securityCode) {
+  ;(window as any)._AMapSecurityConfig = { securityJsCode: securityCode }
+}
 
 export interface ZonePoint {
   lat: number
@@ -65,10 +71,11 @@ const emit = defineEmits<{
 
 // 地图相关
 const mapContainer = ref<HTMLElement>()
-const map = shallowRef<any>(null)
-const AMap = shallowRef<any>(null)
-const polygon = shallowRef<any>(null)
-const polyEditor = shallowRef<any>(null)
+// 使用普通变量而非 ref/shallowRef 存储 AMap 实例，避免 Vue 代理导致的类型检查错误
+let map: any = null
+let AMapObj: any = null
+let polygon: any = null
+let polyEditor: any = null
 
 // 数据
 const points = ref<{ lng: number, lat: number }[]>([])
@@ -77,135 +84,145 @@ const points = ref<{ lng: number, lat: number }[]>([])
 onMounted(async () => {
   try {
     const amapKey = import.meta.env.VITE_AMAP_KEY
-    const securityCode = import.meta.env.VITE_AMAP_SECURITY_JS_CODE
     if (!amapKey) {
       ElMessage.error('未配置高德地图 Key，请在 .env 中设置 VITE_AMAP_KEY')
       return
     }
-    if (securityCode) {
-      ;(window as any)._AMapSecurityConfig = { securityJsCode: securityCode }
-    }
-    AMap.value = await AMapLoader.load({
+
+    AMapObj = await AMapLoader.load({
       key: amapKey,
       version: '2.0',
       plugins: ['AMap.PolygonEditor']
     })
 
-    // 延迟一点初始化，确保 DOM 布局完成（尤其是在弹窗中）
-    nextTick(() => {
-      initMap()
-    })
+    // 尝试初始化地图，如果容器不可见（例如在弹窗动画中），则轮询直到可见
+    tryInitMap()
   } catch (e) {
     console.error('AMap load failed:', e)
     ElMessage.error('地图加载失败，请检查网络或 Key 配置')
   }
 })
 
-function initMap() {
-  if (!mapContainer.value || !AMap.value) return
+function tryInitMap(attempts = 0) {
+  if (!mapContainer.value) return
+  
+  // 如果容器没有宽度/高度，说明可能还在弹窗动画中，延迟重试
+  if (mapContainer.value.clientWidth === 0 || mapContainer.value.clientHeight === 0) {
+    if (attempts < 10) {
+      setTimeout(() => tryInitMap(attempts + 1), 200)
+    }
+    return
+  }
 
-  map.value = new AMap.value.Map(mapContainer.value, {
+  initMap()
+}
+
+function initMap() {
+  if (!mapContainer.value || !AMapObj || map) return
+
+  map = new AMapObj.Map(mapContainer.value, {
     zoom: 14,
-    center: [116.397428, 39.90923], // 默认北京，后续可定位或根据数据居中
+    center: [116.397428, 39.90923], // 默认北京
     viewMode: '2D'
   })
 
   // 解析初始数据
   if (props.modelValue && props.modelValue.length > 0) {
-    try {
-      const path = props.modelValue.map(p => [p.lng, p.lat])
-      drawPolygon(path)
-      points.value = props.modelValue
-      // 自动缩放以适应多边形
-      if (polygon.value) {
-        map.value.setFitView([polygon.value])
-      }
-    } catch (e) {
-      console.error('Invalid polygon data:', e)
-    }
+    points.value = props.modelValue
+    const path = props.modelValue.map(p => [p.lng, p.lat])
+    drawPolygon(path)
   }
 
-  initEditor()
-}
-
-function initEditor() {
-  if (!map.value || !AMap.value) return
-
-  // 如果没有多边形，创建一个空的（但在编辑器里可能需要先有实例）
-  // 实际上 AMap.PolygonEditor 可以绑定到一个多边形对象
-  // 如果没有多边形，我们可以在 startDraw 时处理
+  // 点击地图开始绘制（如果当前没有多边形）
+  map.on('click', () => {
+    if (!polygon && !polyEditor) {
+      startDraw()
+    }
+  })
 }
 
 // 绘制/回显多边形
 function drawPolygon(path: number[][]) {
-  if (polygon.value) {
-    map.value.remove(polygon.value)
+  // 清理旧的
+  if (polygon) {
+    map.remove(polygon)
+    if (polyEditor) {
+      polyEditor.close()
+      polyEditor = null
+    }
   }
 
-  polygon.value = new AMap.value.Polygon({
+  polygon = new AMapObj.Polygon({
     path: path,
-    strokeColor: "#FF33FF", 
-    strokeWeight: 6,
-    strokeOpacity: 0.2,
-    fillOpacity: 0.4,
-    fillColor: '#1791fc',
+    strokeColor: "#409eff", 
+    strokeWeight: 2,
+    strokeOpacity: 0.8,
+    fillOpacity: 0.2,
+    fillColor: '#409eff',
     zIndex: 50,
   })
 
-  map.value.add(polygon.value)
+  map.add(polygon)
+  map.setFitView([polygon])
 }
 
 // 开始编辑/绘制
 function startDraw() {
-  if (!map.value || !AMap.value) return
+  if (!map || !AMapObj) return
 
-  if (!polygon.value) {
-    // 创建一个新的空多边形用于绘制
-    polygon.value = new AMap.value.Polygon({
+  // 如果已有编辑实例，先关闭
+  if (polyEditor) {
+    polyEditor.close()
+    polyEditor = null
+  }
+
+  // 如果没有多边形对象，创建一个空的
+  if (!polygon) {
+    polygon = new AMapObj.Polygon({
       path: [],
-      strokeColor: "#FF33FF", 
-      strokeWeight: 6,
-      strokeOpacity: 0.2,
-      fillOpacity: 0.4,
-      fillColor: '#1791fc',
+      strokeColor: "#409eff", 
+      strokeWeight: 2,
+      strokeOpacity: 0.8,
+      fillOpacity: 0.2,
+      fillColor: '#409eff',
       zIndex: 50,
     })
-    map.value.add(polygon.value)
+    map.add(polygon)
   }
 
-  if (!polyEditor.value) {
-    polyEditor.value = new AMap.value.PolygonEditor(map.value, polygon.value)
-    
-    // 监听编辑事件更新坐标
-    polyEditor.value.on('addnode', updateModel)
-    polyEditor.value.on('adjust', updateModel)
-    polyEditor.value.on('removenode', updateModel)
-    polyEditor.value.on('end', updateModel)
-  } else {
-    polyEditor.value.setTarget(polygon.value)
-  }
+  polyEditor = new AMapObj.PolygonEditor(map, polygon)
+  
+  // 监听编辑事件更新坐标
+  polyEditor.on('addnode', updateModel)
+  polyEditor.on('adjust', updateModel)
+  polyEditor.on('removenode', updateModel)
+  polyEditor.on('end', updateModel)
 
-  polyEditor.value.open()
-  ElMessage.info('请在地图上点击绘制或拖动节点编辑')
+  polyEditor.open()
+  
+  if (!points.value.length) {
+    ElMessage.info('请在地图上点击添加顶点绘制围栏')
+  }
 }
 
 // 结束编辑
 function endDraw() {
-  if (polyEditor.value) {
-    polyEditor.value.close()
+  if (polyEditor) {
+    polyEditor.close()
     updateModel() // 确保最后状态同步
+    polyEditor = null
   }
 }
 
 // 清除
 function clearMap() {
-  if (polyEditor.value) {
-    polyEditor.value.close()
-    polyEditor.value.setTarget()
+  if (polyEditor) {
+    polyEditor.close()
+    polyEditor = null
   }
-  if (polygon.value) {
-    map.value.remove(polygon.value)
-    polygon.value = null
+  if (polygon) {
+    map.remove(polygon)
+    polygon = null
   }
   points.value = []
   emit('update:modelValue', [])
@@ -213,41 +230,43 @@ function clearMap() {
 
 // 更新数据模型
 function updateModel() {
-  if (!polygon.value) return
+  if (!polygon) return
   
-  const path = polygon.value.getPath()
+  const path = polygon.getPath()
   // path 是 AMap.LngLat 对象的数组
   const coords = path.map((p: any) => [p.lng, p.lat])
   const newPoints = coords.map((p: any) => ({ lng: p[0], lat: p[1] }))
   
   points.value = newPoints
-  
-  // 发送 ZonePoint 对象数组
   emit('update:modelValue', newPoints)
 }
 
-// 监听外部数据变化（例如重置表单时）
+// 监听外部数据变化
 watch(() => props.modelValue, (newVal) => {
-  if ((!newVal || newVal.length === 0) && polygon.value) {
-    // 外部清空
-    clearMap()
-  } else if (newVal && newVal.length > 0) {
-    // 检查是否需要重绘（简单对比长度或第一个点）
-    if (!polygon.value) {
+  // 如果正在编辑中，不响应外部变化以免冲突，除非外部清空了
+  if (!newVal || newVal.length === 0) {
+    if (points.value.length > 0) {
+      clearMap()
+    }
+    return
+  }
+
+  // 简单比对是否需要更新（避免死循环）
+  if (JSON.stringify(newVal) !== JSON.stringify(points.value)) {
+    points.value = newVal
+    if (map && AMapObj) {
       const path = newVal.map(p => [p.lng, p.lat])
       drawPolygon(path)
-      points.value = newVal
-      map.value.setFitView([polygon.value])
     }
   }
 }, { deep: true })
 
 onUnmounted(() => {
-  if (polyEditor.value) {
-    polyEditor.value.close()
+  if (polyEditor) {
+    polyEditor.close()
   }
-  if (map.value) {
-    map.value.destroy()
+  if (map) {
+    map.destroy()
   }
 })
 </script>

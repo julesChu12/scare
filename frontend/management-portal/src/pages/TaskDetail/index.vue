@@ -155,7 +155,6 @@
       v-model="showCompleteDialog"
       title="完成任务"
       width="600px"
-      :close-on-click-modal="false"
     >
       <el-form :model="completeForm" label-width="100px">
         <!-- 服务照片上传 -->

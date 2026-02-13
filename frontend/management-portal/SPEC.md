@@ -7,7 +7,7 @@
 - **技术栈**: Vue 3.4 + TypeScript + Vite + Element Plus + Pinia
 - **后端**: Go + Gin + GORM + Casbin + Redis
 - **认证方式**: JWT (localStorage) + Redis 黑名单
-- **权限模型**: RBAC（基于角色的访问控制）
+- **权限模型**: RBAC（基于角色的访问控制），前端基于权限点控制
 - **状态**: Locked
 - **日期**: 2026-01-19
 
@@ -139,6 +139,7 @@ interface PermissionNode {
   ├── <Header>
   │   ├── Logo
   │   ├── 面包屑导航
+  │   ├── 通知中心入口（铃铛图标+未读徽标）
   │   └── 用户信息下拉菜单（个人中心、修改密码、登出）
   ├── <Sidebar>
   │   └── 菜单（根据权限过滤）
@@ -449,9 +450,9 @@ export const permission: Directive = {
 
     if (!value) return;
 
-    // 支持字符串或数组
-    const permissions = Array.isArray(value) ? value : [value];
-    const hasPermission = permissions.some(p => userStore.hasPermission(p));
+    // value 是权限字符串，例如 'service:task:create'
+    const permission = value;
+    const hasPermission = userStore.hasPermission(permission);
 
     if (!hasPermission) {
       el.parentNode?.removeChild(el);

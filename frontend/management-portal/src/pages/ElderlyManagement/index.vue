@@ -97,7 +97,7 @@
     </el-card>
 
     <!-- 新建/编辑弹窗 -->
-    <el-dialog v-model="showDialog" :title="dialogTitle" width="600px">
+    <el-dialog v-model="showDialog" :title="dialogTitle" width="800px">
       <el-form ref="formRef" :model="elderlyForm" :rules="formRules" label-width="100px">
         <el-row :gutter="20">
           <el-col :span="12">
@@ -113,8 +113,6 @@
               </el-radio-group>
             </el-form-item>
           </el-col>
-        </el-row>
-        <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="出生日期" prop="birth_date">
               <el-date-picker
@@ -130,39 +128,53 @@
               <el-input v-model="elderlyForm.ethnicity" placeholder="请输入民族" />
             </el-form-item>
           </el-col>
+          <el-col :span="12">
+            <el-form-item label="身份证号" prop="id_card">
+              <el-input v-model="elderlyForm.id_card" placeholder="请输入身份证号" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="手机号" prop="phone">
+              <el-input v-model="elderlyForm.phone" placeholder="请输入手机号" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="所属站点" prop="station_id">
+              <el-select v-model="elderlyForm.station_id" placeholder="请选择站点" style="width: 100%">
+                <el-option
+                  v-for="station in stationList"
+                  :key="station.id"
+                  :label="station.name"
+                  :value="station.id"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="健康状况" prop="health_status">
+              <el-select v-model="elderlyForm.health_status" placeholder="请选择健康状况" style="width: 100%">
+                <el-option label="良好" value="good" />
+                <el-option label="一般" value="normal" />
+                <el-option label="较差" value="poor" />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="地址" prop="address">
+              <el-input v-model="elderlyForm.address" placeholder="请输入详细地址" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="慢性病" prop="chronic_diseases">
+              <el-input v-model="elderlyForm.chronic_diseases" type="textarea" :rows="2" placeholder="请输入慢性病情况，多个用逗号分隔" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="特殊需求" prop="special_needs">
+              <el-input v-model="elderlyForm.special_needs" type="textarea" :rows="2" placeholder="请输入特殊需求" />
+            </el-form-item>
+          </el-col>
         </el-row>
-        <el-form-item label="身份证号" prop="id_card">
-          <el-input v-model="elderlyForm.id_card" placeholder="请输入身份证号" />
-        </el-form-item>
-        <el-form-item label="手机号" prop="phone">
-          <el-input v-model="elderlyForm.phone" placeholder="请输入手机号" />
-        </el-form-item>
-        <el-form-item label="地址" prop="address">
-          <el-input v-model="elderlyForm.address" placeholder="请输入详细地址" />
-        </el-form-item>
-        <el-form-item label="所属站点" prop="station_id">
-          <el-select v-model="elderlyForm.station_id" placeholder="请选择站点" style="width: 100%">
-            <el-option
-              v-for="station in stationList"
-              :key="station.id"
-              :label="station.name"
-              :value="station.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="健康状况" prop="health_status">
-          <el-select v-model="elderlyForm.health_status" placeholder="请选择健康状况" style="width: 100%">
-            <el-option label="良好" value="good" />
-            <el-option label="一般" value="normal" />
-            <el-option label="较差" value="poor" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="慢性病" prop="chronic_diseases">
-          <el-input v-model="elderlyForm.chronic_diseases" type="textarea" placeholder="请输入慢性病情况，多个用逗号分隔" />
-        </el-form-item>
-        <el-form-item label="特殊需求" prop="special_needs">
-          <el-input v-model="elderlyForm.special_needs" type="textarea" placeholder="请输入特殊需求" />
-        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="showDialog = false">取消</el-button>

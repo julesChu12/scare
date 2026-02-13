@@ -53,7 +53,7 @@
     <el-dialog
       v-model="dialogVisible"
       :title="dialogType === 'add' ? '新增站点' : '编辑站点'"
-      width="500px"
+      width="700px"
       @close="resetForm"
     >
       <el-form
@@ -62,27 +62,39 @@
         :rules="rules"
         label-width="100px"
       >
-        <el-form-item label="站点名称" prop="name">
-          <el-input v-model="formData.name" placeholder="请输入站点名称" />
-        </el-form-item>
-        <el-form-item label="站点编号" prop="code">
-          <el-input v-model="formData.code" placeholder="请输入站点编号" />
-        </el-form-item>
-        <el-form-item label="地址" prop="address">
-          <el-input v-model="formData.address" placeholder="请输入地址" />
-        </el-form-item>
-        <el-form-item label="联系电话" prop="phone">
-          <el-input v-model="formData.phone" placeholder="请输入联系电话" />
-        </el-form-item>
-        <el-form-item label="状态" prop="status">
-          <el-switch
-            v-model="formData.status"
-            active-value="active"
-            inactive-value="inactive"
-            active-text="启用"
-            inactive-text="停用"
-          />
-        </el-form-item>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="站点名称" prop="name">
+              <el-input v-model="formData.name" placeholder="请输入站点名称" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="站点编号" prop="code">
+              <el-input v-model="formData.code" placeholder="请输入站点编号" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="联系电话" prop="phone">
+              <el-input v-model="formData.phone" placeholder="请输入联系电话" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="状态" prop="status">
+              <el-switch
+                v-model="formData.status"
+                active-value="active"
+                inactive-value="inactive"
+                active-text="启用"
+                inactive-text="停用"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <el-form-item label="地址" prop="address">
+              <el-input v-model="formData.address" placeholder="请输入地址" type="textarea" :rows="2" />
+            </el-form-item>
+          </el-col>
+        </el-row>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
