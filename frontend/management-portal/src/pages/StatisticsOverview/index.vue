@@ -182,149 +182,121 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Document, Clock, CircleCheck, Loading } from '@element-plus/icons-vue'
+import { statisticsApi } from '@/api'
+import type {
+  OverviewStatsData,
+  ServiceTypeStatsData,
+  TrendItemData,
+  EfficiencyStatsData,
+  StaffRankingItemData,
+} from '@/types/api'
 
-// 时间范围
 const timeRange = ref('7')
 
-// 概览统计
-const overviewStats = ref({
+const overviewStats = ref<OverviewStatsData>({
   total_requests: 0,
   pending: 0,
   completed: 0,
   in_progress: 0,
 })
 
-// 服务类型统计
-const serviceTypeStats = ref<Array<{
-  type: string
-  count: number
-  percentage: number
-}>>([])
+const serviceTypeStats = ref<ServiceTypeStatsData[]>([])
+const trendData = ref<TrendItemData[]>([])
 
-// 趋势数据
-const trendData = ref<Array<{
-  date: string
-  count: number
-  percentage: number
-}>>([])
-
-// 效率统计
-const efficiencyStats = ref({
+const efficiencyStats = ref<EfficiencyStatsData>({
   avg_response_time: 0,
   avg_process_time: 0,
   satisfaction_rate: 0,
 })
 
-// 服务人员排行
-const staffRanking = ref<Array<{
-  name: string
-  completed_count: number
-  avg_rating: number
-  is_online: boolean
-}>>([])
+const staffRanking = ref<StaffRankingItemData[]>([])
 
-/**
- * 加载统计数据
- */
 async function loadStatistics() {
+  const days = parseInt(timeRange.value)
   try {
-    // 这里调用统计 API
-    // const response = await statisticsApi.getOverview({ days: timeRange.value })
-    // 模拟数据
-    overviewStats.value = {
-      total_requests: 256,
-      pending: 42,
-      completed: 198,
-      in_progress: 16,
+    const [overviewRes, serviceTypeRes, trendRes, efficiencyRes, rankingRes] = await Promise.all([
+      statisticsApi.getOverviewStats({ days }),
+      statisticsApi.getServiceTypeStats({ days }),
+      statisticsApi.getRequestTrend({ days }),
+      statisticsApi.getEfficiencyStats({ days }),
+      statisticsApi.getStaffRanking({ days, limit: 10 }),
+    ])
+
+    if (overviewRes.msg === 'ok') {
+      overviewStats.value = overviewRes.data
     }
-
-    serviceTypeStats.value = [
-      { type: 'meal', count: 89, percentage: 35 },
-      { type: 'cleaning', count: 64, percentage: 25 },
-      { type: 'medical', count: 51, percentage: 20 },
-      { type: 'accompany', count: 32, percentage: 12 },
-      { type: 'shopping', count: 20, percentage: 8 },
-    ]
-
-    trendData.value = [
-      { date: '02-04', count: 12, percentage: 60 },
-      { date: '02-03', count: 18, percentage: 90 },
-      { date: '02-02', count: 15, percentage: 75 },
-      { date: '02-01', count: 20, percentage: 100 },
-      { date: '01-31', count: 14, percentage: 70 },
-      { date: '01-30', count: 16, percentage: 80 },
-      { date: '01-29', count: 11, percentage: 55 },
-    ]
-
-    efficiencyStats.value = {
-      avg_response_time: 15,
-      avg_process_time: 45,
-      satisfaction_rate: 96,
+    if (serviceTypeRes.msg === 'ok') {
+      serviceTypeStats.value = serviceTypeRes.data || []
     }
-
-    staffRanking.value = [
-      { name: '李师傅', completed_count: 45, avg_rating: 4.8, is_online: true },
-      { name: '王师傅', completed_count: 38, avg_rating: 4.7, is_online: true },
-      { name: '张师傅', completed_count: 32, avg_rating: 4.9, is_online: false },
-      { name: '赵师傅', completed_count: 28, avg_rating: 4.6, is_online: true },
-      { name: '刘师傅', completed_count: 25, avg_rating: 4.5, is_online: false },
-    ]
+    if (trendRes.msg === 'ok') {
+      trendData.value = (trendRes.data || []).map(item => ({
+        ...item,
+        date: item.date.slice(5),
+      }))
+    }
+    if (efficiencyRes.msg === 'ok') {
+      efficiencyStats.value = efficiencyRes.data
+    }
+    if (rankingRes.msg === 'ok') {
+      staffRanking.value = rankingRes.data || []
+    }
   } catch (error) {
     console.error('Failed to load statistics:', error)
+    ElMessage.error('加载统计数据失败')
   }
 }
 
-/**
- * 获取服务类型文本
- */
+const serviceTypeNameMap: Record<string, string> = {
+  meal: '送餐服务',
+  medical: '就医陪护',
+  care: '日常照护',
+  repair: '居家维修',
+  cleaning: '家政保洁',
+  company: '陪伴聊天',
+  emergency: '紧急救助',
+  shopping: '代买代购',
+  transport: '出行接送',
+  rehab: '康复理疗',
+  psychology: '心理慰藉',
+  legal_aid: '法律援助',
+  other: '其他服务',
+}
+
 function getServiceTypeText(type: string): string {
-  const typeMap: Record<string, string> = {
-    meal: '送餐服务',
-    medical: '医疗服务',
-    cleaning: '清洁服务',
-    shopping: '代购服务',
-    accompany: '陪护服务',
-  }
-  return typeMap[type] || type
+  return serviceTypeNameMap[type] || type
 }
 
-/**
- * 获取服务类型标签颜色
- */
+const serviceTypeTagMap: Record<string, string> = {
+  meal: 'success',
+  medical: 'danger',
+  cleaning: 'warning',
+  shopping: 'primary',
+  care: 'info',
+}
+
 function getServiceTypeTag(type: string): string {
-  const tagMap: Record<string, string> = {
-    meal: 'success',
-    medical: 'danger',
-    cleaning: 'warning',
-    shopping: 'primary',
-    accompany: 'info',
-  }
-  return tagMap[type] || ''
+  return serviceTypeTagMap[type] || ''
 }
 
-/**
- * 获取进度条颜色
- */
+const serviceTypeColorMap: Record<string, string> = {
+  meal: '#67c23a',
+  medical: '#f56c6c',
+  cleaning: '#e6a23c',
+  shopping: '#409eff',
+  care: '#909399',
+}
+
 function getProgressColor(type: string): string {
-  const colorMap: Record<string, string> = {
-    meal: '#67c23a',
-    medical: '#f56c6c',
-    cleaning: '#e6a23c',
-    shopping: '#409eff',
-    accompany: '#909399',
-  }
-  return colorMap[type] || '#409eff'
+  return serviceTypeColorMap[type] || '#409eff'
 }
 
-/**
- * 获取排名标签类型
- */
 function getRankType(index: number): string {
   const types = ['warning', 'info', 'success']
   return types[index] || ''
 }
 
-// 监听时间范围变化
 watch(timeRange, () => {
   loadStatistics()
 })

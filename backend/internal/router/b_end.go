@@ -106,5 +106,16 @@ func RegisterBEndRoutes(api *gin.RouterGroup, secured *gin.RouterGroup, deps *De
 		protected.GET("/statistics/tasks", deps.StatisticsHandler.GetTaskStats)
 		protected.GET("/statistics/requests", deps.StatisticsHandler.GetRequestStats)
 		protected.GET("/statistics/today", deps.StatisticsHandler.GetTodayStats)
+		protected.GET("/statistics/overview", deps.StatisticsHandler.GetOverviewStats)
+		protected.GET("/statistics/service-types", deps.StatisticsHandler.GetServiceTypeStats)
+		protected.GET("/statistics/trend", deps.StatisticsHandler.GetRequestTrend)
+		protected.GET("/statistics/efficiency", deps.StatisticsHandler.GetEfficiencyStats)
+		protected.GET("/statistics/staff-ranking", deps.StatisticsHandler.GetStaffRanking)
+
+		// 报表
+		protected.POST("/reports/generate", deps.ReportHandler.GenerateReport)
+		protected.GET("/reports", deps.ReportHandler.ListReports)
+		protected.GET("/reports/:id/download", deps.ReportHandler.DownloadReport)
+		protected.DELETE("/reports/:id", deps.ReportHandler.DeleteReport)
 	}
 }

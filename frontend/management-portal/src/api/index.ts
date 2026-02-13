@@ -37,6 +37,13 @@ import type {
   NewsRequest,
   NewsListParams,
   UpdateUserIdentitiesRequest,
+  OverviewStatsData,
+  ServiceTypeStatsData,
+  TrendItemData,
+  EfficiencyStatsData,
+  StaffRankingItemData,
+  GenerateReportRequest,
+  ReportData,
 } from '@/types/api'
 
 /**
@@ -447,32 +454,58 @@ export const bannerApi = {
  * 统计相关 API
  */
 export const statisticsApi = {
-  /**
-   * 获取工作台统计数据
-   */
   getDashboardStats(): Promise<ApiResponse<DashboardStats>> {
     return request.get('/b/statistics/dashboard').then((res) => res.data)
   },
 
-  /**
-   * 获取任务统计
-   */
   getTaskStats(stationId?: number): Promise<ApiResponse<TaskStatsData>> {
     return request.get('/b/statistics/tasks', { params: { station_id: stationId } }).then((res) => res.data)
   },
 
-  /**
-   * 获取需求统计
-   */
   getRequestStats(stationId?: number): Promise<ApiResponse<RequestStatsData>> {
     return request.get('/b/statistics/requests', { params: { station_id: stationId } }).then((res) => res.data)
   },
 
-  /**
-   * 获取今日统计
-   */
   getTodayStats(): Promise<ApiResponse<TodayStatsData>> {
     return request.get('/b/statistics/today').then((res) => res.data)
+  },
+
+  getOverviewStats(params?: { days?: number; station_id?: number }): Promise<ApiResponse<OverviewStatsData>> {
+    return request.get('/b/statistics/overview', { params }).then((res) => res.data)
+  },
+
+  getServiceTypeStats(params?: { days?: number; station_id?: number }): Promise<ApiResponse<ServiceTypeStatsData[]>> {
+    return request.get('/b/statistics/service-types', { params }).then((res) => res.data)
+  },
+
+  getRequestTrend(params?: { days?: number; station_id?: number }): Promise<ApiResponse<TrendItemData[]>> {
+    return request.get('/b/statistics/trend', { params }).then((res) => res.data)
+  },
+
+  getEfficiencyStats(params?: { days?: number; station_id?: number }): Promise<ApiResponse<EfficiencyStatsData>> {
+    return request.get('/b/statistics/efficiency', { params }).then((res) => res.data)
+  },
+
+  getStaffRanking(params?: { days?: number; limit?: number; station_id?: number }): Promise<ApiResponse<StaffRankingItemData[]>> {
+    return request.get('/b/statistics/staff-ranking', { params }).then((res) => res.data)
+  },
+}
+
+export const reportApi = {
+  generateReport(data: GenerateReportRequest): Promise<Blob> {
+    return request.post('/b/reports/generate', data, { responseType: 'blob' }).then((res) => res.data)
+  },
+
+  getReports(params?: { page?: number; page_size?: number; type?: string }): Promise<ApiResponse<PaginationData<ReportData>>> {
+    return request.get('/b/reports', { params }).then((res) => res.data)
+  },
+
+  downloadReport(id: number): Promise<Blob> {
+    return request.get(`/b/reports/${id}/download`, { responseType: 'blob' }).then((res) => res.data)
+  },
+
+  deleteReport(id: number): Promise<ApiResponse<null>> {
+    return request.delete(`/b/reports/${id}`).then((res) => res.data)
   },
 }
 

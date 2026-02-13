@@ -1,9 +1,10 @@
 package repository
 
 import (
+	"community-elderly-care-platform/internal/consts"
 	"community-elderly-care-platform/internal/dao/model"
 	"community-elderly-care-platform/internal/dao/query"
-	"community-elderly-care-platform/internal/consts"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -39,48 +40,48 @@ func (r *TaskRepository) GetByRequestID(requestID int64) (*model.TaskAssignment,
 // ListByStaff 根据工作人员ID获取任务列表（分页）
 func (r *TaskRepository) ListByStaff(staffID int64, offset, limit int) ([]*model.TaskAssignment, int64, error) {
 	t := r.q.TaskAssignment
-	
+
 	// 获取总数
 	total, err := t.Where(t.StaffID.Eq(staffID)).Count()
 	if err != nil {
 		return nil, 0, err
 	}
-	
+
 	// 分页查询
 	tasks, err := t.Where(t.StaffID.Eq(staffID)).
 		Order(t.ID.Desc()).
 		Offset(offset).
 		Limit(limit).
 		Find()
-	
+
 	if err != nil {
 		return nil, 0, err
 	}
-	
+
 	return tasks, total, nil
 }
 
 // ListDispatchedByStation 根据站点ID获取已分派的任务
 func (r *TaskRepository) ListDispatchedByStation(stationID int64, offset, limit int) ([]*model.TaskAssignment, int64, error) {
 	t := r.q.TaskAssignment
-	
+
 	// 获取总数
 	total, err := t.Where(t.StationID.Eq(stationID), t.Status.Eq(consts.TaskStatusDispatched)).Count()
 	if err != nil {
 		return nil, 0, err
 	}
-	
+
 	// 分页查询
 	tasks, err := t.Where(t.StationID.Eq(stationID), t.Status.Eq(consts.TaskStatusDispatched)).
 		Order(t.ID.Desc()).
 		Offset(offset).
 		Limit(limit).
 		Find()
-	
+
 	if err != nil {
 		return nil, 0, err
 	}
-	
+
 	return tasks, total, nil
 }
 
@@ -93,34 +94,34 @@ type TaskPoolFilter struct {
 // ListPool 根据筛选条件查询任务池
 func (r *TaskRepository) ListPool(filter TaskPoolFilter, offset, limit int) ([]*model.TaskAssignment, int64, error) {
 	t := r.q.TaskAssignment
-	
+
 	// 使用原生 DB 处理条件查询
 	db := t.UnderlyingDB().Model(&model.TaskAssignment{})
-	
+
 	// 站点筛选：0 表示所有站点
 	if filter.StationID > 0 {
 		db = db.Where("station_id = ?", filter.StationID)
 	}
-	
+
 	// 状态筛选：默认 dispatched
 	status := filter.Status
 	if status == "" {
 		status = consts.TaskStatusDispatched
 	}
 	db = db.Where("status = ?", status)
-	
+
 	// 获取总数
 	var total int64
 	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-	
+
 	// 分页查询
 	var tasks []*model.TaskAssignment
 	if err := db.Order("id desc").Offset(offset).Limit(limit).Find(&tasks).Error; err != nil {
 		return nil, 0, err
 	}
-	
+
 	return tasks, total, nil
 }
 
@@ -318,4 +319,87 @@ func (r *TaskRepository) GetByIDWithRequest(id int64) (*TaskWithRequest, error) 
 	}
 
 	return &TaskWithRequest{TaskAssignment: *task}, nil
+}
+
+func (r *TaskRepository) GetAvgResponseTime(stationID int64, isAdmin bool, since time.Time) (int64, error) {
+	t := r.q.TaskAssignment
+	db := t.UnderlyingDB().Model(&model.TaskAssignment{}).
+		Select("AVG(TIMESTAMPDIFF(MINUTE, created_at, claimed_at)) as avg_time").
+		Where("claimed_at IS NOT NULL AND created_at >= ?", since)
+
+	if !isAdmin && stationID > 0 {
+		db = db.Where("station_id = ?", stationID)
+	}
+
+	var result struct {
+		AvgTime *float64
+	}
+	if err := db.First(&result).Error; err != nil {
+		return 0, err
+	}
+
+	if result.AvgTime == nil {
+		return 0, nil
+	}
+	return int64(*result.AvgTime), nil
+}
+
+func (r *TaskRepository) GetAvgProcessTime(stationID int64, isAdmin bool, since time.Time) (int64, error) {
+	t := r.q.TaskAssignment
+	db := t.UnderlyingDB().Model(&model.TaskAssignment{}).
+		Select("AVG(TIMESTAMPDIFF(MINUTE, claimed_at, completed_at)) as avg_time").
+		Where("completed_at IS NOT NULL AND claimed_at IS NOT NULL AND created_at >= ?", since)
+
+	if !isAdmin && stationID > 0 {
+		db = db.Where("station_id = ?", stationID)
+	}
+
+	var result struct {
+		AvgTime *float64
+	}
+	if err := db.First(&result).Error; err != nil {
+		return 0, err
+	}
+
+	if result.AvgTime == nil {
+		return 0, nil
+	}
+	return int64(*result.AvgTime), nil
+}
+
+func (r *TaskRepository) GetStaffRanking(stationID int64, isAdmin bool, since time.Time, limit int) ([]StaffRankingItem, error) {
+	t := r.q.TaskAssignment
+	db := t.UnderlyingDB().
+		Table("task_assignments").
+		Select(`
+			task_assignments.staff_id as id,
+			users.name,
+			COUNT(*) as completed_count,
+			COALESCE(AVG(service_requests.rating), 0) as avg_rating
+		`).
+		Joins("LEFT JOIN users ON task_assignments.staff_id = users.id").
+		Joins("LEFT JOIN service_requests ON task_assignments.request_id = service_requests.id").
+		Where("task_assignments.status = ? AND task_assignments.completed_at >= ?", consts.TaskStatusCompleted, since).
+		Group("task_assignments.staff_id, users.name").
+		Order("completed_count DESC").
+		Limit(limit)
+
+	if !isAdmin && stationID > 0 {
+		db = db.Where("task_assignments.station_id = ?", stationID)
+	}
+
+	var results []StaffRankingItem
+	if err := db.Find(&results).Error; err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}
+
+type StaffRankingItem struct {
+	ID             int64   `json:"id"`
+	Name           string  `json:"name"`
+	CompletedCount int64   `json:"completed_count"`
+	AvgRating      float64 `json:"avg_rating"`
+	IsOnline       bool    `json:"is_online"`
 }

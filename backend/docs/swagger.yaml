@@ -1,3 +1,4 @@
+basePath: /api/v1
 definitions:
   geo.Point:
     properties:
@@ -266,6 +267,32 @@ definitions:
     required:
     - refresh_token
     type: object
+  handler.generateReportRequest:
+    properties:
+      end_date:
+        type: string
+      format:
+        enum:
+        - xlsx
+        - csv
+        type: string
+      start_date:
+        type: string
+      station_id:
+        type: integer
+      type:
+        enum:
+        - service
+        - performance
+        - request
+        - station
+        type: string
+    required:
+    - end_date
+    - format
+    - start_date
+    - type
+    type: object
   handler.newsRequest:
     properties:
       content:
@@ -424,8 +451,12 @@ definitions:
     - points
     - station_id
     type: object
+host: localhost:8080
 info:
   contact: {}
+  description: 昌平区霍营街道社区养老信息分发平台后端 API
+  title: sCare 社区养老服务平台 API
+  version: "1.0"
 paths:
   /api/v1/b/news:
     post:
@@ -1101,6 +1132,158 @@ paths:
       summary: 获取权限树
       tags:
       - b_role
+  /b/reports:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户可见的历史报表列表
+      parameters:
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      - description: 报表类型筛选
+        in: query
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取历史报表列表
+      tags:
+      - b_reports
+  /b/reports/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定的历史报表
+      parameters:
+      - description: 报表ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "404":
+          description: 报表不存在
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 删除报表
+      tags:
+      - b_reports
+  /b/reports/{id}/download:
+    get:
+      consumes:
+      - application/json
+      description: 根据ID下载历史报表文件
+      parameters:
+      - description: 报表ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: 报表文件
+          schema:
+            type: file
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "403":
+          description: 无权限
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "404":
+          description: 报表不存在
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 下载历史报表
+      tags:
+      - b_reports
+  /b/reports/generate:
+    post:
+      consumes:
+      - application/json
+      description: 生成指定类型的统计报表并直接下载
+      parameters:
+      - description: 报表参数
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.generateReportRequest'
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: 报表文件
+          schema:
+            type: file
+        "400":
+          description: 参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 生成失败
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 生成并下载报表
+      tags:
+      - b_reports
   /b/requests:
     get:
       consumes:
@@ -1534,6 +1717,74 @@ paths:
       summary: 获取工作台统计数据
       tags:
       - b_statistics
+  /b/statistics/efficiency:
+    get:
+      consumes:
+      - application/json
+      description: 获取平均响应时间、处理时间和满意度
+      parameters:
+      - description: 时间范围（天数，默认7）
+        in: query
+        name: days
+        type: integer
+      - description: 站点ID（管理员可指定）
+        in: query
+        name: station_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取处理效率统计
+      tags:
+      - b_statistics
+  /b/statistics/overview:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定时间范围内的统计概览数据
+      parameters:
+      - description: 时间范围（天数，默认7）
+        in: query
+        name: days
+        type: integer
+      - description: 站点ID（管理员可指定）
+        in: query
+        name: station_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取统计概览数据
+      tags:
+      - b_statistics
   /b/statistics/requests:
     get:
       consumes:
@@ -1562,6 +1813,78 @@ paths:
       security:
       - Bearer: []
       summary: 获取需求统计
+      tags:
+      - b_statistics
+  /b/statistics/service-types:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定时间范围内各服务类型的需求数量分布
+      parameters:
+      - description: 时间范围（天数，默认7）
+        in: query
+        name: days
+        type: integer
+      - description: 站点ID（管理员可指定）
+        in: query
+        name: station_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取服务类型分布统计
+      tags:
+      - b_statistics
+  /b/statistics/staff-ranking:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定时间范围内服务人员完成任务排行
+      parameters:
+      - description: 时间范围（天数，默认7）
+        in: query
+        name: days
+        type: integer
+      - description: 返回数量（默认10）
+        in: query
+        name: limit
+        type: integer
+      - description: 站点ID（管理员可指定）
+        in: query
+        name: station_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取服务人员排行
       tags:
       - b_statistics
   /b/statistics/tasks:
@@ -1617,6 +1940,40 @@ paths:
       security:
       - Bearer: []
       summary: 获取今日统计
+      tags:
+      - b_statistics
+  /b/statistics/trend:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定时间范围内每日需求数量趋势
+      parameters:
+      - description: 时间范围（天数，默认7）
+        in: query
+        name: days
+        type: integer
+      - description: 站点ID（管理员可指定）
+        in: query
+        name: station_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 获取需求趋势数据
       tags:
       - b_statistics
   /b/tasks:
@@ -3090,4 +3447,9 @@ paths:
       tags:
       - c_upload
       - b_upload
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

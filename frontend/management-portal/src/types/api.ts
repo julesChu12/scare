@@ -483,3 +483,58 @@ export interface NewsListParams extends PaginationParams {
   status?: NewsStatus
   station_id?: number
 }
+
+export interface OverviewStatsData {
+  total_requests: number
+  pending: number
+  completed: number
+  in_progress: number
+}
+
+export interface ServiceTypeStatsData {
+  type: string
+  name: string
+  count: number
+  percentage: number
+}
+
+export interface TrendItemData {
+  date: string
+  count: number
+  percentage: number
+}
+
+export interface EfficiencyStatsData {
+  avg_response_time: number
+  avg_process_time: number
+  satisfaction_rate: number
+}
+
+export interface StaffRankingItemData {
+  id: number
+  name: string
+  completed_count: number
+  avg_rating: number
+  is_online: boolean
+}
+
+export interface GenerateReportRequest {
+  type: 'service' | 'performance' | 'request' | 'station'
+  format: 'xlsx' | 'csv'
+  station_id?: number | null
+  start_date: string
+  end_date: string
+}
+
+export interface ReportData {
+  id: number
+  created_at: string
+  name: string
+  type: string
+  format: string
+  file_size: number
+  station_id: number | null
+  start_date: string
+  end_date: string
+  created_by: number
+}

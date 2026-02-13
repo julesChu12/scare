@@ -49,7 +49,6 @@
             <el-form-item label="导出格式">
               <el-radio-group v-model="reportForm.format">
                 <el-radio value="xlsx">Excel (.xlsx)</el-radio>
-                <el-radio value="pdf">PDF</el-radio>
                 <el-radio value="csv">CSV</el-radio>
               </el-radio-group>
             </el-form-item>
@@ -95,9 +94,9 @@
             {{ formatDateTime(row.created_at) }}
           </template>
         </el-table-column>
-        <el-table-column prop="size" label="文件大小" width="100">
+        <el-table-column prop="file_size" label="文件大小" width="100">
           <template #default="{ row }">
-            {{ formatFileSize(row.size) }}
+            {{ formatFileSize(row.file_size) }}
           </template>
         </el-table-column>
         <el-table-column label="操作" width="120" fixed="right">
@@ -172,110 +171,57 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Document, Download } from '@element-plus/icons-vue'
 import dayjs from 'dayjs'
+import { stationApi, reportApi } from '@/api'
+import type { ReportData } from '@/types/api'
 
-// 加载状态
 const loading = ref(false)
 const generating = ref(false)
 const showPreview = ref(false)
 
-// 报表表单
 const reportForm = reactive({
-  type: 'service',
+  type: 'service' as 'service' | 'performance' | 'request' | 'station',
   station_id: null as number | null,
   dateRange: [] as Date[],
-  format: 'xlsx',
+  format: 'xlsx' as 'xlsx' | 'csv',
 })
 
-// 站点列表
 const stationList = ref<Array<{ id: number; name: string }>>([])
+const historyReports = ref<ReportData[]>([])
 
-// 历史报表
-const historyReports = ref<Array<{
-  id: number
-  name: string
-  type: string
-  format: string
-  created_at: string
-  size: number
-  url: string
-}>>([])
-
-// 分页
 const pagination = reactive({
   page: 1,
   pageSize: 10,
   total: 0,
 })
 
-// 预览数据
 const previewData = ref({
   request_count: 0,
   task_count: 0,
   staff_count: 0,
 })
 
-/**
- * 加载站点列表
- */
 async function loadStations() {
   try {
-    // 模拟数据
-    stationList.value = [
-      { id: 1, name: '霍营街道第一服务站' },
-      { id: 2, name: '霍营街道第二服务站' },
-      { id: 3, name: '回龙观服务站' },
-    ]
+    const res = await stationApi.getStations({ page: 1, page_size: 100 })
+    if (res.msg === 'ok') {
+      stationList.value = res.data.items.map(s => ({ id: s.id, name: s.name }))
+    }
   } catch (error) {
     console.error('Failed to load stations:', error)
   }
 }
 
-/**
- * 加载历史报表
- */
 async function loadHistoryReports() {
   try {
     loading.value = true
-    // 模拟数据
-    historyReports.value = [
-      {
-        id: 1,
-        name: '2026年1月服务统计报表.xlsx',
-        type: 'service',
-        format: 'xlsx',
-        created_at: '2026-02-01 10:30:00',
-        size: 125440,
-        url: '#',
-      },
-      {
-        id: 2,
-        name: '2025年12月服务统计报表.xlsx',
-        type: 'service',
-        format: 'xlsx',
-        created_at: '2026-01-01 09:15:00',
-        size: 118784,
-        url: '#',
-      },
-      {
-        id: 3,
-        name: 'Q4季度汇总报表.pdf',
-        type: 'request',
-        format: 'pdf',
-        created_at: '2026-01-05 14:20:00',
-        size: 256000,
-        url: '#',
-      },
-      {
-        id: 4,
-        name: '2025年度人员绩效报表.xlsx',
-        type: 'performance',
-        format: 'xlsx',
-        created_at: '2026-01-02 11:00:00',
-        size: 89600,
-        url: '#',
-      },
-    ]
-    pagination.total = 4
+    const res = await reportApi.getReports({
+      page: pagination.page,
+      page_size: pagination.pageSize,
+    })
+    if (res.msg === 'ok') {
+      historyReports.value = res.data.items
+      pagination.total = res.data.total
+    }
   } catch (error) {
     console.error('Failed to load history reports:', error)
   } finally {
@@ -283,26 +229,19 @@ async function loadHistoryReports() {
   }
 }
 
-/**
- * 预览报表
- */
 function handlePreview() {
   if (!reportForm.dateRange || reportForm.dateRange.length !== 2) {
     ElMessage.warning('请选择时间范围')
     return
   }
-  // 模拟预览数据
   previewData.value = {
-    request_count: 156,
-    task_count: 142,
-    staff_count: 12,
+    request_count: 0,
+    task_count: 0,
+    staff_count: 0,
   }
   showPreview.value = true
 }
 
-/**
- * 生成报表
- */
 async function handleGenerate() {
   if (!reportForm.dateRange || reportForm.dateRange.length !== 2) {
     ElMessage.warning('请选择时间范围')
@@ -310,48 +249,64 @@ async function handleGenerate() {
   }
   try {
     generating.value = true
-    // 模拟生成
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    ElMessage.success('报表生成成功，开始下载')
+    const blob = await reportApi.generateReport({
+      type: reportForm.type,
+      format: reportForm.format,
+      station_id: reportForm.station_id,
+      start_date: dayjs(reportForm.dateRange[0]).format('YYYY-MM-DD'),
+      end_date: dayjs(reportForm.dateRange[1]).format('YYYY-MM-DD'),
+    })
+
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    const filename = `${getReportTypeText(reportForm.type)}_${dayjs(reportForm.dateRange[0]).format('YYYYMMDD')}_${dayjs(reportForm.dateRange[1]).format('YYYYMMDD')}.${reportForm.format}`
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+
+    ElMessage.success('报表生成成功')
     showPreview.value = false
-    // 刷新历史列表
     await loadHistoryReports()
   } catch (error) {
     console.error('Failed to generate report:', error)
+    ElMessage.error('报表生成失败')
   } finally {
     generating.value = false
   }
 }
 
-/**
- * 下载报表
- */
-function handleDownload(report: { url: string; name: string }) {
-  ElMessage.success(`开始下载: ${report.name}`)
-  // 实际下载逻辑
-  // window.open(report.url)
+async function handleDownload(report: ReportData) {
+  try {
+    const blob = await reportApi.downloadReport(report.id)
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${report.name}.${report.format}`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+    ElMessage.success('下载成功')
+  } catch (error) {
+    console.error('Failed to download report:', error)
+    ElMessage.error('下载失败')
+  }
 }
 
-/**
- * 分页大小变化
- */
 function handleSizeChange(size: number) {
   pagination.pageSize = size
   pagination.page = 1
   loadHistoryReports()
 }
 
-/**
- * 页码变化
- */
 function handlePageChange(page: number) {
   pagination.page = page
   loadHistoryReports()
 }
 
-/**
- * 获取报表类型文本
- */
 function getReportTypeText(type: string): string {
   const typeMap: Record<string, string> = {
     service: '服务统计',
@@ -362,33 +317,21 @@ function getReportTypeText(type: string): string {
   return typeMap[type] || type
 }
 
-/**
- * 获取站点名称
- */
 function getStationName(stationId: number | null): string {
   if (!stationId) return '全部站点'
   const station = stationList.value.find(s => s.id === stationId)
   return station?.name || '-'
 }
 
-/**
- * 格式化日期时间
- */
 function formatDateTime(dateTime: string): string {
   return dayjs(dateTime).format('YYYY-MM-DD HH:mm')
 }
 
-/**
- * 格式化日期范围
- */
 function formatDateRange(dateRange: Date[]): string {
   if (!dateRange || dateRange.length !== 2) return '-'
   return `${dayjs(dateRange[0]).format('YYYY-MM-DD')} 至 ${dayjs(dateRange[1]).format('YYYY-MM-DD')}`
 }
 
-/**
- * 格式化文件大小
- */
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return bytes + ' B'
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'

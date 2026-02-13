@@ -28,7 +28,13 @@
             <el-icon><Search /></el-icon>
           </template>
         </el-input>
-        <el-select v-model="filterRole" placeholder="角色筛选" clearable style="width: 150px" @change="handleSearch">
+        <el-select
+          v-model="filterRole"
+          placeholder="角色筛选"
+          clearable
+          style="width: 150px"
+          @change="handleSearch"
+        >
           <el-option label="系统管理员" value="admin" />
           <el-option label="站点管理员" value="station_manager" />
           <el-option label="工作人员" value="staff" />
@@ -75,22 +81,35 @@
         </el-table-column>
         <el-table-column prop="station_name" label="所属站点" min-width="150">
           <template #default="{ row }">
-            {{ row.station_name || '-' }}
+            {{ row.station_name || "-" }}
           </template>
         </el-table-column>
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="row.status === 'active' ? 'success' : 'danger'" size="small">
-              {{ row.status === 'active' ? '正常' : '禁用' }}
+            <el-tag
+              :type="row.status === 'active' ? 'success' : 'danger'"
+              size="small"
+            >
+              {{ row.status === "active" ? "正常" : "禁用" }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" link size="small" @click="showEditDialog(row)">
+            <el-button
+              type="primary"
+              link
+              size="small"
+              @click="showEditDialog(row)"
+            >
               编辑
             </el-button>
-            <el-button type="primary" link size="small" @click="showRoleDialog(row)">
+            <el-button
+              type="primary"
+              link
+              size="small"
+              @click="showRoleDialog(row)"
+            >
               角色
             </el-button>
           </template>
@@ -111,46 +130,35 @@
       </div>
     </el-card>
 
-    <!-- 新建/编辑用户对话框 -->
-    <el-dialog
-      v-model="userDialogVisible"
-      :title="isEdit ? '编辑用户' : '新建用户'"
-      width="500px"
-    >
-      <el-form ref="userFormRef" :model="userForm" :rules="userRules" label-width="80px">
+    <!-- 新建用户对话框 -->
+    <el-dialog v-model="createDialogVisible" title="新建用户" width="500px">
+      <el-form
+        ref="createFormRef"
+        :model="createForm"
+        :rules="createRules"
+        label-width="80px"
+      >
         <el-form-item label="姓名" prop="name">
-          <el-input v-model="userForm.name" placeholder="请输入姓名" />
-        </el-form-item>
-        <el-form-item label="头像" prop="avatar">
-          <image-upload v-model="userForm.avatar" :limit="1" />
+          <el-input v-model="createForm.name" placeholder="请输入姓名" />
         </el-form-item>
         <el-form-item label="手机号" prop="phone">
-          <el-input v-model="userForm.phone" placeholder="请输入手机号" :disabled="isEdit" />
+          <el-input v-model="createForm.phone" placeholder="请输入手机号" />
         </el-form-item>
-        <el-form-item label="性别" prop="gender">
-          <el-select v-model="userForm.gender" placeholder="请选择性别" style="width: 100%">
-            <el-option label="男" value="male" />
-            <el-option label="女" value="female" />
-            <el-option label="其他" value="other" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="出生日期" prop="birth_date">
-          <el-date-picker
-            v-model="userForm.birth_date"
-            type="date"
-            placeholder="选择日期"
-            value-format="YYYY-MM-DD"
-            style="width: 100%"
+        <el-form-item label="密码" prop="password">
+          <el-input
+            v-model="createForm.password"
+            type="password"
+            placeholder="请输入密码"
+            show-password
           />
         </el-form-item>
-        <el-form-item label="身份证号" prop="id_card">
-          <el-input v-model="userForm.id_card" placeholder="请输入身份证号" />
-        </el-form-item>
-        <el-form-item v-if="!isEdit" label="密码" prop="password">
-          <el-input v-model="userForm.password" type="password" placeholder="请输入密码" show-password />
-        </el-form-item>
-        <el-form-item v-if="!isEdit" label="所属站点" prop="station_id">
-          <el-select v-model="userForm.station_id" placeholder="请选择站点" clearable style="width: 100%">
+        <el-form-item label="所属站点" prop="station_id">
+          <el-select
+            v-model="createForm.station_id"
+            placeholder="请选择站点"
+            clearable
+            style="width: 100%"
+          >
             <el-option
               v-for="station in stations"
               :key="station.id"
@@ -159,34 +167,96 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item v-if="!isEdit" label="角色" prop="role">
-          <el-select v-model="userForm.role" placeholder="请选择角色" style="width: 100%">
-             <el-option label="工作人员" value="staff" />
-             <el-option label="站点管理员" value="station_manager" />
-             <el-option label="系统管理员" value="admin" />
+        <el-form-item label="角色" prop="role">
+          <el-select
+            v-model="createForm.role"
+            placeholder="请选择角色"
+            style="width: 100%"
+          >
+            <el-option label="工作人员" value="staff" />
+            <el-option label="站点管理员" value="station_manager" />
+            <el-option label="系统管理员" value="admin" />
           </el-select>
         </el-form-item>
         <el-form-item label="状态" prop="status">
-          <el-radio-group v-model="userForm.status">
+          <el-radio-group v-model="createForm.status">
             <el-radio value="active">正常</el-radio>
             <el-radio value="inactive">禁用</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="userDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="submitUser">确定</el-button>
+        <el-button @click="createDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitCreate"
+          >确定</el-button
+        >
+      </template>
+    </el-dialog>
+
+    <!-- 编辑用户对话框 -->
+    <el-dialog v-model="editDialogVisible" title="编辑用户" width="500px">
+      <el-form
+        ref="editFormRef"
+        :model="editForm"
+        :rules="editRules"
+        label-width="80px"
+      >
+        <el-form-item label="姓名" prop="name">
+          <el-input v-model="editForm.name" placeholder="请输入姓名" />
+        </el-form-item>
+        <el-form-item label="头像">
+          <image-upload v-model="editForm.avatar" :limit="1" />
+        </el-form-item>
+        <el-form-item label="性别" prop="gender">
+          <el-select
+            v-model="editForm.gender"
+            placeholder="请选择性别"
+            style="width: 100%"
+          >
+            <el-option label="男" value="male" />
+            <el-option label="女" value="female" />
+            <el-option label="其他" value="other" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="出生日期" prop="birth_date">
+          <el-date-picker
+            v-model="editForm.birth_date"
+            type="date"
+            placeholder="选择日期"
+            value-format="YYYY-MM-DD"
+            style="width: 100%"
+          />
+        </el-form-item>
+        <el-form-item label="身份证号" prop="id_card">
+          <el-input v-model="editForm.id_card" placeholder="请输入身份证号" />
+        </el-form-item>
+        <el-form-item label="状态" prop="status">
+          <el-radio-group v-model="editForm.status">
+            <el-radio value="active">正常</el-radio>
+            <el-radio value="inactive">禁用</el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="editDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitEdit"
+          >确定</el-button
+        >
       </template>
     </el-dialog>
 
     <!-- 身份分配对话框 -->
     <el-dialog v-model="roleDialogVisible" title="身份分配" width="500px">
       <div class="role-dialog-content">
-        <p class="user-info" style="margin-bottom: 20px;">用户：{{ currentUser?.name }} ({{ currentUser?.phone }})</p>
-        
+        <p class="user-info" style="margin-bottom: 20px">
+          用户：{{ currentUser?.name }} ({{ currentUser?.phone }})
+        </p>
+
         <!-- B端身份 -->
         <div class="identity-section">
-          <h4 style="margin-bottom: 10px; color: #606266;">B端身份 (管理职能)</h4>
+          <h4 style="margin-bottom: 10px; color: #606266">
+            B端身份 (管理职能)
+          </h4>
           <el-checkbox-group v-model="selectedBIdentities">
             <el-checkbox value="admin">系统管理员</el-checkbox>
             <el-checkbox value="station_manager">站点管理员</el-checkbox>
@@ -198,7 +268,9 @@
 
         <!-- C端身份 -->
         <div class="identity-section">
-          <h4 style="margin-bottom: 10px; color: #606266;">C端身份 (服务对象)</h4>
+          <h4 style="margin-bottom: 10px; color: #606266">
+            C端身份 (服务对象)
+          </h4>
           <el-checkbox-group v-model="selectedCIdentities">
             <el-checkbox value="elderly">长者</el-checkbox>
             <el-checkbox value="child">幼儿</el-checkbox>
@@ -209,255 +281,287 @@
       </div>
       <template #footer>
         <el-button @click="roleDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="submitRoles">确定</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitRoles"
+          >确定</el-button
+        >
       </template>
     </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import { Plus, Search } from '@element-plus/icons-vue'
-import ImageUpload from '@/components/ImageUpload.vue'
-import { userApi, stationApi } from '@/api'
-import type { User, Station } from '@/types/api'
-import type { FormInstance, FormRules } from 'element-plus'
+import { ref, reactive, onMounted } from "vue";
+import { ElMessage } from "element-plus";
+import { Plus, Search } from "@element-plus/icons-vue";
+import ImageUpload from "@/components/ImageUpload.vue";
+import { userApi, stationApi } from "@/api";
+import type { User, Station } from "@/types/api";
+import type { FormInstance, FormRules } from "element-plus";
 
 // 用户列表
-const users = ref<User[]>([])
-const loading = ref(false)
+const users = ref<User[]>([]);
+const loading = ref(false);
 const pagination = reactive({
   page: 1,
   pageSize: 10,
   total: 0,
-})
+});
 
 // 筛选条件
-const searchKeyword = ref('')
-const filterRole = ref('')
+const searchKeyword = ref("");
+const filterRole = ref("");
 
 // 站点列表
-const stations = ref<Station[]>([])
+const stations = ref<Station[]>([]);
 
-// 用户表单
-const userDialogVisible = ref(false)
-const isEdit = ref(false)
-const userFormRef = ref<FormInstance>()
+// 新建用户表单
+const createDialogVisible = ref(false);
+const createFormRef = ref<FormInstance>();
 
-interface UserForm {
-  id: number
-  name: string
-  phone: string
-  password?: string
-  station_id: number | null
-  role: string
-  status: 'active' | 'inactive'
-  avatar: string[]
-  gender: string
-  birth_date: string
-  id_card: string
+interface CreateForm {
+  name: string;
+  phone: string;
+  password: string;
+  station_id: number | null;
+  role: string;
+  status: "active" | "inactive";
 }
 
-const userForm = reactive<UserForm>({
-  id: 0,
-  name: '',
-  phone: '',
-  password: '',
+const createForm = reactive<CreateForm>({
+  name: "",
+  phone: "",
+  password: "",
   station_id: null,
-  role: 'staff',
-  status: 'active',
-  avatar: [],
-  gender: '',
-  birth_date: '',
-  id_card: '',
-})
-const userRules: FormRules = {
-  name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
+  role: "staff",
+  status: "active",
+});
+
+const createRules: FormRules = {
+  name: [{ required: true, message: "请输入姓名", trigger: "blur" }],
   phone: [
-    { required: true, message: '请输入手机号', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' },
+    { required: true, message: "请输入手机号", trigger: "blur" },
+    { pattern: /^1[3-9]\d{9}$/, message: "手机号格式不正确", trigger: "blur" },
   ],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur', min: 6 }],
-  id_card: [
-    { pattern: /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/, message: '身份证号格式不正确', trigger: 'blur' },
+  password: [
+    { required: true, message: "请输入密码", trigger: "blur", min: 6 },
   ],
+};
+
+// 编辑用户表单
+const editDialogVisible = ref(false);
+const editFormRef = ref<FormInstance>();
+const editUserId = ref(0);
+
+interface EditForm {
+  name: string;
+  avatar: string[];
+  gender: string;
+  birth_date: string;
+  id_card: string;
+  status: "active" | "inactive";
 }
+
+const editForm = reactive<EditForm>({
+  name: "",
+  avatar: [],
+  gender: "",
+  birth_date: "",
+  id_card: "",
+  status: "active",
+});
+
+const editRules: FormRules = {
+  name: [{ required: true, message: "请输入姓名", trigger: "blur" }],
+  id_card: [
+    {
+      pattern: /(^\d{15}$)|(^\d{18}$)|(^\d{17}(\d|X|x)$)/,
+      message: "身份证号格式不正确",
+      trigger: "blur",
+    },
+  ],
+};
 
 // 角色分配
-const roleDialogVisible = ref(false)
-const currentUser = ref<User | null>(null)
-const selectedBIdentities = ref<string[]>([])
-const selectedCIdentities = ref<string[]>([])
+const roleDialogVisible = ref(false);
+const currentUser = ref<User | null>(null);
+const selectedBIdentities = ref<string[]>([]);
+const selectedCIdentities = ref<string[]>([]);
 
-const submitting = ref(false)
+const submitting = ref(false);
 
 // 身份名称映射
 const identityMap: Record<string, string> = {
-  admin: '系统管理员',
-  station_manager: '站点管理员',
-  staff: '工作人员',
-  user: '普通用户',
-  child: '幼儿',
-  elderly: '长者',
-  disabled: '残障人士',
-  pregnant: '孕妇',
-}
+  admin: "系统管理员",
+  station_manager: "站点管理员",
+  staff: "工作人员",
+  user: "普通用户",
+  child: "幼儿",
+  elderly: "长者",
+  disabled: "残障人士",
+  pregnant: "孕妇",
+};
 
 function getIdentityName(identity: string) {
-  return identityMap[identity] || identity
+  return identityMap[identity] || identity;
 }
 
 // 加载用户列表
 async function loadUsers() {
-  loading.value = true
+  loading.value = true;
   try {
     const res = await userApi.getUsers({
       page: pagination.page,
       page_size: pagination.pageSize,
-    })
-    if (res.msg === 'ok') {
-      users.value = res.data.items || []
-      pagination.total = res.data.total
+    });
+    if (res.msg === "ok") {
+      users.value = res.data.items || [];
+      pagination.total = res.data.total;
     }
   } catch (error) {
-    ElMessage.error('加载用户列表失败')
+    ElMessage.error("加载用户列表失败");
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
 // 加载站点列表
 async function loadStations() {
   try {
-    const res = await stationApi.getStations({ page: 1, page_size: 100 })
-    if (res.msg === 'ok') {
-      stations.value = res.data.items || []
+    const res = await stationApi.getStations({ page: 1, page_size: 100 });
+    if (res.msg === "ok") {
+      stations.value = res.data.items || [];
     }
   } catch (error) {
-    console.error('加载站点列表失败', error)
+    console.error("加载站点列表失败", error);
   }
 }
 
 // 搜索
 function handleSearch() {
-  pagination.page = 1
-  loadUsers()
+  pagination.page = 1;
+  loadUsers();
 }
 
 // 显示新建对话框
 function showCreateDialog() {
-  isEdit.value = false
-  userForm.id = 0
-  userForm.name = ''
-  userForm.phone = ''
-  userForm.password = ''
-  userForm.role = 'staff'
-  userForm.station_id = null
-  userForm.status = 'active'
-  userForm.avatar = []
-  userForm.gender = ''
-  userForm.birth_date = ''
-  userForm.id_card = ''
-  userDialogVisible.value = true
+  createForm.name = "";
+  createForm.phone = "";
+  createForm.password = "";
+  createForm.role = "staff";
+  createForm.station_id = null;
+  createForm.status = "active";
+  createDialogVisible.value = true;
 }
 
 // 显示编辑对话框
 function showEditDialog(user: User) {
-  isEdit.value = true
-  userForm.id = user.id
-  userForm.name = user.name
-  userForm.phone = user.phone
-  userForm.password = ''
-  userForm.role = user.primary_identity || 'staff'
-  userForm.station_id = user.station_id || null
-  userForm.status = user.status
-  userForm.avatar = user.avatar ? [user.avatar] : []
-  userForm.gender = user.gender || ''
-  userForm.birth_date = user.birth_date || ''
-  userForm.id_card = user.id_card || ''
-  userDialogVisible.value = true
+  editUserId.value = user.id;
+  editForm.name = user.name;
+  editForm.avatar = user.avatar ? [user.avatar] : [];
+  editForm.gender = user.gender || "";
+  editForm.birth_date = user.birth_date || "";
+  editForm.id_card = user.id_card || "";
+  editForm.status = user.status;
+  editDialogVisible.value = true;
 }
 
-// 提交用户表单
-async function submitUser() {
-  if (!userFormRef.value) return
+// 提交新建用户
+async function submitCreate() {
+  if (!createFormRef.value) return;
 
-  await userFormRef.value.validate(async (valid) => {
-    if (!valid) return
+  await createFormRef.value.validate(async (valid) => {
+    if (!valid) return;
 
-    submitting.value = true
+    submitting.value = true;
     try {
-      if (isEdit.value) {
-        await userApi.updateUser(userForm.id, {
-          name: userForm.name,
-          station_id: userForm.station_id || undefined,
-          status: userForm.status,
-          avatar: userForm.avatar[0] || '',
-          gender: userForm.gender,
-          birth_date: userForm.birth_date,
-          id_card: userForm.id_card,
-        })
-        ElMessage.success('更新成功')
-      } else {
-        await userApi.createUser({
-          name: userForm.name,
-          phone: userForm.phone,
-          password: userForm.password || '', // Password is required for creation
-          role: userForm.role,
-          station_id: userForm.station_id || undefined,
-          status: userForm.status,
-        })
-        ElMessage.success('创建成功')
-      }
-      userDialogVisible.value = false
-      loadUsers()
+      await userApi.createUser({
+        name: createForm.name,
+        phone: createForm.phone,
+        password: createForm.password,
+        role: createForm.role,
+        station_id: createForm.station_id || undefined,
+        status: createForm.status,
+      });
+      ElMessage.success("创建成功");
+      createDialogVisible.value = false;
+      loadUsers();
     } catch (error) {
-      ElMessage.error(isEdit.value ? '更新失败' : '创建失败')
+      ElMessage.error("创建失败");
     } finally {
-      submitting.value = false
+      submitting.value = false;
     }
-  })
+  });
+}
+
+// 提交编辑用户
+async function submitEdit() {
+  if (!editFormRef.value) return;
+
+  await editFormRef.value.validate(async (valid) => {
+    if (!valid) return;
+
+    submitting.value = true;
+    try {
+      await userApi.updateUser(editUserId.value, {
+        name: editForm.name,
+        avatar: editForm.avatar[0] || "",
+        gender: editForm.gender,
+        birth_date: editForm.birth_date,
+        id_card: editForm.id_card,
+        status: editForm.status,
+      });
+      ElMessage.success("更新成功");
+      editDialogVisible.value = false;
+      loadUsers();
+    } catch (error) {
+      ElMessage.error("更新失败");
+    } finally {
+      submitting.value = false;
+    }
+  });
 }
 
 // 显示角色分配对话框
 function showRoleDialog(user: User) {
-  currentUser.value = user
-  selectedBIdentities.value = [...(user.b_end_identities || [])]
-  selectedCIdentities.value = [...(user.c_end_identities || [])]
-  roleDialogVisible.value = true
+  currentUser.value = user;
+  selectedBIdentities.value = [...(user.b_end_identities || [])];
+  selectedCIdentities.value = [...(user.c_end_identities || [])];
+  roleDialogVisible.value = true;
 }
 
 // 提交角色分配
 async function submitRoles() {
-  if (!currentUser.value) return
+  if (!currentUser.value) return;
 
-  submitting.value = true
+  submitting.value = true;
   try {
-    const identities = [...selectedBIdentities.value, ...selectedCIdentities.value]
+    const identities = [
+      ...selectedBIdentities.value,
+      ...selectedCIdentities.value,
+    ];
     await userApi.updateUserIdentities(currentUser.value.id, {
       identities,
-    })
-    ElMessage.success('身份更新成功')
-    roleDialogVisible.value = false
-    loadUsers()
+    });
+    ElMessage.success("身份更新成功");
+    roleDialogVisible.value = false;
+    loadUsers();
   } catch (error) {
-    ElMessage.error('角色更新失败')
+    ElMessage.error("角色更新失败");
   } finally {
-    submitting.value = false
+    submitting.value = false;
   }
 }
 
 onMounted(() => {
-  loadUsers()
-  loadStations()
-})
+  loadUsers();
+  loadStations();
+});
 </script>
 
 <style scoped lang="scss">
 .user-management {
   width: 100%;
-  
+
   :deep(.el-card__body) {
     padding: 20px;
   }

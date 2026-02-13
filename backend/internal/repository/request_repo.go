@@ -1,9 +1,10 @@
 package repository
 
 import (
+	"community-elderly-care-platform/internal/consts"
 	"community-elderly-care-platform/internal/dao/model"
 	"community-elderly-care-platform/internal/dao/query"
-	"community-elderly-care-platform/internal/consts"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -39,50 +40,50 @@ func (r *RequestRepository) GetByRequestNo(requestNo string) (*model.ServiceRequ
 // ListByUser 根据用户ID查询需求列表（分页）
 func (r *RequestRepository) ListByUser(userID int64, status string, offset, limit int) ([]*model.ServiceRequest, int64, error) {
 	s := r.q.ServiceRequest
-	
+
 	// 使用原生 DB 处理条件查询
 	db := s.UnderlyingDB().Model(&model.ServiceRequest{}).Where("user_id = ?", userID)
-	
+
 	if status != "" {
 		db = db.Where("status = ?", status)
 	}
-	
+
 	// 获取总数
 	var total int64
 	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-	
+
 	// 分页查询
 	var reqs []*model.ServiceRequest
 	if err := db.Order("id desc").Offset(offset).Limit(limit).Find(&reqs).Error; err != nil {
 		return nil, 0, err
 	}
-	
+
 	return reqs, total, nil
 }
 
 // ListDispatchedByStation 根据站点ID查询已分派的需求
 func (r *RequestRepository) ListDispatchedByStation(stationID int64, offset, limit int) ([]*model.ServiceRequest, int64, error) {
 	s := r.q.ServiceRequest
-	
+
 	// 获取总数
 	total, err := s.Where(s.StationID.Eq(stationID), s.Status.Eq(consts.RequestStatusDispatched)).Count()
 	if err != nil {
 		return nil, 0, err
 	}
-	
+
 	// 分页查询
 	reqs, err := s.Where(s.StationID.Eq(stationID), s.Status.Eq(consts.RequestStatusDispatched)).
 		Order(s.ID.Desc()).
 		Offset(offset).
 		Limit(limit).
 		Find()
-	
+
 	if err != nil {
 		return nil, 0, err
 	}
-	
+
 	return reqs, total, nil
 }
 
@@ -194,4 +195,113 @@ func (r *RequestRepository) CountTodayNew(stationID int64, isAdmin bool) (int64,
 		return 0, err
 	}
 	return count, nil
+}
+
+// CountSince 统计指定时间之后的需求总数
+func (r *RequestRepository) CountSince(stationID int64, isAdmin bool, since time.Time) (int64, error) {
+	s := r.q.ServiceRequest
+	db := s.UnderlyingDB().Model(&model.ServiceRequest{}).
+		Where("created_at >= ?", since)
+
+	if !isAdmin && stationID > 0 {
+		db = db.Where("station_id = ?", stationID)
+	}
+
+	var count int64
+	if err := db.Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// CountByStatusSince 统计指定时间之后某状态的需求数量
+func (r *RequestRepository) CountByStatusSince(stationID int64, status string, isAdmin bool, since time.Time) (int64, error) {
+	s := r.q.ServiceRequest
+	db := s.UnderlyingDB().Model(&model.ServiceRequest{}).
+		Where("status = ? AND created_at >= ?", status, since)
+
+	if !isAdmin && stationID > 0 {
+		db = db.Where("station_id = ?", stationID)
+	}
+
+	var count int64
+	if err := db.Count(&count).Error; err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// CountByServiceType 按服务类型统计需求数量
+func (r *RequestRepository) CountByServiceType(stationID int64, isAdmin bool, since time.Time) (map[string]int64, error) {
+	s := r.q.ServiceRequest
+	db := s.UnderlyingDB().Model(&model.ServiceRequest{}).
+		Select("service_type, COUNT(*) as count").
+		Where("created_at >= ?", since).
+		Group("service_type")
+
+	if !isAdmin && stationID > 0 {
+		db = db.Where("station_id = ?", stationID)
+	}
+
+	var results []struct {
+		ServiceType string
+		Count       int64
+	}
+	if err := db.Find(&results).Error; err != nil {
+		return nil, err
+	}
+
+	typeCounts := make(map[string]int64)
+	for _, r := range results {
+		typeCounts[r.ServiceType] = r.Count
+	}
+	return typeCounts, nil
+}
+
+// DailyTrendItem 每日趋势数据项
+type DailyTrendItem struct {
+	Date  string
+	Count int64
+}
+
+// GetDailyTrend 获取每日需求趋势
+func (r *RequestRepository) GetDailyTrend(stationID int64, isAdmin bool, days int) ([]DailyTrendItem, error) {
+	s := r.q.ServiceRequest
+	db := s.UnderlyingDB().Model(&model.ServiceRequest{}).
+		Select("DATE(created_at) as date, COUNT(*) as count").
+		Where("created_at >= DATE_SUB(CURDATE(), INTERVAL ? DAY)", days).
+		Group("DATE(created_at)").
+		Order("date DESC")
+
+	if !isAdmin && stationID > 0 {
+		db = db.Where("station_id = ?", stationID)
+	}
+
+	var results []DailyTrendItem
+	if err := db.Find(&results).Error; err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}
+
+// GetAvgRating 获取平均评分
+func (r *RequestRepository) GetAvgRating(stationID int64, isAdmin bool, since time.Time) (float64, error) {
+	s := r.q.ServiceRequest
+	db := s.UnderlyingDB().Model(&model.ServiceRequest{}).
+		Select("AVG(rating) as avg_rating").
+		Where("rating > 0 AND created_at >= ?", since)
+
+	if !isAdmin && stationID > 0 {
+		db = db.Where("station_id = ?", stationID)
+	}
+
+	var result struct {
+		AvgRating float64
+	}
+	if err := db.First(&result).Error; err != nil {
+		return 0, err
+	}
+
+	return result.AvgRating, nil
 }

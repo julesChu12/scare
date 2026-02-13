@@ -36,6 +36,7 @@ type Deps struct {
 	RoleRepo           *repository.RoleRepository
 	PermissionRepo     *repository.PermissionRepository
 	RolePermissionRepo *repository.RolePermissionRepository
+	ReportRepo         *repository.ReportRepository
 
 	// Services
 	AuthService         *service.AuthService
@@ -57,6 +58,7 @@ type Deps struct {
 	BlacklistService    *service.TokenBlacklistService
 	StorageService      *service.StorageService
 	StatisticsService   *service.StatisticsService
+	ReportService       *service.ReportService
 
 	// Handlers
 	BannerHandler       *handler.BannerHandler
@@ -76,6 +78,7 @@ type Deps struct {
 	NewsHandler         *handler.NewsHandler
 	MenuHandler         *handler.MenuHandler
 	StatisticsHandler   *handler.StatisticsHandler
+	ReportHandler       *handler.ReportHandler
 }
 
 // NewDeps 创建并初始化依赖
@@ -101,6 +104,7 @@ func NewDeps(db *database.DB, rdb *redis.Client, cfg *config.Config) (*Deps, err
 	d.RoleRepo = repository.NewRoleRepository(db.DB)
 	d.PermissionRepo = repository.NewPermissionRepository(db.DB)
 	d.RolePermissionRepo = repository.NewRolePermissionRepository(db.DB)
+	d.ReportRepo = repository.NewReportRepository(db.DB)
 
 	// 初始化 JWT Manager
 	d.JWTManager = jwt.NewManager(cfg.JWT.Secret, cfg.JWT.ExpiresIn, cfg.JWT.RefreshExpiresIn)
@@ -164,6 +168,7 @@ func NewDeps(db *database.DB, rdb *redis.Client, cfg *config.Config) (*Deps, err
 	d.MenuService = service.NewMenuService(d.MenuRepo)
 	d.BannerService = service.NewBannerService(bannerRepo)
 	d.StatisticsService = service.NewStatisticsService(d.TaskRepo, d.RequestRepo, d.UserRepo)
+	d.ReportService = service.NewReportService(d.ReportRepo, d.RequestRepo, d.TaskRepo, d.StationRepo, d.UserRepo, cfg.Storage.Local.BasePath)
 
 	// 初始化 Handlers
 	d.BannerHandler = handler.NewBannerHandler(d.BannerService)
@@ -176,13 +181,14 @@ func NewDeps(db *database.DB, rdb *redis.Client, cfg *config.Config) (*Deps, err
 	d.TaskHandler = handler.NewTaskHandler(d.TaskService)
 	d.NotificationHandler = handler.NewNotificationHandler(d.NotificationService)
 	d.UploadHandler = handler.NewUploadHandler(d.StorageService)
-	d.UserHandler = handler.NewUserHandler(d.UserService, cfg.JWT.Secret)
+	d.UserHandler = handler.NewUserHandler(d.UserService, cfg.JWT.Secret, cfg.Security.IDCardEncryptKey)
 	d.LogoutHandler = handler.NewLogoutHandler(d.BlacklistService)
 	d.PermissionHandler = handler.NewPermissionHandler(d.PermissionService)
 	d.RoleHandler = handler.NewRoleHandler(d.PermissionService, d.UserIdentityService)
 	d.NewsHandler = handler.NewNewsHandler(d.NewsService)
 	d.MenuHandler = handler.NewMenuHandler(d.MenuService, d.UserRepo, d.UserIdentityRepo, d.PermissionService)
 	d.StatisticsHandler = handler.NewStatisticsHandler(d.StatisticsService)
+	d.ReportHandler = handler.NewReportHandler(d.ReportService)
 
 	return d, nil
 }
