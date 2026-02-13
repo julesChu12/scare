@@ -25,14 +25,13 @@ DB_PASSWORD="${DB_PASSWORD:?DB_PASSWORD is required (from .env)}"
 DB_NAME="${DB_NAME:?DB_NAME is required (from .env)}"
 
 SEED_FILES=(
-  "database/seeds/modules/00_reset_all.sql"
-  "database/seeds/modules/10_roles_permissions.sql"
-  "database/seeds/modules/20_menus.sql"
-  "database/seeds/modules/30_stations_zones.sql"
-  "database/seeds/modules/40_users_profiles.sql"
-  "database/seeds/modules/50_requests_tasks.sql"
-  "database/seeds/modules/60_content.sql"
-  "database/seeds/modules/70_notifications.sql"
+  "database/seeds/001_seed_permissions.sql"
+  "database/seeds/002_seed_users.sql"
+  "database/seeds/003_seed_stations.sql"
+  "database/seeds/004_seed_requests.sql"
+  "database/seeds/005_seed_notifications.sql"
+  "database/seeds/006_seed_news.sql"
+  "database/seeds/007_seed_menus.sql"
 )
 
 echo "Rebuilding database '$DB_NAME' in container '$MYSQL_CONTAINER'..."
