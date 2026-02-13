@@ -138,3 +138,14 @@ coverage/
 .nyc_output/
 *.tgz
 *.tar.gz
+*.serena
+*.claude
+
+# 上传文件存储
+backend/storage/
+
+# 测试产物
+frontend/management-portal/test-results/
+
+# AI 生成文档
+GEMINI.md
