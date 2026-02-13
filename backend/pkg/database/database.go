@@ -11,14 +11,15 @@ import (
 )
 
 type Config struct {
-	Host         string
-	Port         int
-	User         string
-	Password     string
-	DBName       string
-	Charset      string
-	MaxIdleConns int
-	MaxOpenConns int
+	Host            string
+	Port            int
+	User            string
+	Password        string
+	DBName          string
+	Charset         string
+	MaxIdleConns    int
+	MaxOpenConns    int
+	MultiStatements bool
 }
 
 type DB struct {
@@ -37,6 +38,9 @@ func InitMySQL(cfg Config) (*DB, error) {
 	}
 
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=true&loc=Local&collation=utf8mb4_unicode_ci", cfg.User, cfg.Password, cfg.Host, cfg.Port, cfg.DBName, cfg.Charset)
+	if cfg.MultiStatements {
+		dsn += "&multiStatements=true"
+	}
 	gdb, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		DisableForeignKeyConstraintWhenMigrating: false,
 		Logger:                                   gormLogger.Default.LogMode(gormLogger.Warn),

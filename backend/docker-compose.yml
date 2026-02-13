@@ -1,0 +1,64 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: scare_mysql
+    restart: unless-stopped
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-scare_root_pass}
+      MYSQL_DATABASE: ${DB_NAME:-scare_db}
+      MYSQL_USER: ${DB_USER:-scare_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-scare_pass}
+      TZ: Asia/Shanghai
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/schema/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./database/seeds/seed_all.sql:/docker-entrypoint-initdb.d/02-seed.sql
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --default-time-zone='+08:00'
+      --max_connections=500
+      --innodb_buffer_pool_size=256M
+    networks:
+      - scare_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-scare_root_pass}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7.0-alpine
+    container_name: scare_redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    environment:
+      TZ: Asia/Shanghai
+    volumes:
+      - redis_data:/data
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass ${REDIS_PASSWORD:-scare_redis_pass}
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    networks:
+      - scare_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  scare_network:
+    driver: bridge

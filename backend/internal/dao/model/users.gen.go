@@ -22,7 +22,7 @@ type User struct {
 	Avatar       string         `gorm:"column:avatar;type:varchar(255)" json:"avatar"`
 	Gender       string         `gorm:"column:gender;type:varchar(10)" json:"gender"`
 	BirthDate    time.Time      `gorm:"column:birth_date;type:date" json:"birth_date"`
-	IDCard       string         `gorm:"column:id_card;type:varchar(18);index:idx_id_card,priority:1;index:idx_users_id_card,priority:1" json:"id_card"`
+	IDCard       string         `gorm:"column:id_card;type:varchar(64);index:idx_id_card,priority:1;index:idx_users_id_card,priority:1" json:"id_card"`
 	IDCardHmac   string         `gorm:"column:id_card_hmac;type:varchar(64);index:idx_users_id_card_hmac,priority:1;comment:身份证号HMAC摘要" json:"id_card_hmac"` // 身份证号HMAC摘要
 	IDCardMasked string         `gorm:"column:id_card_masked;type:varchar(20);default:'';comment:身份证号脱敏值" json:"id_card_masked"`
 	StationID    int64          `gorm:"column:station_id;type:bigint;index:idx_station_id,priority:1;index:idx_users_station_id,priority:1" json:"station_id"`

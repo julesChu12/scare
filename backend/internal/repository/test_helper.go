@@ -47,6 +47,7 @@ func createTables(t *testing.T, db *gorm.DB) {
 			birth_date DATE,
 			id_card TEXT,
 			id_card_hmac TEXT,
+			id_card_masked TEXT,
 			status TEXT DEFAULT 'active',
 			station_id INTEGER,
 			created_at DATETIME,

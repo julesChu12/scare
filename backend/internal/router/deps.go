@@ -111,7 +111,7 @@ func NewDeps(db *database.DB, rdb *redis.Client, cfg *config.Config) (*Deps, err
 
 	// 初始化基础 Services
 	d.SMSService = service.NewSMSService(rdb, cfg.Server.Mode)
-	d.GeocodeService = service.NewGeocodeService("") // TODO: 配置高德地图 API Key
+	d.GeocodeService = service.NewGeocodeService(cfg.Amap.Key)
 	d.BlacklistService = service.NewTokenBlacklistService(rdb)
 
 	// 初始化权限服务（替代 Casbin）

@@ -17,7 +17,17 @@
 | [05-配置说明.md](./05-配置说明.md) | 配置文件说明 |
 | [07-部署方案.md](./07-部署方案.md) | 生产环境部署方案 |
 | [08-快速开通功能实现.md](./08-快速开通功能实现.md) | 快速开通系统完整实现 |
-| [MVP_API_SPEC.md](./MVP_API_SPEC.md) | MVP API实现规格 |
+| [MVP_API_SPEC.md](./MVP_API_SPEC.md) | MVP API 实现规格 |
+| [banner_api.md](./banner_api.md) | Banner 轮播图 API 文档 |
+
+---
+
+## 🔗 前端接入指南
+
+| 文档 | 说明 |
+|------|------|
+| [C_END_FRONTEND_GUIDE.md](./C_END_FRONTEND_GUIDE.md) | C 端前端接入指南 |
+| [PERMISSION_FRONTEND_GUIDE.md](./PERMISSION_FRONTEND_GUIDE.md) | 权限系统前端接入指南 |
 
 ---
 
@@ -57,17 +67,23 @@ air
 
 ```
 backend/
-├── cmd/server/           # 入口文件
+├── cmd/                  # CLI 命令（Cobra）
 ├── internal/
 │   ├── config/          # 配置管理
-│   ├── domain/          # 领域模型
-│   ├── handler/         # HTTP处理器
+│   ├── consts/          # 常量定义
+│   ├── dao/             # GORM Gen 生成的模型与查询
+│   ├── dto/             # 数据传输对象
+│   ├── handler/         # HTTP 处理器
 │   ├── service/         # 业务逻辑
-│   ├── repository/      # 数据访问
-│   ├── middleware/      # 中间件
-│   └── geofence/        # 地理围栏引擎
-├── pkg/                 # 公共库
-└── configs/             # 配置文件
+│   ├── repository/      # 数据访问层
+│   ├── middleware/      # 中间件（JWT、权限等）
+│   ├── router/          # 路由注册与依赖注入
+│   ├── notify/          # 通知服务（邮件）
+│   └── storage/         # 文件存储（本地/OSS）
+├── pkg/                 # 公共库（geo、crypto、jwt、logger）
+├── database/            # 数据库 Schema、迁移、种子数据
+├── scripts/             # 工具脚本
+└── docs/                # 项目文档
 ```
 
 ---
@@ -80,4 +96,4 @@ backend/
 
 ---
 
-**最后更新**：2026-01-31
+**最后更新**：2026-02-13

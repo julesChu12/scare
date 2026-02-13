@@ -14,7 +14,7 @@ const TableNameCustomerProfile = "customer_profiles"
 type CustomerProfile struct {
 	ID               int64     `gorm:"column:id;type:bigint;primaryKey;autoIncrement:true" json:"id"`
 	UserID           int64     `gorm:"column:user_id;type:bigint;not null;uniqueIndex:uk_user_id,priority:1;comment:å…³è”ç”¨æˆ·ID" json:"user_id"`                                                // å…³è”ç”¨æˆ·ID
-	IDCard           string    `gorm:"column:id_card;type:varchar(18);index:idx_id_card,priority:1;comment:èº«ä»½è¯å·" json:"id_card"`                                                           // èº«ä»½è¯å·
+	IDCard           string    `gorm:"column:id_card;type:varchar(64);index:idx_id_card,priority:1;comment:èº«ä»½è¯å·" json:"id_card"`                                                           // èº«ä»½è¯å·
 	Gender           string    `gorm:"column:gender;type:varchar(10);comment:æ€§åˆ«" json:"gender"`                                                                                                // æ€§åˆ«
 	BirthDate        time.Time `gorm:"column:birth_date;type:date;comment:å‡ºç”Ÿæ—¥æœŸ" json:"birth_date"`                                                                                         // å‡ºç”Ÿæ—¥æœŸ
 	Address          string    `gorm:"column:address;type:text;comment:å±…ä½åœ°å€" json:"address"`                                                                                               // å±…ä½åœ°å€

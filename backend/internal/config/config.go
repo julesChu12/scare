@@ -19,6 +19,7 @@ type Config struct {
 	Mail     MailConfig     `mapstructure:"mail"`
 	Storage  StorageConfig  `mapstructure:"storage"`
 	Security SecurityConfig `mapstructure:"security"`
+	Amap     AmapConfig     `mapstructure:"amap"`
 }
 
 type ServerConfig struct {
@@ -96,6 +97,10 @@ type OSSStorageConfig struct {
 
 type SecurityConfig struct {
 	IDCardEncryptKey string `mapstructure:"id_card_encrypt_key"` // 32 字节 base64 编码的 AES-256 密钥
+}
+
+type AmapConfig struct {
+	Key string `mapstructure:"key"` // 高德地图 Web 服务 API Key
 }
 
 func Load() (*Config, error) {
@@ -184,6 +189,8 @@ func bindEnv(v *viper.Viper) {
 		"storage.oss.base_url":              "STORAGE_OSS_BASE_URL",
 
 		"security.id_card_encrypt_key": "SECURITY_ID_CARD_ENCRYPT_KEY",
+
+		"amap.key": "AMAP_KEY",
 	}
 
 	for key, env := range bindings {
