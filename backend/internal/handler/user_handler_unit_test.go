@@ -43,7 +43,7 @@ func TestCalculateAge(t *testing.T) {
 }
 
 func TestIDCardTokenGenerateAndVerify(t *testing.T) {
-	h := NewUserHandler(nil, "unit-test-secret")
+	h := NewUserHandler(nil, "unit-test-secret", "")
 
 	idCardHash := h.idCardDigest("110101199001011234")
 	token, err := h.generateIDCardToken(1001, idCardHash)
@@ -71,7 +71,7 @@ func TestIDCardTokenGenerateAndVerify(t *testing.T) {
 }
 
 func TestToUserResponseIncludesDerivedFields(t *testing.T) {
-	h := NewUserHandler(nil, "unit-test-secret")
+	h := NewUserHandler(nil, "unit-test-secret", "")
 	birthDate := time.Date(1990, 2, 10, 0, 0, 0, 0, time.UTC)
 
 	user := &service.UserWithIdentities{

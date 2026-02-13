@@ -14,7 +14,7 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ./database/schema/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
-      - ./database/seeds/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+      - ./database/seeds/seed_all.sql:/docker-entrypoint-initdb.d/02-seed.sql
     command: >
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_unicode_ci

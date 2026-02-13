@@ -18,6 +18,7 @@ type Config struct {
 	Log      LogConfig      `mapstructure:"log"`
 	Mail     MailConfig     `mapstructure:"mail"`
 	Storage  StorageConfig  `mapstructure:"storage"`
+	Security SecurityConfig `mapstructure:"security"`
 }
 
 type ServerConfig struct {
@@ -91,6 +92,10 @@ type OSSStorageConfig struct {
 	AccessKeySecret string `mapstructure:"access_key_secret"`
 	Region          string `mapstructure:"region"`
 	BaseURL         string `mapstructure:"base_url"`
+}
+
+type SecurityConfig struct {
+	IDCardEncryptKey string `mapstructure:"id_card_encrypt_key"` // 32 字节 base64 编码的 AES-256 密钥
 }
 
 func Load() (*Config, error) {
@@ -177,6 +182,8 @@ func bindEnv(v *viper.Viper) {
 		"storage.oss.access_key_secret":     "STORAGE_OSS_ACCESS_KEY_SECRET",
 		"storage.oss.region":                "STORAGE_OSS_REGION",
 		"storage.oss.base_url":              "STORAGE_OSS_BASE_URL",
+
+		"security.id_card_encrypt_key": "SECURITY_ID_CARD_ENCRYPT_KEY",
 	}
 
 	for key, env := range bindings {

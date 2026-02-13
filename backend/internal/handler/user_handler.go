@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"community-elderly-care-platform/internal/service"
+	"community-elderly-care-platform/pkg/crypto"
 
 	"github.com/gin-gonic/gin"
 )
@@ -20,16 +21,24 @@ type UserHandler struct {
 	service        *service.UserService
 	idCardTokenKey []byte
 	idCardTokenTTL time.Duration
+	encryptKey     []byte // AES-256 加密密钥（32 字节）
 }
 
-func NewUserHandler(service *service.UserService, tokenSecret string) *UserHandler {
+func NewUserHandler(service *service.UserService, tokenSecret string, encryptKeyBase64 string) *UserHandler {
 	if tokenSecret == "" {
 		tokenSecret = "scare-default-id-card-token-secret"
+	}
+	var encryptKey []byte
+	if encryptKeyBase64 != "" {
+		if k, err := base64.StdEncoding.DecodeString(encryptKeyBase64); err == nil && len(k) == 32 {
+			encryptKey = k
+		}
 	}
 	return &UserHandler{
 		service:        service,
 		idCardTokenKey: []byte(tokenSecret + ":id_card_token"),
 		idCardTokenTTL: 24 * time.Hour,
+		encryptKey:     encryptKey,
 	}
 }
 
@@ -156,22 +165,36 @@ func (h *UserHandler) Update(c *gin.Context) {
 	}
 
 	var newIDCardHash string
+	var newIDCardEncrypted string
+	var newIDCardMasked string
 	if req.IDCard != "" {
 		newIDCardHash = h.idCardDigest(req.IDCard)
+		newIDCardMasked = maskIDCard(req.IDCard)
+		if h.encryptKey != nil {
+			encrypted, err := crypto.Encrypt(req.IDCard, h.encryptKey)
+			if err != nil {
+				RespondError(c, http.StatusInternalServerError, "encrypt id_card failed")
+				return
+			}
+			newIDCardEncrypted = encrypted
+		} else {
+			newIDCardEncrypted = req.IDCard // 未配置密钥时保持明文（兼容）
+		}
 	}
 
 	user, err := h.service.Update(service.UserInput{
-		ID:         id,
-		Name:       req.Name,
-		Email:      req.Email,
-		Avatar:     req.Avatar,
-		Gender:     req.Gender,
-		BirthDate:  birthDate,
-		IDCard:     req.IDCard,
-		IDCardHMAC: newIDCardHash,
-		StationID:  req.StationID,
-		Status:     req.Status,
-		Password:   req.Password,
+		ID:           id,
+		Name:         req.Name,
+		Email:        req.Email,
+		Avatar:       req.Avatar,
+		Gender:       req.Gender,
+		BirthDate:    birthDate,
+		IDCard:       newIDCardEncrypted,
+		IDCardHMAC:   newIDCardHash,
+		IDCardMasked: newIDCardMasked,
+		StationID:    req.StationID,
+		Status:       req.Status,
+		Password:     req.Password,
 	})
 	if err != nil {
 		RespondError(c, http.StatusBadRequest, "update user failed")
@@ -264,7 +287,11 @@ func (h *UserHandler) toUserResponse(user *service.UserWithIdentities) gin.H {
 		calculatedAge := calculateAge(user.BirthDate, time.Now())
 		age = &calculatedAge
 	}
-	idCardMasked := maskIDCard(user.IDCard)
+	idCardMasked := user.IDCardMasked
+	if idCardMasked == "" && user.IDCard != "" {
+		// 兼容：旧数据未存储脱敏值时，尝试从明文计算（仅未加密场景）
+		idCardMasked = maskIDCard(user.IDCard)
+	}
 	idCardHash := user.IDCardHmac
 	if idCardHash == "" && user.IDCard != "" {
 		idCardHash = h.idCardDigest(user.IDCard)

@@ -41,7 +41,7 @@ go test ./pkg/geo/...        # 运行单个包测试
 go run cmd/tools/gen/gorm_gen.go
 
 # Swagger 文档更新（接口变更后必须执行）
-swag init -g cmd/server/main.go -o docs --parseDependency --parseInternal
+swag init -g main.go -o docs --parseDependency --parseInternal
 ```
 
 ### 管理门户（工作目录：`frontend/management-portal/`）

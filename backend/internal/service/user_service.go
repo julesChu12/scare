@@ -30,19 +30,20 @@ type UserService struct {
 
 // UserInput 创建/更新用户的输入参数
 type UserInput struct {
-	ID           int64     `json:"id"`            // 用户ID（更新时必填）
-	Phone        string    `json:"phone"`         // 手机号
-	Password     string    `json:"password"`      // 密码
-	Name         string    `json:"name"`          // 姓名
-	Email        string    `json:"email"`         // 邮箱
-	Avatar       string    `json:"avatar"`        // 头像
-	Gender       string    `json:"gender"`        // 性别
-	BirthDate    time.Time `json:"birth_date"`    // 出生日期
-	IDCard       string    `json:"id_card"`       // 身份证号
-	IDCardHMAC   string    `json:"id_card_hmac"`  // 身份证号HMAC摘要
-	IdentityType string    `json:"identity_type"` // 身份类型
-	StationID    int64     `json:"station_id"`    // 站点ID
-	Status       string    `json:"status"`        // 状态
+	ID           int64     `json:"id"`             // 用户ID（更新时必填）
+	Phone        string    `json:"phone"`          // 手机号
+	Password     string    `json:"password"`       // 密码
+	Name         string    `json:"name"`           // 姓名
+	Email        string    `json:"email"`          // 邮箱
+	Avatar       string    `json:"avatar"`         // 头像
+	Gender       string    `json:"gender"`         // 性别
+	BirthDate    time.Time `json:"birth_date"`     // 出生日期
+	IDCard       string    `json:"id_card"`        // 身份证号（密文或明文）
+	IDCardHMAC   string    `json:"id_card_hmac"`   // 身份证号HMAC摘要
+	IDCardMasked string    `json:"id_card_masked"` // 身份证号脱敏值
+	IdentityType string    `json:"identity_type"`  // 身份类型
+	StationID    int64     `json:"station_id"`     // 站点ID
+	Status       string    `json:"status"`         // 状态
 }
 
 // UserFilter 用户筛选条件（Service 层）
@@ -143,6 +144,7 @@ func (s *UserService) Update(input UserInput) (*UserWithIdentities, error) {
 	if input.IDCard != "" {
 		user.IDCard = input.IDCard
 		user.IDCardHmac = input.IDCardHMAC
+		user.IDCardMasked = input.IDCardMasked
 	}
 	if input.Status != "" {
 		user.Status = input.Status

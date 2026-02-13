@@ -23,6 +23,7 @@ var (
 	News            *news
 	Notification    *notification
 	Permission      *permission
+	Report          *report
 	Role            *role
 	RolePermission  *rolePermission
 	ServiceRequest  *serviceRequest
@@ -42,6 +43,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	News = &Q.News
 	Notification = &Q.Notification
 	Permission = &Q.Permission
+	Report = &Q.Report
 	Role = &Q.Role
 	RolePermission = &Q.RolePermission
 	ServiceRequest = &Q.ServiceRequest
@@ -62,6 +64,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		News:            newNews(db, opts...),
 		Notification:    newNotification(db, opts...),
 		Permission:      newPermission(db, opts...),
+		Report:          newReport(db, opts...),
 		Role:            newRole(db, opts...),
 		RolePermission:  newRolePermission(db, opts...),
 		ServiceRequest:  newServiceRequest(db, opts...),
@@ -83,6 +86,7 @@ type Query struct {
 	News            news
 	Notification    notification
 	Permission      permission
+	Report          report
 	Role            role
 	RolePermission  rolePermission
 	ServiceRequest  serviceRequest
@@ -105,6 +109,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		News:            q.News.clone(db),
 		Notification:    q.Notification.clone(db),
 		Permission:      q.Permission.clone(db),
+		Report:          q.Report.clone(db),
 		Role:            q.Role.clone(db),
 		RolePermission:  q.RolePermission.clone(db),
 		ServiceRequest:  q.ServiceRequest.clone(db),
@@ -134,6 +139,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		News:            q.News.replaceDB(db),
 		Notification:    q.Notification.replaceDB(db),
 		Permission:      q.Permission.replaceDB(db),
+		Report:          q.Report.replaceDB(db),
 		Role:            q.Role.replaceDB(db),
 		RolePermission:  q.RolePermission.replaceDB(db),
 		ServiceRequest:  q.ServiceRequest.replaceDB(db),
@@ -153,6 +159,7 @@ type queryCtx struct {
 	News            INewsDo
 	Notification    INotificationDo
 	Permission      IPermissionDo
+	Report          IReportDo
 	Role            IRoleDo
 	RolePermission  IRolePermissionDo
 	ServiceRequest  IServiceRequestDo
@@ -172,6 +179,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		News:            q.News.WithContext(ctx),
 		Notification:    q.Notification.WithContext(ctx),
 		Permission:      q.Permission.WithContext(ctx),
+		Report:          q.Report.WithContext(ctx),
 		Role:            q.Role.WithContext(ctx),
 		RolePermission:  q.RolePermission.WithContext(ctx),
 		ServiceRequest:  q.ServiceRequest.WithContext(ctx),

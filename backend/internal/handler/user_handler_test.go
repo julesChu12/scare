@@ -80,7 +80,7 @@ func TestUserHandler_List_WithIdentities(t *testing.T) {
 	userRepo := repository.NewUserRepository(db)
 	userIdentityRepo := repository.NewUserIdentityRepository(db)
 	userService := service.NewUserService(userRepo, userIdentityRepo)
-	handler := NewUserHandler(userService, "test-secret")
+	handler := NewUserHandler(userService, "test-secret", "")
 
 	stationID := int64(1)
 	createUserHandlerTestUser(t, db, "13800000001", []string{"admin"}, stationID)
@@ -102,7 +102,7 @@ func TestUserHandler_Create(t *testing.T) {
 	userRepo := repository.NewUserRepository(db)
 	userIdentityRepo := repository.NewUserIdentityRepository(db)
 	userService := service.NewUserService(userRepo, userIdentityRepo)
-	handler := NewUserHandler(userService, "test-secret")
+	handler := NewUserHandler(userService, "test-secret", "")
 
 	reqBody := map[string]interface{}{
 		"phone":         "13800000003",
@@ -131,7 +131,7 @@ func TestUserHandler_GetByID(t *testing.T) {
 	userRepo := repository.NewUserRepository(db)
 	userIdentityRepo := repository.NewUserIdentityRepository(db)
 	userService := service.NewUserService(userRepo, userIdentityRepo)
-	handler := NewUserHandler(userService, "test-secret")
+	handler := NewUserHandler(userService, "test-secret", "")
 
 	stationID := int64(1)
 	user := createUserHandlerTestUser(t, db, "13800000004", []string{"admin"}, stationID)
@@ -195,7 +195,7 @@ func TestUserHandler_Update_InvalidIDCardToken(t *testing.T) {
 	userRepo := repository.NewUserRepository(db)
 	userIdentityRepo := repository.NewUserIdentityRepository(db)
 	userService := service.NewUserService(userRepo, userIdentityRepo)
-	handler := NewUserHandler(userService, "test-secret")
+	handler := NewUserHandler(userService, "test-secret", "")
 
 	user := createUserHandlerTestUser(t, db, "13800000005", []string{"admin"}, 1)
 	if user.ID == 0 {
@@ -229,7 +229,7 @@ func TestUserHandler_Update_InvalidIDCardHash(t *testing.T) {
 	userRepo := repository.NewUserRepository(db)
 	userIdentityRepo := repository.NewUserIdentityRepository(db)
 	userService := service.NewUserService(userRepo, userIdentityRepo)
-	handler := NewUserHandler(userService, "test-secret")
+	handler := NewUserHandler(userService, "test-secret", "")
 
 	user := createUserHandlerTestUser(t, db, "13800000006", []string{"admin"}, 1)
 	if user.ID == 0 {

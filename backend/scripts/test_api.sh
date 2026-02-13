@@ -144,6 +144,13 @@ test_api "Admin - 新闻列表" "GET" "/b/news" "$ADMIN_TOKEN" "" "ok"
 test_api "Admin - 权限树" "GET" "/b/permissions/tree" "$ADMIN_TOKEN" "" "ok"
 test_api "Admin - 角色权限" "GET" "/b/roles/admin/permissions" "$ADMIN_TOKEN" "" "ok"
 test_api "Admin - 通知列表" "GET" "/b/notifications" "$ADMIN_TOKEN" "" "ok"
+test_api "Admin - 任务列表" "GET" "/b/tasks" "$ADMIN_TOKEN" "" "ok"
+test_api "Admin - 菜单详情(ID=1)" "GET" "/b/menus/1" "$ADMIN_TOKEN" "" ""
+test_api "Admin - 新闻详情(ID=1)" "GET" "/b/news/1" "$ADMIN_TOKEN" "" ""
+test_api "Admin - 统计仪表盘" "GET" "/b/statistics/dashboard" "$ADMIN_TOKEN" "" "ok"
+test_api "Admin - 统计任务" "GET" "/b/statistics/tasks" "$ADMIN_TOKEN" "" "ok"
+test_api "Admin - 统计请求" "GET" "/b/statistics/requests" "$ADMIN_TOKEN" "" "ok"
+test_api "Admin - 统计今日" "GET" "/b/statistics/today" "$ADMIN_TOKEN" "" "ok"
 
 # 用户更新新增字段与校验分支回归
 USER_DETAIL=$(curl -s -X GET "$API_URL/b/users/1" -H "Authorization: Bearer $ADMIN_TOKEN")
@@ -204,7 +211,10 @@ test_api "Staff - 角色权限(无权限)" "GET" "/b/roles/admin/permissions" "$
 # =====================================================
 echo -e "\n${YELLOW}--- C端公开 API 测试 ---${NC}"
 test_api "C端 - 新闻列表" "GET" "/c/news" "" "" "ok"
+test_api "C端 - 新闻详情(ID=1)" "GET" "/c/news/1" "" "" ""
 test_api "C端 - Banner列表" "GET" "/c/banners" "" "" "ok"
+test_api "C端 - 站点匹配" "GET" "/c/stations/match?lng=116.4&lat=39.9" "" "" ""
+test_api "C端 - 逆地理编码" "GET" "/c/geocode/reverse?lng=116.4&lat=39.9" "" "" ""
 
 # =====================================================
 # 测试结果汇总
