@@ -157,13 +157,8 @@ const total = ref(0)
 const noMore = computed(() => requests.value.length >= total.value && total.value > 0)
 const contentRef = ref<HTMLElement | null>(null)
 
-// 是否已登录（开发模式下可强制为 true）
-const DEV_MOCK_LOGIN = false // 生产环境
+// 是否已登录
 const isLoggedIn = computed(() => {
-  if (import.meta.env.DEV && DEV_MOCK_LOGIN) {
-    return true
-  }
-  // 检查 token 或 user 信息
   return tokenStore.isLoggedIn || !!userStore.user
 })
 
@@ -175,58 +170,6 @@ const selectCategory = (key: string) => {
   requests.value = []
   fetchRequests()
 }
-
-// 开发模式 mock 数据
-const mockRequests: ServiceRequest[] = [
-  {
-    id: 1,
-    request_no: '20250129-ABC123',
-    service_type: 'meal_service',
-    status: 'completed',
-    description: '需要送餐服务',
-    contact_name: '张三',
-    contact_phone: '13800138000',
-    address: '北京市朝阳区望京街道',
-    created_at: '2025-01-28T10:30:00Z',
-    updated_at: '2025-01-28T12:00:00Z'
-  },
-  {
-    id: 2,
-    request_no: '20250128-DEF456',
-    service_type: 'medical_care',
-    status: 'processing',
-    description: '陪同就医',
-    contact_name: '张三',
-    contact_phone: '13800138000',
-    address: '北京市朝阳区望京街道',
-    created_at: '2025-01-27T14:00:00Z',
-    updated_at: '2025-01-27T15:00:00Z'
-  },
-  {
-    id: 3,
-    request_no: '20250127-GHI789',
-    service_type: 'housekeeping',
-    status: 'pending',
-    description: '家政保洁',
-    contact_name: '张三',
-    contact_phone: '13800138000',
-    address: '北京市朝阳区望京街道',
-    created_at: '2025-01-26T09:00:00Z',
-    updated_at: '2025-01-26T09:00:00Z'
-  },
-  {
-    id: 4,
-    request_no: '20250125-JKL012',
-    service_type: 'daily_care',
-    status: 'cancelled',
-    description: '日常照护',
-    contact_name: '张三',
-    contact_phone: '13800138000',
-    address: '北京市朝阳区望京街道',
-    created_at: '2025-01-25T08:00:00Z',
-    updated_at: '2025-01-25T10:00:00Z'
-  }
-]
 
 // 获取服务请求列表
 const fetchRequests = async (isRefresh = false) => {
@@ -242,19 +185,13 @@ const fetchRequests = async (isRefresh = false) => {
   try {
     let items: ServiceRequest[] = []
 
-    // 开发模式使用 mock 数据
-    if (import.meta.env.DEV && DEV_MOCK_LOGIN) {
-      items = [...mockRequests]
-      total.value = mockRequests.length
-    } else {
-      const params: { page: number; page_size: number; status?: string } = {
-        page: page.value,
-        page_size: pageSize
-      }
-      const result = await requestsAPI.getMyRequests(params)
-      items = result.list || []
-      total.value = result.total
+    const params: { page: number; page_size: number; status?: string } = {
+      page: page.value,
+      page_size: pageSize
     }
+    const result = await requestsAPI.getMyRequests(params)
+    items = result.items || []
+    total.value = result.total
 
     // 前端按服务类型筛选
     if (selectedCategory.value) {

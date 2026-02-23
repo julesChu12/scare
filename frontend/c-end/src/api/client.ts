@@ -49,7 +49,8 @@ client.interceptors.response.use(
     const body = response.data as any
 
     // Backend uses unified wrapper: { msg, data }
-    if (body && typeof body === 'object' && 'data' in body && 'msg' in body) {
+    // 只要包含 data 字段就尝试解包，不再强制要求 msg 字段
+    if (body && typeof body === 'object' && 'data' in body) {
       return body.data
     }
 
@@ -61,13 +62,6 @@ client.interceptors.response.use(
     // 处理错误响应
     if (error.response) {
       const { status, data } = error.response
-
-      // 开发模式 mock 登录：跳过 401 跳转
-      const DEV_MOCK_LOGIN = false // 生产环境
-      if (import.meta.env.DEV && DEV_MOCK_LOGIN && status === 401) {
-        console.warn('🔧 开发模式：跳过 401 跳转')
-        return Promise.reject(error)
-      }
 
       // 401 未授权：尝试刷新 Token
       if (status === 401 && !originalRequest._retry) {

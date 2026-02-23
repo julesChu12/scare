@@ -2,74 +2,75 @@ import client from './client'
 import type { ServiceTypeKey } from '@/config/serviceTypes'
 
 // 请求状态枚举
-export type RequestStatus = 'pending' | 'processing' | 'completed' | 'cancelled'
+export type RequestStatus = 'pending' | 'dispatched' | 'accepted' | 'in_progress' | 'processing' | 'completed' | 'cancelled' | 'rejected'
 
 // 请求状态映射
-export const REQUEST_STATUS_MAP: Record<RequestStatus, { label: string; color: string }> = {
+export const REQUEST_STATUS_MAP: Record<string, { label: string; color: string }> = {
   pending: { label: '待处理', color: 'warning' },
+  dispatched: { label: '已派单', color: 'primary' },
+  accepted: { label: '已接单', color: 'primary' },
+  in_progress: { label: '服务中', color: 'primary' },
   processing: { label: '处理中', color: 'primary' },
   completed: { label: '已完成', color: 'success' },
-  cancelled: { label: '已取消', color: 'info' }
+  cancelled: { label: '已取消', color: 'info' },
+  rejected: { label: '已拒绝', color: 'danger' }
 }
 
-// 接口类型定义
+// 创建请求（对齐后端 handler.requestCreate）
 export interface CreateRequestRequest {
   service_type: ServiceTypeKey | string
-  description?: string
-  address: string
-  latitude?: number
-  longitude?: number
-  contact_name: string
-  contact_phone: string
+  address?: string
+  lat?: number
+  lng?: number
+  contact_name?: string
+  contact_phone?: string
+  images?: string[]
 }
 
+// 创建响应（后端返回完整 RequestResponse）
 export interface CreateRequestResponse {
   id: number
   request_no: string
   service_type: string
-  status: RequestStatus
+  status: string
   created_at: string
 }
 
-export interface AssignedStaff {
-  id: number
-  name: string
-  phone: string
-}
-
+// 服务请求详情（对齐后端 handler.RequestResponse）
 export interface ServiceRequest {
   id: number
   request_no: string
+  user_id: number
   service_type: string
-  status: RequestStatus
+  status: string
   description?: string
-  address: string
   contact_name: string
   contact_phone: string
-  assigned_staff?: AssignedStaff
-  // 扩展字段（详情页可能返回）
-  station?: {
-    id: number
-    name: string
-  }
+  address: string
+  station_id?: number
+  station_name?: string
   appointment_time?: string
+  urgency?: string
   reject_reason?: string
+  images?: string
   rating?: number
-  comment?: string
+  feedback?: string
   created_at: string
   updated_at: string
 }
 
+// 列表响应（对齐后端 handler.RequestListResponse）
 export interface PageData<T> {
-  list: T
+  items: T
   total: number
   page: number
   page_size: number
 }
 
+// 评价请求（对齐后端 handler.rateRequest）
 export interface RateRequestData {
   rating: number
-  comment?: string
+  feedback?: string
 }
 
 export interface CancelRequestData {

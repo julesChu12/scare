@@ -62,29 +62,35 @@
         </div>
 
         <!-- 服务站点 -->
-        <div class="info-section" v-if="request.station">
+        <div class="info-section" v-if="request.station_name">
           <div class="section-title">服务站点</div>
           <div class="info-list">
             <div class="info-row">
               <span class="info-label">站点名称</span>
-              <span class="info-value">{{ request.station.name }}</span>
+              <span class="info-value">{{ request.station_name }}</span>
             </div>
           </div>
         </div>
 
-        <!-- 服务人员 -->
-        <div class="info-section" v-if="request.assigned_staff">
-          <div class="section-title">服务人员</div>
-          <div class="staff-card">
-            <div class="staff-avatar">👤</div>
-            <div class="staff-info">
-              <div class="staff-name">{{ request.assigned_staff.name }}</div>
-              <div class="staff-role">服务人员</div>
-            </div>
-            <el-button type="primary" plain size="small" @click="callStaff">
-              <el-icon><Phone /></el-icon>
-              联系
-            </el-button>
+        <!-- 服务照片 -->
+        <div class="info-section" v-if="parsedImages.length">
+          <div class="section-title">服务记录</div>
+          <div class="photo-gallery">
+            <el-image
+              v-for="(photo, index) in parsedImages"
+              :key="index"
+              :src="photo"
+              :preview-src-list="parsedImages"
+              :initial-index="index"
+              fit="cover"
+              class="photo-item"
+            >
+              <template #error>
+                <div class="photo-error">
+                  <el-icon><Picture /></el-icon>
+                </div>
+              </template>
+            </el-image>
           </div>
         </div>
 
@@ -99,7 +105,7 @@
           <div class="section-title">服务评价</div>
           <div class="rating-display">
             <el-rate v-model="request.rating" disabled show-score />
-            <div class="feedback" v-if="request.comment">{{ request.comment }}</div>
+            <div class="feedback" v-if="request.feedback">{{ request.feedback }}</div>
           </div>
         </div>
 
@@ -163,7 +169,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeft, Loading, Star, Phone } from '@element-plus/icons-vue'
+import { ArrowLeft, Loading, Star, Picture } from '@element-plus/icons-vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { requestsAPI, type ServiceRequest } from '@/api'
 import { getServiceTypeName, getServiceTypeIcon } from '@/config/serviceTypes'
@@ -171,68 +177,6 @@ import RatingDialog from '@/components/RatingDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
-
-// 开发模式 mock
-const DEV_MOCK_LOGIN = false
-
-// Mock 数据
-const mockRequestsMap: Record<number, ServiceRequest> = {
-  1: {
-    id: 1,
-    request_no: '20250129-ABC123',
-    service_type: 'meal_service',
-    status: 'completed',
-    description: '需要送餐服务，希望清淡一些，少油少盐',
-    contact_name: '张三',
-    contact_phone: '13800138000',
-    address: '北京市朝阳区望京街道望京西园四区',
-    station: { id: 1, name: '望京街道服务站' },
-    assigned_staff: { id: 1, name: '李师傅', phone: '13900139000' },
-    created_at: '2025-01-28T10:30:00Z',
-    updated_at: '2025-01-28T12:00:00Z'
-  },
-  2: {
-    id: 2,
-    request_no: '20250128-DEF456',
-    service_type: 'medical_care',
-    status: 'processing',
-    description: '陪同去朝阳医院看骨科，需要轮椅',
-    contact_name: '张三',
-    contact_phone: '13800138000',
-    address: '北京市朝阳区望京街道望京西园四区',
-    station: { id: 1, name: '望京街道服务站' },
-    assigned_staff: { id: 2, name: '王阿姨', phone: '13900139001' },
-    appointment_time: '2025-01-29T09:00:00Z',
-    created_at: '2025-01-27T14:00:00Z',
-    updated_at: '2025-01-27T15:00:00Z'
-  },
-  3: {
-    id: 3,
-    request_no: '20250127-GHI789',
-    service_type: 'housekeeping',
-    status: 'pending',
-    description: '家政保洁，两室一厅，约80平米',
-    contact_name: '张三',
-    contact_phone: '13800138000',
-    address: '北京市朝阳区望京街道望京西园四区',
-    station: { id: 1, name: '望京街道服务站' },
-    created_at: '2025-01-26T09:00:00Z',
-    updated_at: '2025-01-26T09:00:00Z'
-  },
-  4: {
-    id: 4,
-    request_no: '20250125-JKL012',
-    service_type: 'daily_care',
-    status: 'cancelled',
-    description: '日常照护，因家人已回来，取消服务',
-    contact_name: '张三',
-    contact_phone: '13800138000',
-    address: '北京市朝阳区望京街道望京西园四区',
-    reject_reason: '用户主动取消',
-    created_at: '2025-01-25T08:00:00Z',
-    updated_at: '2025-01-25T10:00:00Z'
-  }
-}
 
 const loading = ref(false)
 const request = ref<ServiceRequest | null>(null)
@@ -256,9 +200,16 @@ const getServiceIcon = (type: string) => {
   return getServiceTypeIcon(type)
 }
 
-const callStaff = () => {
-  ElMessage.info('联系服务人员功能开发中')
-}
+// 解析图片字符串为数组
+const parsedImages = computed(() => {
+  if (!request.value?.images) return []
+  try {
+    const parsed = JSON.parse(request.value.images)
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return request.value.images ? [request.value.images] : []
+  }
+})
 
 const handleCancel = async () => {
   try {
@@ -268,17 +219,9 @@ const handleCancel = async () => {
       type: 'warning'
     })
 
-    if (import.meta.env.DEV && DEV_MOCK_LOGIN) {
-      if (request.value) {
-        request.value.status = 'cancelled'
-        request.value.reject_reason = '用户主动取消'
-      }
-      ElMessage.success('服务已取消')
-    } else {
-      await requestsAPI.cancelRequest(request.value!.id)
-      ElMessage.success('服务已取消')
-      loadDetail()
-    }
+    await requestsAPI.cancelRequest(request.value!.id)
+    ElMessage.success('服务已取消')
+    loadDetail()
   } catch (e) {
     // 用户点击取消
   }
@@ -296,13 +239,7 @@ const loadDetail = async () => {
 
   loading.value = true
   try {
-    // 开发模式使用 mock 数据
-    if (import.meta.env.DEV && DEV_MOCK_LOGIN) {
-      await new Promise(resolve => setTimeout(resolve, 300)) // 模拟加载
-      request.value = mockRequestsMap[id] || null
-    } else {
-      request.value = await requestsAPI.getRequestDetail(id)
-    }
+    request.value = await requestsAPI.getRequestDetail(id)
   } catch (error) {
     console.error('加载服务详情失败:', error)
   } finally {
@@ -310,10 +247,10 @@ const loadDetail = async () => {
   }
 }
 
-const handleRatingSuccess = (rating: number, comment: string) => {
+const handleRatingSuccess = (rating: number, feedback: string) => {
   if (request.value) {
     request.value.rating = rating
-    request.value.comment = comment
+    request.value.feedback = feedback
   }
 }
 
@@ -496,40 +433,6 @@ onMounted(() => {
   font-weight: 500;
 }
 
-/* 服务人员卡片 */
-.staff-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.staff-avatar {
-  width: 48px;
-  height: 48px;
-  background: #f5f7fa;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-}
-
-.staff-info {
-  flex: 1;
-}
-
-.staff-name {
-  font-size: 16px;
-  font-weight: 500;
-  color: #303133;
-}
-
-.staff-role {
-  font-size: 12px;
-  color: #909399;
-  margin-top: 2px;
-}
-
 /* 取消原因 */
 .cancel-reason {
   color: #f56c6c;
@@ -537,6 +440,31 @@ onMounted(() => {
   padding: 12px;
   background: #fef0f0;
   border-radius: 8px;
+}
+
+.photo-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.photo-item {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.photo-error {
+  width: 100%;
+  height: 100%;
+  background: #f0f2f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #909399;
+  font-size: 24px;
 }
 
 /* 评价展示 */

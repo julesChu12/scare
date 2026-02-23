@@ -131,7 +131,7 @@ const loadRequests = async () => {
     const result = await requestsAPI.getMyRequests({
       status: statusFilter.value || undefined
     })
-    requests.value = result.list || []
+    requests.value = result.items || []
   } catch (error) {
     console.error('加载服务请求失败:', error)
   } finally {

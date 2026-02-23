@@ -60,42 +60,42 @@ export function wgs84ToGcj02(lng: number, lat: number): { lng: number; lat: numb
 
 /**
  * 获取当前位置（已转换为 GCJ-02）
+ * 先尝试高精度定位，超时后自动降级为低精度（WiFi/IP）
  * @returns Promise<{ lng: number; lat: number }> GCJ-02 坐标
  */
 export function getCurrentPosition(): Promise<{ lng: number; lat: number }> {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error('浏览器不支持地理位置'))
-      return
-    }
+  if (!navigator.geolocation) {
+    return Promise.reject(new Error('浏览器不支持地理位置'))
+  }
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { longitude, latitude } = position.coords
-        // 转换为 GCJ-02 坐标系
-        const gcj02 = wgs84ToGcj02(longitude, latitude)
-        resolve(gcj02)
-      },
-      (error) => {
-        let message = '获取位置失败'
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            message = '用户拒绝了位置请求'
-            break
-          case error.POSITION_UNAVAILABLE:
-            message = '位置信息不可用'
-            break
-          case error.TIMEOUT:
-            message = '获取位置超时'
-            break
-        }
-        reject(new Error(message))
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000
-      }
-    )
+  const resolvePosition = (position: GeolocationPosition): { lng: number; lat: number } => {
+    const { longitude, latitude } = position.coords
+    return wgs84ToGcj02(longitude, latitude)
+  }
+
+  const getPosition = (highAccuracy: boolean, timeout: number): Promise<{ lng: number; lat: number }> => {
+    return new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => resolve(resolvePosition(position)),
+        (error) => reject(error),
+        { enableHighAccuracy: highAccuracy, timeout, maximumAge: 60000 }
+      )
+    })
+  }
+
+  // 高精度 → 超时/失败后降级低精度
+  return getPosition(true, 5000).catch((err) => {
+    if (err.code === err.PERMISSION_DENIED) {
+      throw new Error('用户拒绝了位置请求')
+    }
+    // 超时或不可用，降级为低精度
+    return getPosition(false, 15000)
+  }).catch((err) => {
+    if (err instanceof Error) throw err
+    let message = '获取位置失败'
+    if (err.code === err.PERMISSION_DENIED) message = '用户拒绝了位置请求'
+    else if (err.code === err.POSITION_UNAVAILABLE) message = '位置信息不可用'
+    else if (err.code === err.TIMEOUT) message = '获取位置超时，请检查系统定位权限'
+    throw new Error(message)
   })
 }

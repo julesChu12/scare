@@ -5,6 +5,7 @@
       <div class="location-left" @click="refreshLocation">
         <el-icon><Location /></el-icon>
         <span class="location-text">{{ currentDistrict }}</span>
+        <span v-if="isDefaultLocation" class="location-hint">(默认)</span>
         <el-icon class="refresh-icon"><RefreshRight /></el-icon>
       </div>
       <div class="station-right" @click="showStationInfo">
@@ -172,6 +173,7 @@ const currentLat = ref<number | undefined>()
 const currentLng = ref<number | undefined>()
 const currentStation = ref<StationInfo | null>(null)
 const locationLoading = ref(false)
+const isDefaultLocation = ref(false)
 const stationDialogVisible = ref(false)
 
 const banners = ref<Banner[]>([])
@@ -225,12 +227,32 @@ const formatDate = (dateStr: string) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
+// 默认位置：霍营街道（GCJ-02 坐标）
+const DEFAULT_LOCATION = { lat: 40.0579, lng: 116.3698, district: '昌平区霍营街道' }
+
 // 获取定位并解析地址
 const fetchLocation = async () => {
   locationLoading.value = true
+  isDefaultLocation.value = false
   try {
-    // 获取 GPS 坐标（已转换为 GCJ-02）
-    const pos = await getCurrentPosition()
+    let pos: { lat: number; lng: number }
+
+    // 开发环境下浏览器模拟模式无 GPS，直接使用默认坐标
+    if (import.meta.env.DEV) {
+      try {
+        pos = await getCurrentPosition()
+      } catch {
+        console.info('[Home] 开发环境定位不可用，使用默认坐标')
+        currentLat.value = DEFAULT_LOCATION.lat
+        currentLng.value = DEFAULT_LOCATION.lng
+        currentDistrict.value = DEFAULT_LOCATION.district
+        isDefaultLocation.value = true
+        return
+      }
+    } else {
+      pos = await getCurrentPosition()
+    }
+
     currentLat.value = pos.lat
     currentLng.value = pos.lng
 
@@ -241,8 +263,17 @@ const fetchLocation = async () => {
     })
     currentDistrict.value = geoResult.district || geoResult.city || '未知位置'
   } catch (error) {
-    console.warn('定位失败:', error)
-    currentDistrict.value = '定位失败'
+    if (import.meta.env.DEV) {
+      console.group('[Home] 定位失败，回退到默认位置')
+      console.warn('原因:', error)
+      console.info('默认坐标:', DEFAULT_LOCATION)
+      console.groupEnd()
+    }
+    // 回退到默认位置
+    currentLat.value = DEFAULT_LOCATION.lat
+    currentLng.value = DEFAULT_LOCATION.lng
+    currentDistrict.value = DEFAULT_LOCATION.district
+    isDefaultLocation.value = true
   } finally {
     locationLoading.value = false
   }
@@ -258,8 +289,8 @@ const fetchStation = async () => {
       latitude: currentLat.value,
       longitude: currentLng.value
     })
-    currentStation.value = result.station
-    stationName.value = result.station.name
+    currentStation.value = result
+    stationName.value = result.name
     // 每次获取站点后刷新 Banner，因为 Banner 可能跟站点有关
     fetchBanners()
   } catch (error) {
@@ -344,6 +375,11 @@ onMounted(async () => {
   color: #409EFF;
 }
 
+.location-hint {
+  font-size: 12px;
+  color: #E6A23C;
+}
+
 .refresh-icon {
   font-size: 12px;
   color: #909399 !important;
@@ -422,30 +458,6 @@ onMounted(async () => {
   background: #409EFF;
   width: 20px;
   border-radius: 4px;
-}
-
-/* 紧急求助 */
-.emergency-section {
-  padding: 0 16px 12px;
-}
-
-.emergency-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
-  color: white;
-  padding: 14px;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(238, 90, 90, 0.3);
-}
-
-.emergency-btn .el-icon {
-  font-size: 20px;
 }
 
 /* 服务网格 */

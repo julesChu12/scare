@@ -49,7 +49,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
-  (e: 'success', rating: number, comment: string): void
+  (e: 'success', rating: number, feedback: string): void
 }>()
 
 const visible = ref(props.modelValue)
@@ -85,7 +85,7 @@ const handleSubmit = async () => {
   try {
     await requestsAPI.rateRequest(props.requestId, {
       rating: rating.value,
-      comment: comment.value || undefined
+      feedback: comment.value || undefined
     })
 
     ElMessage.success('评价提交成功')

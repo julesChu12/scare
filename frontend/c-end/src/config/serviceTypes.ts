@@ -17,15 +17,6 @@ export type ServiceTypeKey =
   | 'meal_service'
   | 'other'
 
-// 首页展示的主要服务
-export const primaryServiceTypes: ServiceType[] = [
-  { key: 'meal_service', name: '助餐服务', icon: '🍱', description: '营养配餐送上门' },
-  { key: 'medical_care', name: '医疗护理', icon: '🏥', description: '陪同就医看诊' },
-  { key: 'daily_care', name: '日常照护', icon: '👴', description: '生活起居照料' },
-  { key: 'housekeeping', name: '家政服务', icon: '🧹', description: '居家清洁服务' },
-  { key: 'mental_care', name: '心理关怀', icon: '💬', description: '心理陪伴慰藉' }
-]
-
 // 全部服务类型（与后端 API 一致）
 export const allServiceTypes: ServiceType[] = [
   { key: 'daily_care', name: '日常照护', icon: '👴', description: '生活起居照料' },

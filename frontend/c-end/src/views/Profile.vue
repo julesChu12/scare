@@ -225,7 +225,7 @@ const fetchStation = async () => {
         latitude: userStore.profile.latitude,
         longitude: userStore.profile.longitude
       })
-      currentStation.value = result.station
+      currentStation.value = result
     }
   } catch (error) {
     console.error('获取站点信息失败:', error)

@@ -13,27 +13,6 @@ export interface ReverseGeocodeResponse {
     address: string
 }
 
-export interface UploadResponse {
-    url: string
-    filename: string
-}
-
-export const commonAPI = {
-    /**
-     * 文件上传
-     * POST /api/v1/c/upload
-     */
-    upload: (file: File) => {
-        const formData = new FormData()
-        formData.append('file', file)
-        return client.post<any, UploadResponse>('/c/upload', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        })
-    }
-}
-
 export const geocodeAPI = {
     /**
      * 地理编码（地址 -> 坐标）
