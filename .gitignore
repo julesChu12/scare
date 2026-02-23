@@ -138,7 +138,7 @@ coverage/
 .nyc_output/
 *.tgz
 *.tar.gz
-*.serena
+.serena/
 *.claude
 
 # 上传文件存储
