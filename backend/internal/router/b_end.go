@@ -37,7 +37,9 @@ func RegisterBEndRoutes(api *gin.RouterGroup, secured *gin.RouterGroup, deps *De
 		// 服务请求管理
 		protected.GET("/requests", deps.RequestHandler.List)
 		protected.GET("/requests/:id", deps.RequestHandler.Get)
+		protected.PUT("/requests/:id", deps.RequestHandler.Update)
 		protected.PUT("/requests/:id/status", deps.RequestHandler.UpdateStatus)
+		protected.POST("/requests/:id/cancel", deps.RequestHandler.CancelByAdmin)
 
 		// 任务管理
 		protected.GET("/tasks", deps.TaskHandler.List)
@@ -100,6 +102,13 @@ func RegisterBEndRoutes(api *gin.RouterGroup, secured *gin.RouterGroup, deps *De
 		protected.GET("/news/:id", deps.NewsHandler.Get)
 		protected.PUT("/news/:id", deps.NewsHandler.Update)
 		protected.DELETE("/news/:id", deps.NewsHandler.Delete)
+
+		// 老年人档案管理
+		protected.GET("/customers", deps.CustomerHandler.List)
+		protected.POST("/customers", deps.CustomerHandler.Create)
+		protected.GET("/customers/:id", deps.CustomerHandler.Get)
+		protected.PUT("/customers/:id", deps.CustomerHandler.Update)
+		protected.GET("/customers/:id/service-records", deps.CustomerHandler.GetServiceRecords)
 
 		// 统计数据
 		protected.GET("/statistics/dashboard", deps.StatisticsHandler.GetDashboardStats)

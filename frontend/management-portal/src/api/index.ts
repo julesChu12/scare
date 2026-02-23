@@ -10,7 +10,6 @@ import type {
   TaskListParams,
   PaginationData,
   ServiceRequest,
-  CreateServiceRequest,
   UpdateServiceRequest,
   CompleteTaskRequest,
   Station,
@@ -20,7 +19,6 @@ import type {
   User,
   UserCreateRequest,
   UserUpdateRequest,
-  UpdateUserRolesRequest,
   UpdateRolePermissionsRequest,
   PermissionNode,
   Notification,
@@ -44,6 +42,11 @@ import type {
   StaffRankingItemData,
   GenerateReportRequest,
   ReportData,
+  ElderlyProfile,
+  ElderlyCreateRequest,
+  ElderlyUpdateRequest,
+  ElderlyListParams,
+  ElderlyServiceRecord,
 } from '@/types/api'
 
 /**
@@ -152,13 +155,6 @@ export const requestApi = {
   },
 
   /**
-   * 创建服务需求
-   */
-  createRequest(data: CreateServiceRequest): Promise<ApiResponse<ServiceRequest>> {
-    return request.post('/b/requests', data).then((res) => res.data)
-  },
-
-  /**
    * 更新服务需求
    */
   updateRequest(requestId: number, data: UpdateServiceRequest): Promise<ApiResponse<ServiceRequest>> {
@@ -166,10 +162,10 @@ export const requestApi = {
   },
 
   /**
-   * 删除服务需求
+   * B端取消服务请求
    */
-  deleteRequest(requestId: number): Promise<ApiResponse<null>> {
-    return request.delete(`/b/requests/${requestId}`).then((res) => res.data)
+  cancelRequest(requestId: number): Promise<ApiResponse<ServiceRequest>> {
+    return request.post(`/b/requests/${requestId}/cancel`).then((res) => res.data)
   },
 }
 
@@ -276,13 +272,6 @@ export const userApi = {
    */
   updateUser(userId: number, data: UserUpdateRequest): Promise<ApiResponse<User>> {
     return request.put(`/b/users/${userId}`, data).then((res) => res.data)
-  },
-
-  /**
-   * 更新用户角色
-   */
-  updateUserRoles(userId: number, data: UpdateUserRolesRequest): Promise<ApiResponse<{ user_id: number; roles: string[]; tokens_revoked: boolean }>> {
-    return request.put(`/b/users/${userId}/roles`, data).then((res) => res.data)
   },
 
   /**
@@ -422,13 +411,6 @@ export const bannerApi = {
   },
 
   /**
-   * 获取轮播图详情
-   */
-  getBanner(bannerId: number): Promise<ApiResponse<Banner>> {
-    return request.get(`/b/banners/${bannerId}`).then((res) => res.data)
-  },
-
-  /**
    * 创建轮播图
    */
   createBanner(data: BannerRequest): Promise<ApiResponse<Banner>> {
@@ -546,5 +528,45 @@ export const newsApi = {
    */
   deleteNews(newsId: number): Promise<ApiResponse<null>> {
     return request.delete(`/b/news/${newsId}`).then((res) => res.data)
+  },
+}
+
+/**
+ * 老年人档案管理 API
+ */
+export const elderlyApi = {
+  /**
+   * 获取老人档案列表
+   */
+  getList(params?: ElderlyListParams): Promise<ApiResponse<PaginationData<ElderlyProfile>>> {
+    return request.get('/b/customers', { params }).then((res) => res.data)
+  },
+
+  /**
+   * 获取老人档案详情
+   */
+  getDetail(id: number): Promise<ApiResponse<ElderlyProfile>> {
+    return request.get(`/b/customers/${id}`).then((res) => res.data)
+  },
+
+  /**
+   * 创建老人档案
+   */
+  create(data: ElderlyCreateRequest): Promise<ApiResponse<ElderlyProfile>> {
+    return request.post('/b/customers', data).then((res) => res.data)
+  },
+
+  /**
+   * 更新老人档案
+   */
+  update(id: number, data: ElderlyUpdateRequest): Promise<ApiResponse<ElderlyProfile>> {
+    return request.put(`/b/customers/${id}`, data).then((res) => res.data)
+  },
+
+  /**
+   * 获取老人服务记录
+   */
+  getServiceRecords(id: number, params?: PaginationParams): Promise<ApiResponse<PaginationData<ElderlyServiceRecord>>> {
+    return request.get(`/b/customers/${id}/service-records`, { params }).then((res) => res.data)
   },
 }

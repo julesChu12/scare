@@ -39,6 +39,7 @@ type Deps struct {
 	ReportRepo         *repository.ReportRepository
 
 	// Services
+	ElderlyService      *service.ElderlyService
 	AuthService         *service.AuthService
 	SMSService          *service.SMSService
 	BannerService       *service.BannerService
@@ -61,6 +62,7 @@ type Deps struct {
 	ReportService       *service.ReportService
 
 	// Handlers
+	CustomerHandler     *handler.CustomerHandler
 	BannerHandler       *handler.BannerHandler
 	BAuthHandler        *handler.BAuthHandler
 	CAuthHandler        *handler.CAuthHandler
@@ -169,8 +171,10 @@ func NewDeps(db *database.DB, rdb *redis.Client, cfg *config.Config) (*Deps, err
 	d.BannerService = service.NewBannerService(bannerRepo)
 	d.StatisticsService = service.NewStatisticsService(d.TaskRepo, d.RequestRepo, d.UserRepo)
 	d.ReportService = service.NewReportService(d.ReportRepo, d.RequestRepo, d.TaskRepo, d.StationRepo, d.UserRepo, cfg.Storage.Local.BasePath)
+	d.ElderlyService = service.NewElderlyService(db.DB, d.UserRepo, d.UserIdentityRepo, d.CustomerRepo, d.RequestRepo, d.TaskRepo)
 
 	// 初始化 Handlers
+	d.CustomerHandler = handler.NewCustomerHandler(d.ElderlyService)
 	d.BannerHandler = handler.NewBannerHandler(d.BannerService)
 	d.BAuthHandler = handler.NewBAuthHandler(d.AuthService, d.UserRepo, d.UserIdentityRepo, d.PermissionService)
 	d.CAuthHandler = handler.NewCAuthHandler(d.AuthService, d.UserRepo, d.CustomerRepo, d.SMSService)

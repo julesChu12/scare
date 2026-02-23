@@ -19,7 +19,7 @@
           <el-form-item>
             <el-input
               v-model="searchForm.keyword"
-              placeholder="姓名/手机号/身份证号"
+              placeholder="姓名/手机号"
               :prefix-icon="Search"
               clearable
               style="width: 220px"
@@ -37,6 +37,13 @@
             </el-select>
           </el-form-item>
           <el-form-item>
+            <el-select v-model="searchForm.health_status" placeholder="健康状况" clearable style="width: 140px">
+              <el-option label="良好" value="good" />
+              <el-option label="一般" value="normal" />
+              <el-option label="较差" value="poor" />
+            </el-select>
+          </el-form-item>
+          <el-form-item>
             <el-button type="primary" @click="handleSearch">查询</el-button>
             <el-button @click="handleReset">重置</el-button>
           </el-form-item>
@@ -46,24 +53,24 @@
       <!-- 数据表格 -->
       <el-table v-loading="loading" :data="elderlyList" stripe style="width: 100%">
         <el-table-column prop="name" label="姓名" width="100" />
-        <el-table-column prop="age" label="年龄" width="80">
+        <el-table-column label="年龄" width="80">
           <template #default="{ row }">
-            {{ calculateAge(row.birth_date) }}岁
+            {{ row.birth_date ? calculateAge(row.birth_date) + '岁' : '-' }}
           </template>
         </el-table-column>
-        <el-table-column prop="gender" label="性别" width="80">
+        <el-table-column label="性别" width="80">
           <template #default="{ row }">
-            {{ row.gender === 'male' ? '男' : '女' }}
+            {{ row.gender === 'male' ? '男' : row.gender === 'female' ? '女' : '-' }}
           </template>
         </el-table-column>
-        <el-table-column prop="phone" label="手机号" width="130">
+        <el-table-column label="手机号" width="130">
           <template #default="{ row }">
             {{ maskPhone(row.phone) }}
           </template>
         </el-table-column>
         <el-table-column prop="address" label="地址" min-width="200" show-overflow-tooltip />
         <el-table-column prop="station_name" label="所属站点" width="180" />
-        <el-table-column prop="health_status" label="健康状况" width="100">
+        <el-table-column label="健康状况" width="100">
           <template #default="{ row }">
             <el-tag :type="getHealthStatusType(row.health_status)" size="small">
               {{ getHealthStatusText(row.health_status) }}
@@ -119,23 +126,19 @@
                 v-model="elderlyForm.birth_date"
                 type="date"
                 placeholder="选择出生日期"
+                value-format="YYYY-MM-DD"
                 style="width: 100%"
               />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="民族" prop="ethnicity">
-              <el-input v-model="elderlyForm.ethnicity" placeholder="请输入民族" />
+            <el-form-item label="手机号" prop="phone">
+              <el-input v-model="elderlyForm.phone" placeholder="请输入手机号" :disabled="isEdit" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="身份证号" prop="id_card">
               <el-input v-model="elderlyForm.id_card" placeholder="请输入身份证号" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="手机号" prop="phone">
-              <el-input v-model="elderlyForm.phone" placeholder="请输入手机号" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -159,18 +162,28 @@
               </el-select>
             </el-form-item>
           </el-col>
+          <el-col :span="12">
+            <el-form-item label="失能等级">
+              <el-select v-model="elderlyForm.disability_level" placeholder="请选择" clearable style="width: 100%">
+                <el-option label="自理" value="自理" />
+                <el-option label="轻度" value="轻度" />
+                <el-option label="中度" value="中度" />
+                <el-option label="重度" value="重度" />
+              </el-select>
+            </el-form-item>
+          </el-col>
           <el-col :span="24">
             <el-form-item label="地址" prop="address">
               <el-input v-model="elderlyForm.address" placeholder="请输入详细地址" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="慢性病" prop="chronic_diseases">
-              <el-input v-model="elderlyForm.chronic_diseases" type="textarea" :rows="2" placeholder="请输入慢性病情况，多个用逗号分隔" />
+            <el-form-item label="病史">
+              <el-input v-model="elderlyForm.medical_history" type="textarea" :rows="2" placeholder="请输入病史/慢性病情况" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
-            <el-form-item label="特殊需求" prop="special_needs">
+            <el-form-item label="特殊需求">
               <el-input v-model="elderlyForm.special_needs" type="textarea" :rows="2" placeholder="请输入特殊需求" />
             </el-form-item>
           </el-col>
@@ -191,6 +204,8 @@ import { ElMessage } from 'element-plus'
 import { Plus, Search } from '@element-plus/icons-vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import dayjs from 'dayjs'
+import { elderlyApi, stationApi } from '@/api'
+import type { ElderlyProfile } from '@/types/api'
 
 const router = useRouter()
 
@@ -206,28 +221,15 @@ const isEdit = ref(false)
 // 搜索表单
 const searchForm = reactive({
   keyword: '',
-  station_id: null as number | null,
+  station_id: undefined as number | undefined,
+  health_status: undefined as string | undefined,
 })
 
 // 站点列表
 const stationList = ref<Array<{ id: number; name: string }>>([])
 
 // 老年人列表
-const elderlyList = ref<Array<{
-  id: number
-  name: string
-  gender: string
-  birth_date: string
-  ethnicity: string
-  id_card: string
-  phone: string
-  address: string
-  station_id: number
-  station_name: string
-  health_status: string
-  chronic_diseases: string
-  special_needs: string
-}>>([])
+const elderlyList = ref<ElderlyProfile[]>([])
 
 // 分页
 const pagination = reactive({
@@ -242,14 +244,14 @@ const elderlyForm = reactive({
   id: null as number | null,
   name: '',
   gender: 'male',
-  birth_date: null as Date | null,
-  ethnicity: '汉族',
+  birth_date: '',
   id_card: '',
   phone: '',
   address: '',
-  station_id: null as number | null,
+  station_id: undefined as number | undefined,
   health_status: 'good',
-  chronic_diseases: '',
+  disability_level: '',
+  medical_history: '',
   special_needs: '',
 })
 
@@ -257,9 +259,7 @@ const elderlyForm = reactive({
 const formRules: FormRules = {
   name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
   gender: [{ required: true, message: '请选择性别', trigger: 'change' }],
-  birth_date: [{ required: true, message: '请选择出生日期', trigger: 'change' }],
   phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }],
-  address: [{ required: true, message: '请输入地址', trigger: 'blur' }],
   station_id: [{ required: true, message: '请选择所属站点', trigger: 'change' }],
 }
 
@@ -268,14 +268,10 @@ const formRules: FormRules = {
  */
 async function loadStations() {
   try {
-    // 模拟数据
-    stationList.value = [
-      { id: 1, name: '霍营街道第一服务站' },
-      { id: 2, name: '霍营街道第二服务站' },
-      { id: 3, name: '回龙观服务站' },
-    ]
+    const res = await stationApi.getStations({ page: 1, page_size: 100 })
+    stationList.value = (res.data?.items || []).map((s) => ({ id: s.id, name: s.name }))
   } catch (error) {
-    console.error('Failed to load stations:', error)
+    console.error('加载站点失败:', error)
   }
 }
 
@@ -285,87 +281,18 @@ async function loadStations() {
 async function loadElderlyList() {
   try {
     loading.value = true
-    // 模拟数据
-    elderlyList.value = [
-      {
-        id: 1,
-        name: '张老人',
-        gender: 'male',
-        birth_date: '1948-05-15',
-        ethnicity: '汉族',
-        id_card: '110114194805151234',
-        phone: '13800000001',
-        address: '霍营街道xx小区1号楼101室',
-        station_id: 1,
-        station_name: '霍营街道第一服务站',
-        health_status: 'good',
-        chronic_diseases: '高血压',
-        special_needs: '低盐饮食',
-      },
-      {
-        id: 2,
-        name: '李老人',
-        gender: 'female',
-        birth_date: '1944-08-20',
-        ethnicity: '汉族',
-        id_card: '110114194408201234',
-        phone: '13800000002',
-        address: '霍营街道xx小区2号楼201室',
-        station_id: 1,
-        station_name: '霍营街道第一服务站',
-        health_status: 'normal',
-        chronic_diseases: '糖尿病、高血压',
-        special_needs: '低糖低盐饮食',
-      },
-      {
-        id: 3,
-        name: '王老人',
-        gender: 'male',
-        birth_date: '1951-03-10',
-        ethnicity: '汉族',
-        id_card: '110114195103101234',
-        phone: '13800000003',
-        address: '霍营街道xx小区3号楼301室',
-        station_id: 2,
-        station_name: '霍营街道第二服务站',
-        health_status: 'good',
-        chronic_diseases: '',
-        special_needs: '',
-      },
-      {
-        id: 4,
-        name: '赵老人',
-        gender: 'female',
-        birth_date: '1946-11-25',
-        ethnicity: '汉族',
-        id_card: '110114194611251234',
-        phone: '13800000004',
-        address: '霍营街道xx小区1号楼501室',
-        station_id: 1,
-        station_name: '霍营街道第一服务站',
-        health_status: 'poor',
-        chronic_diseases: '心脏病、高血压、糖尿病',
-        special_needs: '需要定期上门护理',
-      },
-      {
-        id: 5,
-        name: '刘老人',
-        gender: 'male',
-        birth_date: '1941-07-08',
-        ethnicity: '汉族',
-        id_card: '110114194107081234',
-        phone: '13800000005',
-        address: '霍营街道xx小区2号楼102室',
-        station_id: 2,
-        station_name: '霍营街道第二服务站',
-        health_status: 'normal',
-        chronic_diseases: '关节炎',
-        special_needs: '',
-      },
-    ]
-    pagination.total = 5
+    const res = await elderlyApi.getList({
+      page: pagination.page,
+      page_size: pagination.pageSize,
+      keyword: searchForm.keyword || undefined,
+      station_id: searchForm.station_id,
+      health_status: searchForm.health_status,
+    })
+    elderlyList.value = res.data?.items || []
+    pagination.total = res.data?.total || 0
   } catch (error) {
-    console.error('Failed to load elderly list:', error)
+    console.error('加载老人列表失败:', error)
+    ElMessage.error('加载数据失败')
   } finally {
     loading.value = false
   }
@@ -384,7 +311,8 @@ function handleSearch() {
  */
 function handleReset() {
   searchForm.keyword = ''
-  searchForm.station_id = null
+  searchForm.station_id = undefined
+  searchForm.health_status = undefined
   pagination.page = 1
   loadElderlyList()
 }
@@ -402,22 +330,22 @@ function handleCreate() {
 /**
  * 编辑档案
  */
-function handleEdit(row: typeof elderlyList.value[0]) {
+function handleEdit(row: ElderlyProfile) {
   isEdit.value = true
   dialogTitle.value = '编辑档案'
   Object.assign(elderlyForm, {
     id: row.id,
     name: row.name,
     gender: row.gender,
-    birth_date: row.birth_date ? new Date(row.birth_date) : null,
-    ethnicity: row.ethnicity,
-    id_card: row.id_card,
+    birth_date: row.birth_date || '',
+    id_card: row.id_card || '',
     phone: row.phone,
-    address: row.address,
-    station_id: row.station_id,
-    health_status: row.health_status,
-    chronic_diseases: row.chronic_diseases,
-    special_needs: row.special_needs,
+    address: row.address || '',
+    station_id: row.station_id || undefined,
+    health_status: row.health_status || 'good',
+    disability_level: row.disability_level || '',
+    medical_history: row.medical_history || '',
+    special_needs: row.special_needs || '',
   })
   showDialog.value = true
 }
@@ -425,7 +353,7 @@ function handleEdit(row: typeof elderlyList.value[0]) {
 /**
  * 查看详情
  */
-function handleView(row: typeof elderlyList.value[0]) {
+function handleView(row: ElderlyProfile) {
   router.push(`/residents/elderly/${row.id}`)
 }
 
@@ -438,13 +366,31 @@ async function handleSave() {
     if (!valid) return
     try {
       saving.value = true
-      // 模拟保存
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      ElMessage.success(isEdit.value ? '修改成功' : '创建成功')
+      const data = {
+        name: elderlyForm.name,
+        gender: elderlyForm.gender,
+        birth_date: elderlyForm.birth_date || undefined,
+        id_card: elderlyForm.id_card || undefined,
+        address: elderlyForm.address || undefined,
+        station_id: elderlyForm.station_id,
+        health_status: elderlyForm.health_status || undefined,
+        disability_level: elderlyForm.disability_level || undefined,
+        medical_history: elderlyForm.medical_history || undefined,
+        special_needs: elderlyForm.special_needs || undefined,
+      }
+
+      if (isEdit.value && elderlyForm.id) {
+        await elderlyApi.update(elderlyForm.id, data)
+        ElMessage.success('修改成功')
+      } else {
+        await elderlyApi.create({ ...data, phone: elderlyForm.phone })
+        ElMessage.success('创建成功')
+      }
       showDialog.value = false
       loadElderlyList()
-    } catch (error) {
-      console.error('Failed to save:', error)
+    } catch (error: any) {
+      const msg = error?.response?.data?.msg || '操作失败'
+      ElMessage.error(msg)
     } finally {
       saving.value = false
     }
@@ -458,14 +404,14 @@ function resetForm() {
   elderlyForm.id = null
   elderlyForm.name = ''
   elderlyForm.gender = 'male'
-  elderlyForm.birth_date = null
-  elderlyForm.ethnicity = '汉族'
+  elderlyForm.birth_date = ''
   elderlyForm.id_card = ''
   elderlyForm.phone = ''
   elderlyForm.address = ''
-  elderlyForm.station_id = null
+  elderlyForm.station_id = undefined
   elderlyForm.health_status = 'good'
-  elderlyForm.chronic_diseases = ''
+  elderlyForm.disability_level = ''
+  elderlyForm.medical_history = ''
   elderlyForm.special_needs = ''
 }
 
@@ -523,7 +469,7 @@ function getHealthStatusText(status: string): string {
     normal: '一般',
     poor: '较差',
   }
-  return textMap[status] || status
+  return textMap[status] || status || '-'
 }
 
 onMounted(() => {

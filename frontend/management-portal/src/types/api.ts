@@ -36,16 +36,6 @@ export interface PaginationData<T> {
 }
 
 /**
- * B端用户角色
- */
-export type UserRole = 'admin' | 'station_manager' | 'staff'
-
-/**
- * 用户状态
- */
-export type UserStatus = 'active' | 'inactive'
-
-/**
  * B端用户信息
  */
 export interface User {
@@ -68,7 +58,7 @@ export interface User {
 
   station_name?: string
   station_id: number | null
-  status: UserStatus
+  status: string
   created_at: string
   updated_at: string
 }
@@ -122,11 +112,6 @@ export interface MeResponse {
 }
 
 /**
- * 任务状态
- */
-export type TaskStatus = 'dispatched' | 'claimed' | 'completed' | 'cancelled'
-
-/**
  * 任务信息
  */
 export interface Task {
@@ -137,7 +122,7 @@ export interface Task {
   request_id: number
   station_id: number
   staff_id: number | null
-  status: TaskStatus
+  status: string
   claimed_at: string | null
   completed_at: string | null
   rating: number
@@ -148,8 +133,6 @@ export interface Task {
   request?: ServiceRequest
 }
 
-export type RequestStatus = 'pending' | 'dispatched' | 'claimed' | 'processing' | 'completed' | 'cancelled' | 'rejected'
-
 export interface ServiceRequest {
   id: number
   created_at: string
@@ -158,7 +141,7 @@ export interface ServiceRequest {
   request_no: string
   user_id: number
   service_type: string
-  status: RequestStatus
+  status: string
   priority: string
   description: string
   submit_location_lat: number
@@ -171,18 +154,6 @@ export interface ServiceRequest {
   station_name?: string
 }
 
-export interface CreateServiceRequest {
-  user_id?: number
-  service_type: string
-  description: string
-  contact_name: string
-  contact_phone: string
-  address: string
-  priority?: string
-  scheduled_at?: string
-  station_id?: number
-}
-
 export interface UpdateServiceRequest {
   service_type?: string
   description?: string
@@ -192,15 +163,13 @@ export interface UpdateServiceRequest {
   priority?: string
   scheduled_at?: string
   station_id?: number
-  status?: RequestStatus
+  status?: string
 }
 
 export interface CompleteTaskRequest {
   images?: string[]
   staff_notes?: string
 }
-
-export type StationStatus = 'active' | 'inactive'
 
 export interface Station {
   id: number
@@ -215,7 +184,7 @@ export interface Station {
   longitude: number
   service_area: string
   work_hours: string
-  status: StationStatus
+  status: string
 }
 
 export interface StationRequest {
@@ -278,10 +247,6 @@ export interface UserUpdateRequest {
   password?: string
 }
 
-export interface UpdateUserRolesRequest {
-  roles: string[]
-}
-
 export interface UpdateUserIdentitiesRequest {
   identities: string[]
 }
@@ -314,8 +279,6 @@ export interface Notification {
   read_at: string | null
 }
 
-export type MenuStatus = 'active' | 'inactive'
-
 export interface Menu {
   id: number
   parent_id: number
@@ -326,7 +289,7 @@ export interface Menu {
   permission_code: string  // 新字段名
   sort: number
   hidden: boolean
-  status: MenuStatus
+  status: string
   children?: Menu[]
   created_at?: string
   updated_at?: string
@@ -341,7 +304,7 @@ export interface MenuRequest {
   permission_code?: string  // 新字段名
   sort?: number
   hidden?: boolean
-  status?: MenuStatus
+  status?: string
 }
 
 export interface BatchUpdateSortRequest {
@@ -350,8 +313,6 @@ export interface BatchUpdateSortRequest {
     sort: number
   }>
 }
-
-export type BannerStatus = 'active' | 'inactive'
 
 export interface Banner {
   id: number
@@ -363,7 +324,7 @@ export interface Banner {
   link_type: string
   link_value: string
   sort: number
-  status: BannerStatus
+  status: string
   station_id: number
 }
 
@@ -376,7 +337,7 @@ export interface BannerRequest {
   link_type: string
   link_value: string
   sort: number
-  status: BannerStatus
+  status: string
   station_id: number
 }
 
@@ -537,4 +498,86 @@ export interface ReportData {
   start_date: string
   end_date: string
   created_by: number
+}
+
+/**
+ * 老年人档案信息
+ */
+export interface ElderlyProfile {
+  id: number
+  name: string
+  phone: string
+  gender: string
+  birth_date: string
+  id_card: string
+  address: string
+  station_id: number
+  station_name: string
+  health_status: string
+  disability_level: string
+  medical_history: string
+  special_needs: string
+  customer_type: string
+  created_at: string
+}
+
+/**
+ * 创建老人档案请求
+ */
+export interface ElderlyCreateRequest {
+  name: string
+  phone: string
+  gender?: string
+  birth_date?: string
+  id_card?: string
+  address?: string
+  station_id?: number
+  health_status?: string
+  disability_level?: string
+  medical_history?: string
+  special_needs?: string
+}
+
+/**
+ * 更新老人档案请求
+ */
+export interface ElderlyUpdateRequest {
+  name?: string
+  gender?: string
+  birth_date?: string
+  id_card?: string
+  address?: string
+  station_id?: number
+  health_status?: string
+  disability_level?: string
+  medical_history?: string
+  special_needs?: string
+}
+
+/**
+ * 老人档案列表查询参数
+ */
+export interface ElderlyListParams extends PaginationParams {
+  keyword?: string
+  station_id?: number
+  health_status?: string
+}
+
+/**
+ * 老人服务记录
+ */
+export interface ElderlyServiceRecord {
+  request_id: number
+  request_no: string
+  service_type: string
+  status: string
+  description: string
+  address: string
+  rating: number
+  feedback: string
+  created_at: string
+  task_id: number | null
+  staff_name: string | null
+  claimed_at: string | null
+  completed_at: string | null
 }
