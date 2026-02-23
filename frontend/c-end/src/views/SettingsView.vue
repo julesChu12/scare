@@ -88,6 +88,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowLeft, ArrowRight, Check, Bell, Delete } from '@element-plus/icons-vue'
 import { useTokenStore, useUserStore } from '@/store'
+import { authAPI } from '@/api'
 import { useFontSize, type FontSize as FontSizeType, fontSizeConfig } from '@/composables/useFontSize'
 
 // 自定义 FontSize 图标组件
@@ -163,6 +164,12 @@ const handleLogout = async () => {
       }
     )
 
+    // 调用后端使 Token 进入黑名单
+    try {
+      await authAPI.logout()
+    } catch {
+      // 即使后端调用失败也继续清除本地状态
+    }
     tokenStore.clearToken()
     userStore.clearUser()
     router.push('/login')

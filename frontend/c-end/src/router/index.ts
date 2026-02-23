@@ -91,6 +91,12 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: false, title: '详情' }
   },
   {
+    path: '/notifications',
+    name: 'NotificationList',
+    component: () => import('@/views/NotificationList.vue'),
+    meta: { requiresAuth: true, title: '消息通知' }
+  },
+  {
     path: '/mine',
     name: 'Mine',
     component: () => import('@/views/Mine.vue'),
@@ -103,21 +109,12 @@ const router = createRouter({
   routes
 })
 
-// 开发模式 mock 登录
-const DEV_MOCK_LOGIN = false // 生产环境
-
 // 路由守卫：检查登录状态
 router.beforeEach((to, _from, next) => {
   const tokenStore = useTokenStore()
 
   // 设置页面标题
   document.title = to.meta.title ? `${to.meta.title} - sCare` : 'sCare 社区养老服务'
-
-  // 开发模式下跳过登录检查
-  if (import.meta.env.DEV && DEV_MOCK_LOGIN) {
-    next()
-    return
-  }
 
   // 检查是否需要登录
   if (to.meta.requiresAuth && !tokenStore.isLoggedIn) {

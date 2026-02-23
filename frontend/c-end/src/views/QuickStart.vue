@@ -73,6 +73,21 @@
           />
         </el-form-item>
 
+        <el-form-item label="上传照片">
+          <el-upload
+            v-model:file-list="fileList"
+            :http-request="customUpload"
+            :before-upload="beforeUpload"
+            list-type="picture-card"
+            accept="image/jpeg,image/png,image/webp"
+            :limit="5"
+            :on-exceed="handleExceed"
+          >
+            <el-icon><Plus /></el-icon>
+          </el-upload>
+          <div class="upload-hint">最多 5 张，支持 JPG/PNG/WebP，单张不超过 5MB</div>
+        </el-form-item>
+
         <el-form-item>
           <el-button
             type="primary"
@@ -97,9 +112,9 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { ArrowLeft, Location } from '@element-plus/icons-vue'
-import type { FormInstance } from 'element-plus'
-import { authAPI, requestsAPI } from '@/api'
+import { ArrowLeft, Location, Plus } from '@element-plus/icons-vue'
+import type { FormInstance, UploadFile, UploadRequestOptions } from 'element-plus'
+import { authAPI, requestsAPI, uploadAPI } from '@/api'
 import { useTokenStore, useUserStore } from '@/store'
 import { allServiceTypes, getServiceTypeName, getServiceTypeIcon } from '@/config/serviceTypes'
 import { getCurrentPosition } from '@/utils/coordTransform'
@@ -117,6 +132,39 @@ const countdown = ref(0)
 const loading = ref(false)
 const hasLocation = ref(false)
 const coordinates = ref<{ lng: number; lat: number } | null>(null)
+
+// 上传相关
+const fileList = ref<UploadFile[]>([])
+const uploadedUrls = ref<string[]>([])
+
+const beforeUpload = (file: File) => {
+  const isImage = ['image/jpeg', 'image/png', 'image/webp'].includes(file.type)
+  if (!isImage) {
+    ElMessage.error('仅支持 JPG/PNG/WebP 格式图片')
+    return false
+  }
+  const isLt5M = file.size / 1024 / 1024 < 5
+  if (!isLt5M) {
+    ElMessage.error('图片大小不能超过 5MB')
+    return false
+  }
+  return true
+}
+
+const customUpload = async (options: UploadRequestOptions) => {
+  try {
+    const result = await uploadAPI.upload(options.file as File)
+    uploadedUrls.value.push(result.url)
+    options.onSuccess!(result)
+  } catch (error) {
+    options.onError!(error as any)
+    ElMessage.error('图片上传失败')
+  }
+}
+
+const handleExceed = () => {
+  ElMessage.warning('最多上传 5 张图片')
+}
 
 // 是否已登录
 const isLoggedIn = computed(() => tokenStore.isLoggedIn)
@@ -209,9 +257,9 @@ const handleSubmit = async () => {
           address: form.address,
           contact_name: form.name,
           contact_phone: form.phone,
-          description: form.description,
-          latitude: coordinates.value?.lat,
-          longitude: coordinates.value?.lng
+          lat: coordinates.value?.lat,
+          lng: coordinates.value?.lng,
+          images: uploadedUrls.value.length > 0 ? uploadedUrls.value : undefined
         })
 
         ElMessage.success('服务申请已提交！')
@@ -267,7 +315,12 @@ const fetchLocation = async () => {
     hasLocation.value = true
     sessionStorage.setItem('user_location', JSON.stringify(coords))
   } catch (error) {
-    console.warn('获取位置失败:', error)
+    console.warn('获取位置失败，使用默认位置:', error)
+    // 回退到默认位置（霍营街道）
+    const fallback = { lat: 40.0579, lng: 116.3698 }
+    coordinates.value = fallback
+    hasLocation.value = true
+    sessionStorage.setItem('user_location', JSON.stringify(fallback))
   }
 }
 
@@ -413,5 +466,11 @@ onMounted(async () => {
 .tips a {
   color: var(--color-primary, #409EFF);
   text-decoration: none;
+}
+
+.upload-hint {
+  color: var(--text-color-secondary, #909399);
+  font-size: var(--font-size-sm, 14px);
+  margin-top: 8px;
 }
 </style>

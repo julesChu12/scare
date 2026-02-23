@@ -23,6 +23,14 @@
         <el-icon class="menu-arrow"><ArrowRight /></el-icon>
       </div>
 
+      <div class="menu-item" @click="goToNotifications">
+        <div class="menu-left">
+          <span class="menu-icon">🔔</span>
+          <span class="menu-text">消息通知</span>
+        </div>
+        <el-icon class="menu-arrow"><ArrowRight /></el-icon>
+      </div>
+
       <div class="menu-item" @click="goToAddress">
         <div class="menu-left">
           <span class="menu-icon">📍</span>
@@ -136,13 +144,7 @@ const serviceDialogVisible = ref(false)
 const aboutDialogVisible = ref(false)
 
 // 计算属性
-const DEV_MOCK_LOGIN = false // 生产环境
-const isLoggedIn = computed(() => {
-  if (import.meta.env.DEV && DEV_MOCK_LOGIN) {
-    return true
-  }
-  return tokenStore.isLoggedIn
-})
+const isLoggedIn = computed(() => tokenStore.isLoggedIn)
 
 const displayName = computed(() => {
   if (!isLoggedIn.value) {
@@ -198,6 +200,10 @@ const goToAddress = () => {
 
 const goToSettings = () => {
   router.push('/settings')
+}
+
+const goToNotifications = () => {
+  router.push('/notifications')
 }
 
 // 弹窗方法
