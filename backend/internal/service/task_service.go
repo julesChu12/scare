@@ -34,14 +34,6 @@ func NewTaskService(db *gorm.DB, taskRepo *repository.TaskRepository, requestRep
 	}
 }
 
-func (s *TaskService) ListPool(stationID int64, page, pageSize int) ([]*model.TaskAssignment, int64, error) {
-	if stationID == 0 {
-		return nil, 0, ErrTaskInvalid
-	}
-	offset := (page - 1) * pageSize
-	return s.taskRepo.ListDispatchedByStation(stationID, offset, pageSize)
-}
-
 // TaskPoolFilter 任务池筛选条件
 type TaskPoolFilter struct {
 	StationID int64  // 站点ID，0 表示所有站点（仅 admin）
@@ -110,8 +102,11 @@ func (s *TaskService) Claim(taskID, staffID int64) (*model.TaskAssignment, bool,
 
 		task.StaffID = staffID
 		task.Status = consts.TaskStatusClaimed
-		if err := tx.Save(&task).Error; err != nil {
-			return err
+		if err := tx.Model(&task).Updates(map[string]interface{}{
+			"staff_id": staffID,
+			"status":   consts.TaskStatusClaimed,
+		}); err.Error != nil {
+			return err.Error
 		}
 		changed = true
 
@@ -179,10 +174,13 @@ func (s *TaskService) Complete(taskID, staffID int64, images []string) (*model.T
 		if err != nil {
 			return err
 		}
-		task.Images = string(payload)
 		task.Status = consts.TaskStatusCompleted
-		if err := tx.Save(&task).Error; err != nil {
-			return err
+		task.Images = string(payload)
+		if err := tx.Model(&task).Updates(map[string]interface{}{
+			"status": consts.TaskStatusCompleted,
+			"images": string(payload),
+		}); err.Error != nil {
+			return err.Error
 		}
 		changed = true
 

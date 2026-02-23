@@ -5,8 +5,6 @@
 # 默认: http://localhost:8080
 # =====================================================
 
-set -e
-
 BASE_URL="${1:-http://localhost:8080}"
 API_URL="$BASE_URL/api/v1"
 
@@ -75,13 +73,44 @@ assert_not_empty() {
     fi
 }
 
-# 登录并获取 token
+# 调用 API 并返回响应体（用于提取 ID 等字段）
+api_call() {
+    local method="$1"
+    local endpoint="$2"
+    local token="$3"
+    local data="$4"
+
+    local auth_header=""
+    if [ -n "$token" ]; then
+        auth_header="-H \"Authorization: Bearer $token\""
+    fi
+
+    local data_param=""
+    if [ -n "$data" ]; then
+        data_param="-d '$data'"
+    fi
+
+    local cmd="curl -s -X $method \"$API_URL$endpoint\" -H \"Content-Type: application/json\" $auth_header $data_param"
+    eval $cmd
+}
+
+# 登录并获取 token（B端）
 login() {
     local phone="$1"
     local password="$2"
     local response=$(curl -s -X POST "$API_URL/b/auth/login" \
         -H "Content-Type: application/json" \
         -d "{\"phone\":\"$phone\",\"password\":\"$password\"}")
+    echo "$response" | jq -r '.data.token // empty'
+}
+
+# 登录并获取 token（C端，密码模式）
+c_login() {
+    local phone="$1"
+    local password="$2"
+    local response=$(curl -s -X POST "$API_URL/c/auth/login" \
+        -H "Content-Type: application/json" \
+        -d "{\"phone\":\"$phone\",\"password\":\"$password\",\"type\":\"password\"}")
     echo "$response" | jq -r '.data.token // empty'
 }
 
@@ -168,6 +197,102 @@ test_api "Admin - 用户更新(id_card_hash保持原值)" "PUT" "/b/users/1" "$A
 test_api "Admin - 用户更新(id_card_token保持原值)" "PUT" "/b/users/1" "$ADMIN_TOKEN" "{\"id_card_token\":\"$ID_CARD_TOKEN\",\"name\":\"系统管理员\"}" "ok" "200"
 
 # =====================================================
+# Admin 写操作测试（CRUD 流程）
+# =====================================================
+echo -e "\n${YELLOW}--- Admin 写操作测试 ---${NC}"
+
+# --- 新闻 CRUD ---
+NEWS_RESP=$(api_call "POST" "/b/news" "$ADMIN_TOKEN" '{"title":"集成测试新闻","summary":"测试摘要","content":"<p>测试正文</p>","type":"notice","status":"published","station_id":1}')
+TEST_NEWS_ID=$(echo "$NEWS_RESP" | jq -r '.data.id // empty')
+if [ -n "$TEST_NEWS_ID" ] && [ "$TEST_NEWS_ID" != "null" ]; then
+    echo -e "${GREEN}✓${NC} Admin - 新闻创建 (ID=$TEST_NEWS_ID)"
+    PASSED=$((PASSED + 1))
+else
+    echo -e "${RED}✗${NC} Admin - 新闻创建失败"
+    FAILED=$((FAILED + 1))
+fi
+TOTAL=$((TOTAL + 1))
+
+if [ -n "$TEST_NEWS_ID" ] && [ "$TEST_NEWS_ID" != "null" ]; then
+    test_api "Admin - 新闻详情(测试)" "GET" "/b/news/$TEST_NEWS_ID" "$ADMIN_TOKEN" "" ""
+    test_api "Admin - 新闻更新" "PUT" "/b/news/$TEST_NEWS_ID" "$ADMIN_TOKEN" '{"title":"集成测试新闻-已更新","summary":"更新摘要","content":"<p>更新正文</p>","type":"notice","status":"published","station_id":1}' "更新成功"
+    test_api "Admin - 新闻删除" "DELETE" "/b/news/$TEST_NEWS_ID" "$ADMIN_TOKEN" "" "删除成功"
+fi
+
+# --- 轮播图 CRUD ---
+BANNER_RESP=$(api_call "POST" "/b/banners" "$ADMIN_TOKEN" '{"title":"测试轮播图","image_url":"/static/test.jpg","link_type":"none","sort":99,"status":"active","station_id":1}')
+TEST_BANNER_ID=$(echo "$BANNER_RESP" | jq -r '.data.id // empty')
+if [ -n "$TEST_BANNER_ID" ] && [ "$TEST_BANNER_ID" != "null" ]; then
+    echo -e "${GREEN}✓${NC} Admin - 轮播图创建 (ID=$TEST_BANNER_ID)"
+    PASSED=$((PASSED + 1))
+else
+    echo -e "${RED}✗${NC} Admin - 轮播图创建失败"
+    FAILED=$((FAILED + 1))
+fi
+TOTAL=$((TOTAL + 1))
+
+if [ -n "$TEST_BANNER_ID" ] && [ "$TEST_BANNER_ID" != "null" ]; then
+    test_api "Admin - 轮播图更新" "PUT" "/b/banners/$TEST_BANNER_ID" "$ADMIN_TOKEN" '{"title":"测试轮播图-已更新","image_url":"/static/test2.jpg","link_type":"none","sort":99,"status":"active","station_id":1}' "ok"
+    test_api "Admin - 轮播图删除" "DELETE" "/b/banners/$TEST_BANNER_ID" "$ADMIN_TOKEN" "" "ok"
+fi
+
+# --- 站点 CRUD ---
+TIMESTAMP=$(date +%s)
+STATION_RESP=$(api_call "POST" "/b/stations" "$ADMIN_TOKEN" "{\"name\":\"集成测试站点_${TIMESTAMP}\",\"code\":\"TEST_${TIMESTAMP}\",\"latitude\":40.0,\"longitude\":116.4,\"status\":\"active\"}")
+TEST_STATION_ID=$(echo "$STATION_RESP" | jq -r '.data.id // empty')
+if [ -n "$TEST_STATION_ID" ] && [ "$TEST_STATION_ID" != "null" ]; then
+    echo -e "${GREEN}✓${NC} Admin - 站点创建 (ID=$TEST_STATION_ID)"
+    PASSED=$((PASSED + 1))
+else
+    echo -e "${RED}✗${NC} Admin - 站点创建失败"
+    FAILED=$((FAILED + 1))
+fi
+TOTAL=$((TOTAL + 1))
+
+if [ -n "$TEST_STATION_ID" ] && [ "$TEST_STATION_ID" != "null" ]; then
+    test_api "Admin - 站点详情(测试)" "GET" "/b/stations/$TEST_STATION_ID" "$ADMIN_TOKEN" "" "ok"
+    test_api "Admin - 站点更新" "PUT" "/b/stations/$TEST_STATION_ID" "$ADMIN_TOKEN" "{\"name\":\"集成测试站点_${TIMESTAMP}_已更新\",\"code\":\"TEST_${TIMESTAMP}\",\"latitude\":40.01,\"longitude\":116.41,\"status\":\"active\"}" "ok"
+
+    # --- 围栏 CRUD（依赖站点）---
+    ZONE_RESP=$(api_call "POST" "/b/zones" "$ADMIN_TOKEN" "{\"station_id\":$TEST_STATION_ID,\"name\":\"测试围栏\",\"points\":[{\"lat\":40.0,\"lng\":116.3},{\"lat\":40.1,\"lng\":116.3},{\"lat\":40.1,\"lng\":116.5},{\"lat\":40.0,\"lng\":116.5}],\"priority\":1,\"status\":\"active\"}")
+    TEST_ZONE_ID=$(echo "$ZONE_RESP" | jq -r '.data.id // empty')
+    if [ -n "$TEST_ZONE_ID" ] && [ "$TEST_ZONE_ID" != "null" ]; then
+        echo -e "${GREEN}✓${NC} Admin - 围栏创建 (ID=$TEST_ZONE_ID)"
+        PASSED=$((PASSED + 1))
+    else
+        echo -e "${RED}✗${NC} Admin - 围栏创建失败"
+        FAILED=$((FAILED + 1))
+    fi
+    TOTAL=$((TOTAL + 1))
+
+    if [ -n "$TEST_ZONE_ID" ] && [ "$TEST_ZONE_ID" != "null" ]; then
+        test_api "Admin - 围栏更新" "PUT" "/b/zones/$TEST_ZONE_ID" "$ADMIN_TOKEN" "{\"station_id\":$TEST_STATION_ID,\"name\":\"测试围栏-已更新\",\"points\":[{\"lat\":40.0,\"lng\":116.3},{\"lat\":40.1,\"lng\":116.3},{\"lat\":40.1,\"lng\":116.5},{\"lat\":40.0,\"lng\":116.5}],\"priority\":2,\"status\":\"active\"}" "ok"
+        test_api "Admin - 围栏删除" "DELETE" "/b/zones/$TEST_ZONE_ID" "$ADMIN_TOKEN" "" "ok"
+    fi
+
+    # 删除测试站点（围栏删除后才能删站点）
+    test_api "Admin - 站点删除" "DELETE" "/b/stations/$TEST_STATION_ID" "$ADMIN_TOKEN" "" "ok"
+fi
+
+# --- 用户创建（使用时间戳避免手机号冲突）---
+TEST_PHONE="138${TIMESTAMP: -8}"
+test_api "Admin - 创建用户(staff)" "POST" "/b/users" "$ADMIN_TOKEN" "{\"phone\":\"$TEST_PHONE\",\"password\":\"Test@123\",\"name\":\"测试员工\",\"identity_type\":\"staff\",\"station_id\":1}" "ok"
+
+# --- 请求详情与状态更新 ---
+test_api "Admin - 服务请求详情(ID=1)" "GET" "/b/requests/1" "$ADMIN_TOKEN" "" ""
+test_api "Admin - 任务详情(ID=1)" "GET" "/b/tasks/1" "$ADMIN_TOKEN" "" ""
+
+# --- 统计接口补全 ---
+test_api "Admin - 统计概览" "GET" "/b/statistics/overview" "$ADMIN_TOKEN" "" "ok"
+test_api "Admin - 统计服务类型" "GET" "/b/statistics/service-types" "$ADMIN_TOKEN" "" "ok"
+test_api "Admin - 统计趋势" "GET" "/b/statistics/trend" "$ADMIN_TOKEN" "" "ok"
+test_api "Admin - 统计效率" "GET" "/b/statistics/efficiency" "$ADMIN_TOKEN" "" "ok"
+test_api "Admin - 统计员工排名" "GET" "/b/statistics/staff-ranking" "$ADMIN_TOKEN" "" "ok"
+
+# --- 通知标记已读 ---
+test_api "Admin - 通知标记已读(ID=1)" "POST" "/b/notifications/1/read" "$ADMIN_TOKEN" "" ""
+
+# =====================================================
 # Station Manager 角色测试
 # =====================================================
 echo -e "\n${YELLOW}--- Station Manager 角色测试 ---${NC}"
@@ -207,14 +332,104 @@ test_api "Staff - 我的任务" "GET" "/b/tasks/my" "$STAFF_TOKEN" "" "ok"
 test_api "Staff - 角色权限(无权限)" "GET" "/b/roles/admin/permissions" "$STAFF_TOKEN" "" "forbidden" "403"
 
 # =====================================================
-# C端 API 测试
+# C端公开 API 测试
 # =====================================================
 echo -e "\n${YELLOW}--- C端公开 API 测试 ---${NC}"
 test_api "C端 - 新闻列表" "GET" "/c/news" "" "" "ok"
 test_api "C端 - 新闻详情(ID=1)" "GET" "/c/news/1" "" "" ""
 test_api "C端 - Banner列表" "GET" "/c/banners" "" "" "ok"
 test_api "C端 - 站点匹配" "GET" "/c/stations/match?lng=116.4&lat=39.9" "" "" ""
+test_api "C端 - 站点匹配(POST)" "POST" "/c/stations/match" "" '{"latitude":39.9,"longitude":116.4}' ""
 test_api "C端 - 逆地理编码" "GET" "/c/geocode/reverse?lng=116.4&lat=39.9" "" "" ""
+test_api "C端 - 正地理编码" "POST" "/c/geocode" "" '{"address":"北京市昌平区霍营街道"}' ""
+
+# =====================================================
+# C端认证流程测试
+# =====================================================
+echo -e "\n${YELLOW}--- C端认证流程 ---${NC}"
+C_TOKEN=$(c_login "13800000008" "Test@123")
+if [ -z "$C_TOKEN" ]; then
+    echo -e "${RED}✗${NC} C端用户(张大爷)登录失败"
+    FAILED=$((FAILED + 1))
+else
+    echo -e "${GREEN}✓${NC} C端用户(张大爷)密码登录成功"
+    PASSED=$((PASSED + 1))
+fi
+TOTAL=$((TOTAL + 1))
+
+if [ -n "$C_TOKEN" ]; then
+    test_api "C端 - 获取当前用户" "GET" "/c/auth/me" "$C_TOKEN" "" "ok"
+    test_api "C端 - Token检查" "GET" "/c/auth/check" "$C_TOKEN" "" ""
+    test_api "C端 Token - 访问B端拒绝" "GET" "/b/auth/me" "$C_TOKEN" "" "token end type mismatch" "403"
+    test_api "C端 - 更新个人资料" "PUT" "/c/profile" "$C_TOKEN" '{"name":"张大爷","address":"北京市昌平区霍营街道华龙苑北里小区"}' "ok"
+    test_api "C端 - 通知列表" "GET" "/c/notifications" "$C_TOKEN" "" "ok"
+
+    # =====================================================
+    # C端业务流程测试（创建请求 → 查看 → 取消）
+    # =====================================================
+    echo -e "\n${YELLOW}--- C端业务流程 ---${NC}"
+
+    # 创建服务请求
+    REQ_RESP=$(api_call "POST" "/c/requests" "$C_TOKEN" '{"service_type":"meal","contact_name":"张大爷","contact_phone":"13800000008","address":"北京市昌平区霍营街道华龙苑北里小区1号楼3单元501","lat":40.07,"lng":116.37}')
+    C_REQUEST_ID=$(echo "$REQ_RESP" | jq -r '.data.id // empty')
+    C_REQUEST_MSG=$(echo "$REQ_RESP" | jq -r '.msg // empty')
+    if [ -n "$C_REQUEST_ID" ] && [ "$C_REQUEST_ID" != "null" ]; then
+        echo -e "${GREEN}✓${NC} C端 - 创建服务请求 (ID=$C_REQUEST_ID)"
+        PASSED=$((PASSED + 1))
+    else
+        echo -e "${RED}✗${NC} C端 - 创建服务请求失败 (msg=$C_REQUEST_MSG)"
+        FAILED=$((FAILED + 1))
+    fi
+    TOTAL=$((TOTAL + 1))
+
+    # 查看请求列表和详情
+    test_api "C端 - 服务请求列表" "GET" "/c/requests" "$C_TOKEN" "" "ok"
+
+    if [ -n "$C_REQUEST_ID" ] && [ "$C_REQUEST_ID" != "null" ]; then
+        test_api "C端 - 服务请求详情" "GET" "/c/requests/$C_REQUEST_ID" "$C_TOKEN" "" "ok"
+
+        # 请求创建时已自动 dispatched 并生成任务，直接查询对应任务
+        test_api "Admin - 查看C端请求详情" "GET" "/b/requests/$C_REQUEST_ID" "$ADMIN_TOKEN" "" ""
+
+        # 通过任务列表按 request_id 找到对应任务（响应字段为 items，加大 page_size 确保查到）
+        TASK_LIST_RESP=$(api_call "GET" "/b/tasks?page_size=100" "$ADMIN_TOKEN" "")
+        C_TASK_ID=$(echo "$TASK_LIST_RESP" | jq -r --argjson rid "$C_REQUEST_ID" '[.data.items[] | select(.request_id == $rid)] | .[0].id // empty')
+
+        if [ -n "$C_TASK_ID" ] && [ "$C_TASK_ID" != "null" ]; then
+            # Staff 认领任务
+            test_api "Staff - 认领任务" "POST" "/b/tasks/$C_TASK_ID/claim" "$STAFF_TOKEN" "" "ok"
+            # Staff 完成任务
+            test_api "Staff - 完成任务" "POST" "/b/tasks/$C_TASK_ID/complete" "$STAFF_TOKEN" '{"images":[]}' "ok"
+            # C端评价
+            test_api "C端 - 评价服务" "POST" "/c/requests/$C_REQUEST_ID/rate" "$C_TOKEN" '{"rating":5,"feedback":"服务很好"}' "ok"
+        else
+            echo -e "${YELLOW}⚠${NC} 未找到对应任务，跳过认领/完成/评价测试"
+        fi
+
+        # 再创建一个请求用于测试取消
+        CANCEL_REQ_RESP=$(api_call "POST" "/c/requests" "$C_TOKEN" '{"service_type":"cleaning","contact_name":"张大爷","contact_phone":"13800000008","address":"北京市昌平区霍营街道","lat":40.07,"lng":116.37}')
+        CANCEL_REQUEST_ID=$(echo "$CANCEL_REQ_RESP" | jq -r '.data.id // empty')
+        if [ -n "$CANCEL_REQUEST_ID" ] && [ "$CANCEL_REQUEST_ID" != "null" ]; then
+            test_api "C端 - 取消服务请求" "POST" "/c/requests/$CANCEL_REQUEST_ID/cancel" "$C_TOKEN" "" "ok"
+            # B端管理员也可以取消请求
+            CANCEL_REQ2_RESP=$(api_call "POST" "/c/requests" "$C_TOKEN" '{"service_type":"repair","contact_name":"张大爷","contact_phone":"13800000008","address":"北京市昌平区霍营街道","lat":40.07,"lng":116.37}')
+            CANCEL_REQUEST_ID2=$(echo "$CANCEL_REQ2_RESP" | jq -r '.data.id // empty')
+            if [ -n "$CANCEL_REQUEST_ID2" ] && [ "$CANCEL_REQUEST_ID2" != "null" ]; then
+                test_api "Admin - 管理员取消请求" "POST" "/b/requests/$CANCEL_REQUEST_ID2/cancel" "$ADMIN_TOKEN" "" "ok"
+            fi
+        fi
+    fi
+
+    # B端更新请求信息（用新创建的 pending 请求测试）
+    EDIT_REQ_RESP=$(api_call "POST" "/c/requests" "$C_TOKEN" '{"service_type":"company","contact_name":"张大爷","contact_phone":"13800000008","address":"北京市昌平区霍营街道","lat":40.07,"lng":116.37}')
+    EDIT_REQUEST_ID=$(echo "$EDIT_REQ_RESP" | jq -r '.data.id // empty')
+    if [ -n "$EDIT_REQUEST_ID" ] && [ "$EDIT_REQUEST_ID" != "null" ]; then
+        test_api "Admin - 更新请求信息" "PUT" "/b/requests/$EDIT_REQUEST_ID" "$ADMIN_TOKEN" '{"description":"补充描述","urgency":"normal"}' ""
+    fi
+
+    # C端登出
+    test_api "C端 - 登出" "POST" "/c/auth/logout" "$C_TOKEN" "" "logout successful"
+fi
 
 # =====================================================
 # 测试结果汇总
