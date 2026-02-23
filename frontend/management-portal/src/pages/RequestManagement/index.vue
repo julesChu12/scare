@@ -40,13 +40,6 @@
               <el-option label="已拒绝" value="rejected" />
             </el-select>
             <el-button
-              type="primary"
-              :icon="Plus"
-              @click="handleCreate"
-            >
-              新建需求
-            </el-button>
-            <el-button
               :icon="Refresh"
               :loading="loading"
               @click="loadRequests"
@@ -142,6 +135,7 @@
               详情
             </el-button>
             <el-button
+              v-if="row.status === 'pending' || row.status === 'dispatched'"
               type="primary"
               size="small"
               link
@@ -151,13 +145,13 @@
               编辑
             </el-button>
             <el-button
+              v-if="!['completed', 'cancelled', 'rejected'].includes(row.status)"
               type="danger"
               size="small"
               link
-              :icon="Delete"
-              @click="handleDelete(row)"
+              @click="handleCancel(row)"
             >
-              删除
+              取消
             </el-button>
           </template>
         </el-table-column>
@@ -226,10 +220,10 @@
       </template>
     </el-dialog>
 
-    <!-- 编辑/创建对话框 -->
+    <!-- 编辑对话框 -->
     <el-dialog
       v-model="formVisible"
-      :title="formTitle"
+      title="编辑服务需求"
       width="600px"
     >
       <el-form
@@ -318,17 +312,6 @@
           />
         </el-form-item>
 
-        <el-form-item v-if="isEdit" label="状态" prop="status">
-          <el-select v-model="formData.status" placeholder="选择状态" style="width: 100%">
-            <el-option label="待处理" value="pending" />
-            <el-option label="已派发" value="dispatched" />
-            <el-option label="已认领" value="claimed" />
-            <el-option label="处理中" value="processing" />
-            <el-option label="已完成" value="completed" />
-            <el-option label="已取消" value="cancelled" />
-            <el-option label="已拒绝" value="rejected" />
-          </el-select>
-        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="formVisible = false">取消</el-button>
@@ -342,7 +325,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, reactive, nextTick } from 'vue'
-import { Refresh, Plus, Edit, Delete } from '@element-plus/icons-vue'
+import { Refresh, Edit } from '@element-plus/icons-vue'
 import { requestApi, stationApi } from '@/api'
 import type { ServiceRequest, Station } from '@/types/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -545,9 +528,7 @@ const stationList = ref<Station[]>([])
 // 表单相关
 const formVisible = ref(false)
 const formLoading = ref(false)
-const isEdit = ref(false)
 const formRef = ref<FormInstance>()
-const formTitle = ref('')
 
 const formData = reactive({
   id: undefined as number | undefined,
@@ -559,7 +540,6 @@ const formData = reactive({
   description: '',
   scheduled_at: '',
   station_id: undefined as number | undefined,
-  status: 'pending'
 })
 
 const rules = reactive<FormRules>({
@@ -583,22 +563,9 @@ async function loadStations() {
 }
 
 /**
- * 新建需求
- */
-function handleCreate() {
-  isEdit.value = false
-  formTitle.value = '新建服务需求'
-  resetForm()
-  formVisible.value = true
-}
-
-/**
  * 编辑需求
  */
 function handleEdit(row: ServiceRequest) {
-  isEdit.value = true
-  formTitle.value = '编辑服务需求'
-  
   formData.id = row.id
   formData.service_type = row.service_type
   formData.contact_name = row.contact_name
@@ -608,42 +575,24 @@ function handleEdit(row: ServiceRequest) {
   formData.description = row.description
   formData.scheduled_at = row.scheduled_at || ''
   formData.station_id = row.station_id || undefined
-  formData.status = row.status
 
   formVisible.value = true
-}
-
-/**
- * 重置表单
- */
-function resetForm() {
-  formData.id = undefined
-  formData.service_type = ''
-  formData.contact_name = ''
-  formData.contact_phone = ''
-  formData.address = ''
-  formData.priority = 'normal'
-  formData.description = ''
-  formData.scheduled_at = ''
-  formData.station_id = undefined
-  formData.status = 'pending'
-  
   nextTick(() => {
     formRef.value?.clearValidate()
   })
 }
 
 /**
- * 提交表单
+ * 提交编辑表单
  */
 async function submitForm() {
-  if (!formRef.value) return
-  
+  if (!formRef.value || !formData.id) return
+
   await formRef.value.validate(async (valid) => {
     if (valid) {
       try {
         formLoading.value = true
-        const data = {
+        await requestApi.updateRequest(formData.id!, {
           service_type: formData.service_type,
           contact_name: formData.contact_name,
           contact_phone: formData.contact_phone,
@@ -652,24 +601,13 @@ async function submitForm() {
           description: formData.description,
           scheduled_at: formData.scheduled_at || undefined,
           station_id: formData.station_id || undefined
-        }
-
-        if (isEdit.value && formData.id) {
-           await requestApi.updateRequest(formData.id, {
-             ...data,
-             status: formData.status as any
-           })
-           ElMessage.success('更新成功')
-        } else {
-          await requestApi.createRequest(data)
-          ElMessage.success('创建成功')
-        }
-        
+        } as any)
+        ElMessage.success('更新成功')
         formVisible.value = false
         loadRequests()
       } catch (error) {
         console.error('Submit failed:', error)
-        ElMessage.error(isEdit.value ? '更新失败' : '创建失败')
+        ElMessage.error('更新失败')
       } finally {
         formLoading.value = false
       }
@@ -678,29 +616,25 @@ async function submitForm() {
 }
 
 /**
- * 删除需求
+ * 取消需求
  */
-function handleDelete(row: ServiceRequest) {
+function handleCancel(row: ServiceRequest) {
   ElMessageBox.confirm(
-    '确认删除该服务需求吗？此操作不可恢复。',
-    '警告',
+    '确认取消该服务需求吗？取消后关联任务也将同步取消。',
+    '确认取消',
     {
-      confirmButtonText: '确认删除',
-      cancelButtonText: '取消',
+      confirmButtonText: '确认取消',
+      cancelButtonText: '返回',
       type: 'warning',
     }
   ).then(async () => {
     try {
-      await requestApi.deleteRequest(row.id)
-      ElMessage.success('删除成功')
-      // 如果当前页只有一条数据且不是第一页，则跳转到上一页
-      if (requestList.value.length === 1 && pagination.page > 1) {
-        pagination.page--
-      }
+      await requestApi.cancelRequest(row.id)
+      ElMessage.success('已取消')
       loadRequests()
     } catch (error) {
-      console.error('Delete failed:', error)
-      ElMessage.error('删除失败')
+      console.error('Cancel failed:', error)
+      ElMessage.error('取消失败')
     }
   })
 }
