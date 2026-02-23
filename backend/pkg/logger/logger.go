@@ -182,28 +182,12 @@ func parseLevel(level string) zapcore.Level {
 	}
 }
 
-// Debug 调试日志
-func Debug(format string, args ...any) {
-	if defaultLogger == nil {
-		InitSimple("debug")
-	}
-	defaultLogger.Debugf(format, args...)
-}
-
 // Info 信息日志
 func Info(format string, args ...any) {
 	if defaultLogger == nil {
 		InitSimple("info")
 	}
 	defaultLogger.Infof(format, args...)
-}
-
-// Warn 警告日志
-func Warn(format string, args ...any) {
-	if defaultLogger == nil {
-		InitSimple("info")
-	}
-	defaultLogger.Warnf(format, args...)
 }
 
 // Error 错误日志
@@ -214,30 +198,9 @@ func Error(format string, args ...any) {
 	defaultLogger.Errorf(format, args...)
 }
 
-// Fatal 致命错误日志（会退出程序）
-func Fatal(format string, args ...any) {
-	if defaultLogger == nil {
-		InitSimple("info")
-	}
-	defaultLogger.Fatalf(format, args...)
-}
-
-// With 返回带有额外字段的 logger
-func With(args ...any) *zap.SugaredLogger {
-	if defaultLogger == nil {
-		InitSimple("info")
-	}
-	return defaultLogger.With(args...)
-}
-
 // Sync 刷新日志缓冲
 func Sync() {
 	if zapLogger != nil {
 		zapLogger.Sync()
 	}
-}
-
-// GetZapLogger 获取原始 zap.Logger
-func GetZapLogger() *zap.Logger {
-	return zapLogger
 }

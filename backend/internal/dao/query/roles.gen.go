@@ -44,7 +44,6 @@ func newRole(db *gorm.DB, opts ...gen.DOOption) role {
 	return _role
 }
 
-// role è§’è‰²è¡¨
 type role struct {
 	roleDo
 

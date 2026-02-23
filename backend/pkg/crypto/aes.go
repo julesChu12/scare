@@ -42,38 +42,3 @@ func Encrypt(plaintext string, key []byte) (string, error) {
 	return base64.StdEncoding.EncodeToString(sealed), nil
 }
 
-// Decrypt 解密 AES-256-GCM 密文
-// 输入 base64(nonce + ciphertext + tag)
-func Decrypt(ciphertext string, key []byte) (string, error) {
-	if len(key) != 32 {
-		return "", ErrInvalidKey
-	}
-
-	data, err := base64.StdEncoding.DecodeString(ciphertext)
-	if err != nil {
-		return "", err
-	}
-
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return "", err
-	}
-
-	gcm, err := cipher.NewGCM(block)
-	if err != nil {
-		return "", err
-	}
-
-	nonceSize := gcm.NonceSize()
-	if len(data) < nonceSize {
-		return "", ErrCiphertextTooShort
-	}
-
-	nonce, sealed := data[:nonceSize], data[nonceSize:]
-	plaintext, err := gcm.Open(nil, nonce, sealed, nil)
-	if err != nil {
-		return "", ErrDecryptFailed
-	}
-
-	return string(plaintext), nil
-}

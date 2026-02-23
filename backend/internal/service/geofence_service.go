@@ -63,14 +63,3 @@ func (s *GeofenceService) Match(lat, lng float64) (int64, bool) {
 	return engine.Match(geo.Point{Lat: lat, Lng: lng})
 }
 
-// Engine 获取当前引擎实例
-func (s *GeofenceService) Engine() (*geo.Engine, bool) {
-	s.mu.RLock()
-	engine := s.engine
-	s.mu.RUnlock()
-
-	if engine == nil {
-		return nil, false
-	}
-	return engine, true
-}

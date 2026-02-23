@@ -47,31 +47,7 @@ CREATE TABLE IF NOT EXISTS `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
 
 -- =====================================================
--- 2. 老年人档案表 (elderly_profiles)
--- 说明: 一对一关联用户表，存储老年人详细信息
--- =====================================================
-CREATE TABLE IF NOT EXISTS `elderly_profiles` (
-  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `user_id` BIGINT NOT NULL COMMENT '关联用户ID(逻辑外键)',
-  `address` VARCHAR(200) DEFAULT NULL COMMENT '居住地址',
-  `latitude` DECIMAL(10,7) DEFAULT NULL COMMENT '纬度',
-  `longitude` DECIMAL(10,7) DEFAULT NULL COMMENT '经度',
-  `health_info` TEXT DEFAULT NULL COMMENT '健康信息',
-  `emergency_contact_name` VARCHAR(50) DEFAULT NULL COMMENT '紧急联系人姓名',
-  `emergency_contact_phone` VARCHAR(20) DEFAULT NULL COMMENT '紧急联系人电话',
-  `emergency_contact_relation` VARCHAR(20) DEFAULT NULL COMMENT '紧急联系人关系(子女/配偶/其他)',
-  `emergency_contact_user_id` BIGINT DEFAULT NULL COMMENT '紧急联系人用户ID(逻辑外键,未来扩展)',
-  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  `deleted_at` DATETIME DEFAULT NULL COMMENT '删除时间(软删除)',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_user_id` (`user_id`),
-  KEY `idx_emergency_contact_user_id` (`emergency_contact_user_id`),
-  KEY `idx_deleted_at` (`deleted_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='老年人档案表';
-
--- =====================================================
--- 3. 服务站点表 (service_stations)
+-- 2. 服务站点表 (service_stations)
 -- 说明: 社区服务站点信息
 -- =====================================================
 CREATE TABLE IF NOT EXISTS `service_stations` (
@@ -246,34 +222,7 @@ CREATE TABLE IF NOT EXISTS `notifications` (
 -- =====================================================
 
 -- =====================================================
--- 10. 用户角色关联表 (user_roles)
--- 说明: 支持多角色，区分 C 端和 B 端
--- =====================================================
-CREATE TABLE IF NOT EXISTS `user_roles` (
-  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `user_id` BIGINT NOT NULL COMMENT '用户ID',
-  `role` VARCHAR(20) NOT NULL COMMENT '角色(elderly/family/staff/station_manager/admin)',
-  `type` VARCHAR(10) NOT NULL COMMENT '端类型(c_end/b_end)',
-  `is_primary` BOOLEAN NOT NULL DEFAULT FALSE COMMENT '是否为主角色',
-  `status` VARCHAR(20) NOT NULL DEFAULT 'active' COMMENT '角色状态(active/inactive)',
-  `granted_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '授权时间',
-  `granted_by` BIGINT DEFAULT NULL COMMENT '授权人ID',
-  `revoked_at` DATETIME DEFAULT NULL COMMENT '撤销时间',
-  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  `deleted_at` DATETIME DEFAULT NULL COMMENT '删除时间(软删除)',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_user_role_type` (`user_id`, `role`, `type`, `deleted_at`),
-  KEY `idx_user_id` (`user_id`),
-  KEY `idx_role` (`role`),
-  KEY `idx_type` (`type`),
-  KEY `idx_status` (`status`),
-  KEY `idx_is_primary` (`is_primary`),
-  KEY `idx_deleted_at` (`deleted_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户角色关联表';
-
--- =====================================================
--- 11. 新闻资讯表 (news)
+-- 9. 新闻资讯表 (news)
 -- 说明: 站点新闻、公告，station_id=0 为平台级内容
 -- =====================================================
 CREATE TABLE IF NOT EXISTS `news` (
@@ -341,23 +290,3 @@ CREATE TABLE IF NOT EXISTS `customer_profiles` (
   UNIQUE KEY `uk_customer_user_id` (`user_id`),
   KEY `idx_customer_profiles_deleted_at` (`deleted_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='C端客户档案表';
-
--- =====================================================
--- 14. Casbin权限规则表 (casbin_rule)
--- 说明: 用于 RBAC 权限管理
--- =====================================================
-CREATE TABLE IF NOT EXISTS `casbin_rule` (
-  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `ptype` VARCHAR(100) NOT NULL COMMENT '策略类型(p:策略/g:分组)',
-  `v0` VARCHAR(100) NOT NULL COMMENT '主体或角色',
-  `v1` VARCHAR(100) DEFAULT NULL COMMENT '资源或子角色',
-  `v2` VARCHAR(100) DEFAULT NULL COMMENT '操作',
-  `v3` VARCHAR(100) DEFAULT NULL COMMENT '保留字段',
-  `v4` VARCHAR(100) DEFAULT NULL COMMENT '保留字段',
-  `v5` VARCHAR(100) DEFAULT NULL COMMENT '保留字段',
-  PRIMARY KEY (`id`),
-  KEY `idx_ptype` (`ptype`),
-  KEY `idx_v0` (`v0`),
-  KEY `idx_v1` (`v1`),
-  KEY `idx_v2` (`v2`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Casbin权限规则表';

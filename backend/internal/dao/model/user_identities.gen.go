@@ -12,7 +12,7 @@ import (
 
 const TableNameUserIdentity = "user_identities"
 
-// UserIdentity 用户身份表
+// UserIdentity mapped from table <user_identities>
 type UserIdentity struct {
 	ID           int64          `gorm:"column:id;type:bigint;primaryKey;autoIncrement:true;comment:主键ID" json:"id"`                                                                                                                                         // 主键ID
 	UserID       int64          `gorm:"column:user_id;type:bigint;not null;uniqueIndex:uk_user_identity,priority:1;index:idx_ui_user_id,priority:1;comment:用户ID" json:"user_id"`                                                                            // 用户ID

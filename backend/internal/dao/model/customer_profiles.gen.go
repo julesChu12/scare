@@ -6,26 +6,31 @@ package model
 
 import (
 	"time"
+
+	"gorm.io/gorm"
 )
 
 const TableNameCustomerProfile = "customer_profiles"
 
-// CustomerProfile å®¢æˆ·æ¡£æ¡ˆè¡¨ï¼ˆæœåŠ¡å¯¹è±¡ï¼‰
+// CustomerProfile C端客户档案表
 type CustomerProfile struct {
-	ID               int64     `gorm:"column:id;type:bigint;primaryKey;autoIncrement:true" json:"id"`
-	UserID           int64     `gorm:"column:user_id;type:bigint;not null;uniqueIndex:uk_user_id,priority:1;comment:å…³è”ç”¨æˆ·ID" json:"user_id"`                                                // å…³è”ç”¨æˆ·ID
-	IDCard           string    `gorm:"column:id_card;type:varchar(64);index:idx_id_card,priority:1;comment:èº«ä»½è¯å·" json:"id_card"`                                                           // èº«ä»½è¯å·
-	Gender           string    `gorm:"column:gender;type:varchar(10);comment:æ€§åˆ«" json:"gender"`                                                                                                // æ€§åˆ«
-	BirthDate        time.Time `gorm:"column:birth_date;type:date;comment:å‡ºç”Ÿæ—¥æœŸ" json:"birth_date"`                                                                                         // å‡ºç”Ÿæ—¥æœŸ
-	Address          string    `gorm:"column:address;type:text;comment:å±…ä½åœ°å€" json:"address"`                                                                                               // å±…ä½åœ°å€
-	CustomerType     string    `gorm:"column:customer_type;type:varchar(20);index:idx_customer_type,priority:1;comment:å®¢æˆ·ç±»åž‹ï¼šelderly/disabled/pregnant/child/other" json:"customer_type"` // å®¢æˆ·ç±»åž‹ï¼šelderly/disabled/pregnant/child/other
-	HealthStatus     string    `gorm:"column:health_status;type:varchar(50);comment:å¥åº·çŠ¶å†µ" json:"health_status"`                                                                            // å¥åº·çŠ¶å†µ
-	DisabilityLevel  string    `gorm:"column:disability_level;type:varchar(20);comment:å¤±èƒ½ç­‰çº§ï¼šè‡ªç†/è½»åº¦/ä¸­åº¦/é‡åº¦" json:"disability_level"`                                        // å¤±èƒ½ç­‰çº§ï¼šè‡ªç†/è½»åº¦/ä¸­åº¦/é‡åº¦
-	MedicalHistory   string    `gorm:"column:medical_history;type:text;comment:ç—…å²" json:"medical_history"`                                                                                     // ç—…å²
-	SpecialNeeds     string    `gorm:"column:special_needs;type:text;comment:ç‰¹æ®Šéœ€æ±‚" json:"special_needs"`                                                                                   // ç‰¹æ®Šéœ€æ±‚
-	EmergencyContact string    `gorm:"column:emergency_contact;type:json;comment:ç´§æ€¥è”ç³»äºº {"name":"","phone":"","relation":""}" json:"emergency_contact"`                                   // ç´§æ€¥è”ç³»äºº {"name":"","phone":"","relation":""}
-	CreatedAt        time.Time `gorm:"column:created_at;type:datetime(3)" json:"created_at"`
-	UpdatedAt        time.Time `gorm:"column:updated_at;type:datetime(3)" json:"updated_at"`
+	ID               int64          `gorm:"column:id;type:bigint;primaryKey;autoIncrement:true;comment:主键ID" json:"id"`                                                                                 // 主键ID
+	UserID           int64          `gorm:"column:user_id;type:bigint;not null;uniqueIndex:uk_user_id,priority:1;comment:å…³è”ç”¨æˆ·ID" json:"user_id"`                                                // å…³è”ç”¨æˆ·ID
+	IDCard           string         `gorm:"column:id_card;type:varchar(64);index:idx_id_card,priority:1;comment:身份证号" json:"id_card"`                                                                   // 身份证号
+	Address          string         `gorm:"column:address;type:text;comment:å±…ä½åœ°å€" json:"address"`                                                                                               // å±…ä½åœ°å€
+	Latitude         float64        `gorm:"column:latitude;type:decimal(10,7);comment:纬度" json:"latitude"`                                                                                              // 纬度
+	Longitude        float64        `gorm:"column:longitude;type:decimal(10,7);comment:经度" json:"longitude"`                                                                                            // 经度
+	CustomerType     string         `gorm:"column:customer_type;type:varchar(20);index:idx_customer_type,priority:1;comment:å®¢æˆ·ç±»åž‹ï¼šelderly/disabled/pregnant/child/other" json:"customer_type"` // å®¢æˆ·ç±»åž‹ï¼šelderly/disabled/pregnant/child/other
+	EmergencyContact string         `gorm:"column:emergency_contact;type:json;comment:ç´§æ€¥è”ç³»äºº" json:"emergency_contact"`                                                                        // ç´§æ€¥è”ç³»äºº
+	CreatedAt        time.Time      `gorm:"column:created_at;type:datetime(3)" json:"created_at"`
+	UpdatedAt        time.Time      `gorm:"column:updated_at;type:datetime(3)" json:"updated_at"`
+	DeletedAt        gorm.DeletedAt `gorm:"column:deleted_at;type:datetime(3);index:idx_customer_profiles_deleted_at,priority:1;comment:删除时间(软删除)" json:"deleted_at"` // 删除时间(软删除)
+	Gender           string         `gorm:"column:gender;type:varchar(10);comment:æ€§åˆ«" json:"gender"`                                                              // æ€§åˆ«
+	BirthDate        time.Time      `gorm:"column:birth_date;type:date;comment:å‡ºç”Ÿæ—¥æœŸ" json:"birth_date"`                                                       // å‡ºç”Ÿæ—¥æœŸ
+	HealthStatus     string         `gorm:"column:health_status;type:varchar(50);comment:å¥åº·çŠ¶å†µ" json:"health_status"`                                          // å¥åº·çŠ¶å†µ
+	DisabilityLevel  string         `gorm:"column:disability_level;type:varchar(20);comment:å¤±èƒ½ç­‰çº§ï¼šè‡ªç†/è½»åº¦/ä¸­åº¦/é‡åº¦" json:"disability_level"`      // å¤±èƒ½ç­‰çº§ï¼šè‡ªç†/è½»åº¦/ä¸­åº¦/é‡åº¦
+	MedicalHistory   string         `gorm:"column:medical_history;type:text;comment:ç—…å²" json:"medical_history"`                                                   // ç—…å²
+	SpecialNeeds     string         `gorm:"column:special_needs;type:text;comment:ç‰¹æ®Šéœ€æ±‚" json:"special_needs"`                                                 // ç‰¹æ®Šéœ€æ±‚
 }
 
 // TableName CustomerProfile's table name

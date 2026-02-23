@@ -46,7 +46,6 @@ func newUserIdentity(db *gorm.DB, opts ...gen.DOOption) userIdentity {
 	return _userIdentity
 }
 
-// userIdentity 用户身份表
 type userIdentity struct {
 	userIdentityDo
 

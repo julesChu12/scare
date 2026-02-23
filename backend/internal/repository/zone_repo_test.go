@@ -62,47 +62,6 @@ func TestZoneRepository_GetByID_NotFound(t *testing.T) {
 	}
 }
 
-func TestZoneRepository_GetByStationID(t *testing.T) {
-	db := setupTestDB(t)
-	repo := NewZoneRepository(db)
-
-	// 创建站点1的围栏
-	for i := 0; i < 3; i++ {
-		zone := &model.ServiceZone{
-			StationID: 1,
-			Name:      "站点1围栏" + string(rune('A'+i)),
-			Points:    `[[30.0,120.0],[30.1,120.0],[30.1,120.1],[30.0,120.1]]`,
-			Priority:  int64(i * 10),
-			Status:    "active",
-		}
-		repo.Create(zone)
-	}
-
-	// 创建站点2的围栏
-	zone := &model.ServiceZone{
-		StationID: 2,
-		Name:      "站点2围栏",
-		Points:    `[[31.0,121.0],[31.1,121.0],[31.1,121.1],[31.0,121.1]]`,
-		Status:    "active",
-	}
-	repo.Create(zone)
-
-	// 查询站点1的围栏
-	zones, err := repo.GetByStationID(1)
-	if err != nil {
-		t.Fatalf("failed to get zones by station_id: %v", err)
-	}
-
-	if len(zones) != 3 {
-		t.Errorf("expected 3 zones for station 1, got %d", len(zones))
-	}
-
-	// 验证按优先级降序排列
-	if zones[0].Priority < zones[1].Priority {
-		t.Error("expected zones to be ordered by priority desc")
-	}
-}
-
 func TestZoneRepository_ListActive(t *testing.T) {
 	db := setupTestDB(t)
 	repo := NewZoneRepository(db)

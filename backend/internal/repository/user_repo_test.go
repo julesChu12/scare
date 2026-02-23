@@ -122,36 +122,6 @@ func TestUserRepository_Update(t *testing.T) {
 	}
 }
 
-func TestUserRepository_List(t *testing.T) {
-	db := setupTestDB(t)
-	repo := NewUserRepository(db)
-
-	// 创建多个测试用户
-	for i := 0; i < 5; i++ {
-		user := &model.User{
-			Phone:        "1380000010" + string(rune('0'+i)),
-			PasswordHash: "hashed_password",
-			Name:         "用户" + string(rune('0'+i)),
-			Status:       "active",
-		}
-		repo.Create(user)
-	}
-
-	// 测试分页
-	users, total, err := repo.List(0, 3)
-	if err != nil {
-		t.Fatalf("failed to list users: %v", err)
-	}
-
-	if total != 5 {
-		t.Errorf("expected total 5, got %d", total)
-	}
-
-	if len(users) != 3 {
-		t.Errorf("expected 3 users in page, got %d", len(users))
-	}
-}
-
 func TestUserRepository_ListWithFilter(t *testing.T) {
 	db := setupTestDB(t)
 	repo := NewUserRepository(db)

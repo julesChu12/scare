@@ -29,43 +29,44 @@ func newNews(db *gorm.DB, opts ...gen.DOOption) news {
 	tableName := _news.newsDo.TableName()
 	_news.ALL = field.NewAsterisk(tableName)
 	_news.ID = field.NewInt64(tableName, "id")
-	_news.CreatedAt = field.NewTime(tableName, "created_at")
-	_news.UpdatedAt = field.NewTime(tableName, "updated_at")
-	_news.DeletedAt = field.NewField(tableName, "deleted_at")
+	_news.StationID = field.NewInt64(tableName, "station_id")
 	_news.Title = field.NewString(tableName, "title")
 	_news.Summary = field.NewString(tableName, "summary")
 	_news.Content = field.NewString(tableName, "content")
 	_news.CoverURL = field.NewString(tableName, "cover_url")
 	_news.Type = field.NewString(tableName, "type")
 	_news.Status = field.NewString(tableName, "status")
-	_news.StationID = field.NewInt64(tableName, "station_id")
 	_news.AuthorID = field.NewInt64(tableName, "author_id")
 	_news.PublishAt = field.NewTime(tableName, "publish_at")
 	_news.ViewCount = field.NewInt64(tableName, "view_count")
+	_news.CreatedAt = field.NewTime(tableName, "created_at")
+	_news.UpdatedAt = field.NewTime(tableName, "updated_at")
+	_news.DeletedAt = field.NewField(tableName, "deleted_at")
 
 	_news.fillFieldMap()
 
 	return _news
 }
 
+// news 新闻资讯表
 type news struct {
 	newsDo
 
 	ALL       field.Asterisk
-	ID        field.Int64
-	CreatedAt field.Time
-	UpdatedAt field.Time
-	DeletedAt field.Field
+	ID        field.Int64 // 主键ID
+	StationID field.Int64
 	Title     field.String
 	Summary   field.String
 	Content   field.String
 	CoverURL  field.String
 	Type      field.String
 	Status    field.String
-	StationID field.Int64
 	AuthorID  field.Int64
 	PublishAt field.Time
 	ViewCount field.Int64
+	CreatedAt field.Time
+	UpdatedAt field.Time
+	DeletedAt field.Field
 
 	fieldMap map[string]field.Expr
 }
@@ -83,19 +84,19 @@ func (n news) As(alias string) *news {
 func (n *news) updateTableName(table string) *news {
 	n.ALL = field.NewAsterisk(table)
 	n.ID = field.NewInt64(table, "id")
-	n.CreatedAt = field.NewTime(table, "created_at")
-	n.UpdatedAt = field.NewTime(table, "updated_at")
-	n.DeletedAt = field.NewField(table, "deleted_at")
+	n.StationID = field.NewInt64(table, "station_id")
 	n.Title = field.NewString(table, "title")
 	n.Summary = field.NewString(table, "summary")
 	n.Content = field.NewString(table, "content")
 	n.CoverURL = field.NewString(table, "cover_url")
 	n.Type = field.NewString(table, "type")
 	n.Status = field.NewString(table, "status")
-	n.StationID = field.NewInt64(table, "station_id")
 	n.AuthorID = field.NewInt64(table, "author_id")
 	n.PublishAt = field.NewTime(table, "publish_at")
 	n.ViewCount = field.NewInt64(table, "view_count")
+	n.CreatedAt = field.NewTime(table, "created_at")
+	n.UpdatedAt = field.NewTime(table, "updated_at")
+	n.DeletedAt = field.NewField(table, "deleted_at")
 
 	n.fillFieldMap()
 
@@ -114,19 +115,19 @@ func (n *news) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 func (n *news) fillFieldMap() {
 	n.fieldMap = make(map[string]field.Expr, 14)
 	n.fieldMap["id"] = n.ID
-	n.fieldMap["created_at"] = n.CreatedAt
-	n.fieldMap["updated_at"] = n.UpdatedAt
-	n.fieldMap["deleted_at"] = n.DeletedAt
+	n.fieldMap["station_id"] = n.StationID
 	n.fieldMap["title"] = n.Title
 	n.fieldMap["summary"] = n.Summary
 	n.fieldMap["content"] = n.Content
 	n.fieldMap["cover_url"] = n.CoverURL
 	n.fieldMap["type"] = n.Type
 	n.fieldMap["status"] = n.Status
-	n.fieldMap["station_id"] = n.StationID
 	n.fieldMap["author_id"] = n.AuthorID
 	n.fieldMap["publish_at"] = n.PublishAt
 	n.fieldMap["view_count"] = n.ViewCount
+	n.fieldMap["created_at"] = n.CreatedAt
+	n.fieldMap["updated_at"] = n.UpdatedAt
+	n.fieldMap["deleted_at"] = n.DeletedAt
 }
 
 func (n news) clone(db *gorm.DB) news {

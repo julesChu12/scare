@@ -59,19 +59,6 @@ func (r *NewsRepository) GetByID(id int64) (*model.News, error) {
 	return n.Where(n.ID.Eq(id)).First()
 }
 
-// GetPublishedByID 获取已发布的新闻详情
-func (r *NewsRepository) GetPublishedByID(id int64) (*model.News, error) {
-	n := r.q.News
-	return n.Where(n.ID.Eq(id), n.Status.Eq("published")).First()
-}
-
-// IncrementViewCount 增加浏览次数
-func (r *NewsRepository) IncrementViewCount(id int64) error {
-	n := r.q.News
-	_, err := n.Where(n.ID.Eq(id)).UpdateSimple(n.ViewCount.Add(1))
-	return err
-}
-
 // Create 创建新闻
 func (r *NewsRepository) Create(news *model.News) error {
 	return r.q.News.Create(news)

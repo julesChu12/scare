@@ -38,7 +38,6 @@ func newRolePermission(db *gorm.DB, opts ...gen.DOOption) rolePermission {
 	return _rolePermission
 }
 
-// rolePermission è§’è‰²æƒé™å…³è”è¡¨
 type rolePermission struct {
 	rolePermissionDo
 

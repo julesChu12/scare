@@ -25,18 +25,6 @@ func (r *TaskRepository) Create(task *model.TaskAssignment) error {
 	return r.q.TaskAssignment.Omit(r.q.TaskAssignment.ClaimedAt, r.q.TaskAssignment.CompletedAt, r.q.TaskAssignment.Images).Create(task)
 }
 
-// GetByID 根据ID获取任务
-func (r *TaskRepository) GetByID(id int64) (*model.TaskAssignment, error) {
-	t := r.q.TaskAssignment
-	return t.Where(t.ID.Eq(id)).First()
-}
-
-// GetByRequestID 根据需求ID获取任务
-func (r *TaskRepository) GetByRequestID(requestID int64) (*model.TaskAssignment, error) {
-	t := r.q.TaskAssignment
-	return t.Where(t.RequestID.Eq(requestID)).First()
-}
-
 // ListByStaff 根据工作人员ID获取任务列表（分页）
 func (r *TaskRepository) ListByStaff(staffID int64, offset, limit int) ([]*model.TaskAssignment, int64, error) {
 	t := r.q.TaskAssignment
@@ -49,30 +37,6 @@ func (r *TaskRepository) ListByStaff(staffID int64, offset, limit int) ([]*model
 
 	// 分页查询
 	tasks, err := t.Where(t.StaffID.Eq(staffID)).
-		Order(t.ID.Desc()).
-		Offset(offset).
-		Limit(limit).
-		Find()
-
-	if err != nil {
-		return nil, 0, err
-	}
-
-	return tasks, total, nil
-}
-
-// ListDispatchedByStation 根据站点ID获取已分派的任务
-func (r *TaskRepository) ListDispatchedByStation(stationID int64, offset, limit int) ([]*model.TaskAssignment, int64, error) {
-	t := r.q.TaskAssignment
-
-	// 获取总数
-	total, err := t.Where(t.StationID.Eq(stationID), t.Status.Eq(consts.TaskStatusDispatched)).Count()
-	if err != nil {
-		return nil, 0, err
-	}
-
-	// 分页查询
-	tasks, err := t.Where(t.StationID.Eq(stationID), t.Status.Eq(consts.TaskStatusDispatched)).
 		Order(t.ID.Desc()).
 		Offset(offset).
 		Limit(limit).
@@ -123,13 +87,6 @@ func (r *TaskRepository) ListPool(filter TaskPoolFilter, offset, limit int) ([]*
 	}
 
 	return tasks, total, nil
-}
-
-// UpdateStatus 更新任务状态
-func (r *TaskRepository) UpdateStatus(id int64, status string) error {
-	t := r.q.TaskAssignment
-	_, err := t.Where(t.ID.Eq(id)).Update(t.Status, status)
-	return err
 }
 
 // WithTx 事务支持

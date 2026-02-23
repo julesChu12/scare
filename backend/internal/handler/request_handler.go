@@ -244,6 +244,101 @@ func (h *RequestHandler) Cancel(c *gin.Context) {
 	Respond(c, http.StatusOK, "ok", request)
 }
 
+type updateRequestBody struct {
+	ServiceType  string `json:"service_type"`
+	ContactName  string `json:"contact_name"`
+	ContactPhone string `json:"contact_phone"`
+	Address      string `json:"address"`
+	Description  string `json:"description"`
+	Urgency      string `json:"urgency"`
+}
+
+// Update B端编辑服务请求
+// @Summary      编辑服务请求
+// @Description  B端编辑服务请求基本信息（仅 pending/dispatched 状态可编辑）
+// @Tags         b_request
+// @Accept       json
+// @Produce      json
+// @Security     Bearer
+// @Param        id path int true "需求ID"
+// @Param        request body updateRequestBody true "更新信息"
+// @Success      200  {object} APIResponse{data=RequestResponse} "更新成功"
+// @Failure      400  {object} APIResponse "请求参数错误"
+// @Failure      401  {object} APIResponse "未认证"
+// @Failure      409  {object} APIResponse "状态不允许编辑"
+// @Failure      500  {object} APIResponse "服务器错误"
+// @Router       /b/requests/{id} [put]
+func (h *RequestHandler) Update(c *gin.Context) {
+	id, err := parseInt64Param(c.Param("id"))
+	if err != nil {
+		RespondError(c, http.StatusBadRequest, "invalid id")
+		return
+	}
+
+	var req updateRequestBody
+	if err := c.ShouldBindJSON(&req); err != nil {
+		RespondError(c, http.StatusBadRequest, "invalid payload")
+		return
+	}
+
+	result, err := h.service.Update(id, service.UpdateInput{
+		ServiceType:  req.ServiceType,
+		ContactName:  req.ContactName,
+		ContactPhone: req.ContactPhone,
+		Address:      req.Address,
+		Description:  req.Description,
+		Urgency:      req.Urgency,
+	})
+	if err != nil {
+		switch err {
+		case service.ErrInvalidRequest:
+			RespondError(c, http.StatusBadRequest, "invalid request")
+		case service.ErrRequestConflict:
+			RespondError(c, http.StatusConflict, "当前状态不允许编辑")
+		default:
+			RespondError(c, http.StatusInternalServerError, "update failed")
+		}
+		return
+	}
+
+	Respond(c, http.StatusOK, "ok", result)
+}
+
+// CancelByAdmin B端取消服务请求
+// @Summary      B端取消服务请求
+// @Description  B端管理人员取消服务请求，同步取消关联任务
+// @Tags         b_request
+// @Accept       json
+// @Produce      json
+// @Security     Bearer
+// @Param        id path int true "需求ID"
+// @Success      200  {object} APIResponse{data=RequestResponse} "取消成功"
+// @Failure      400  {object} APIResponse "ID无效"
+// @Failure      401  {object} APIResponse "未认证"
+// @Failure      409  {object} APIResponse "状态不允许取消"
+// @Failure      500  {object} APIResponse "服务器错误"
+// @Router       /b/requests/{id}/cancel [post]
+func (h *RequestHandler) CancelByAdmin(c *gin.Context) {
+	id, err := parseInt64Param(c.Param("id"))
+	if err != nil {
+		RespondError(c, http.StatusBadRequest, "invalid id")
+		return
+	}
+
+	result, err := h.service.CancelByAdmin(id)
+	if err != nil {
+		switch err {
+		case service.ErrRequestConflict:
+			RespondError(c, http.StatusConflict, "当前状态不允许取消")
+		default:
+			RespondError(c, http.StatusInternalServerError, "cancel failed")
+		}
+		return
+	}
+
+	Respond(c, http.StatusOK, "ok", result)
+}
+
 type updateStatusRequest struct {
 	Status       string `json:"status" binding:"required"`
 	RejectReason string `json:"reject_reason"`

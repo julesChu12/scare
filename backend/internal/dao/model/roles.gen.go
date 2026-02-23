@@ -12,7 +12,7 @@ import (
 
 const TableNameRole = "roles"
 
-// Role è§’è‰²è¡¨
+// Role mapped from table <roles>
 type Role struct {
 	ID          int64          `gorm:"column:id;type:bigint unsigned;primaryKey;autoIncrement:true;comment:ä¸»é”®ID" json:"id"`                                                       // ä¸»é”®ID
 	Code        string         `gorm:"column:code;type:varchar(50);not null;uniqueIndex:uk_code,priority:1;comment:è§’è‰²ç¼–ç ï¼Œå¦‚ admin, staff" json:"code"`                      // è§’è‰²ç¼–ç ï¼Œå¦‚ admin, staff

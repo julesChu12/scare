@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"net/http"
-	"strings"
 
 	"community-elderly-care-platform/internal/service"
 
@@ -74,25 +73,4 @@ func PermissionMiddleware(permService *service.PermissionService) gin.HandlerFun
 
 		c.Next()
 	}
-}
-
-// MatchPath 路径匹配，支持通配符 *
-// 例如: /api/v1/b/tasks/*/claim 匹配 /api/v1/b/tasks/123/claim
-func MatchPath(pattern, path string) bool {
-	patternParts := strings.Split(pattern, "/")
-	pathParts := strings.Split(path, "/")
-
-	if len(patternParts) != len(pathParts) {
-		return false
-	}
-
-	for i, part := range patternParts {
-		if part == "*" {
-			continue
-		}
-		if part != pathParts[i] {
-			return false
-		}
-	}
-	return true
 }

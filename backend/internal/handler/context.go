@@ -42,16 +42,6 @@ func GetUserIdentities(c *gin.Context) []string {
 	return identities
 }
 
-// GetUserPrimary 获取用户主身份
-func GetUserPrimary(c *gin.Context) (string, bool) {
-	value, ok := c.Get("user_primary")
-	if !ok {
-		return "", false
-	}
-	primary, ok := value.(string)
-	return primary, ok
-}
-
 // GetUserRoles 获取用户角色列表（兼容旧代码，返回身份列表）
 // Deprecated: use GetUserIdentities instead
 func GetUserRoles(c *gin.Context) []string {

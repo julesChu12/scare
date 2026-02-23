@@ -65,68 +65,6 @@ func (s *UserIdentityService) GrantIdentity(userID int64, identityType string, i
 	return s.identityRepo.Create(identity)
 }
 
-// RevokeIdentity 撤销用户身份
-func (s *UserIdentityService) RevokeIdentity(userID int64, identityType string) error {
-	// 检查是否为主身份
-	identity, err := s.identityRepo.GetPrimaryIdentity(userID)
-	if err == nil && identity.IdentityType == identityType {
-		return ErrCannotRemovePrimary
-	}
-
-	// 更新状态为 inactive
-	now := time.Now()
-	return s.db.Model(&model.UserIdentity{}).
-		Where("user_id = ? AND identity_type = ?", userID, identityType).
-		Updates(map[string]interface{}{
-			"status":     "inactive",
-			"revoked_at": now,
-		}).Error
-}
-
-// SwitchPrimaryIdentity 切换主身份
-func (s *UserIdentityService) SwitchPrimaryIdentity(userID int64, identityType string) error {
-	// 检查目标身份是否存在
-	exists, err := s.identityRepo.ExistsByUserIDAndType(userID, identityType)
-	if err != nil {
-		return err
-	}
-	if !exists {
-		return ErrIdentityNotFound
-	}
-
-	return s.identityRepo.SetPrimary(userID, identityType)
-}
-
-// GetUserIdentities 获取用户所有身份
-func (s *UserIdentityService) GetUserIdentities(userID int64) ([]*model.UserIdentity, error) {
-	return s.identityRepo.GetActiveByUserID(userID)
-}
-
-// GetBEndIdentities 获取用户 B端身份
-func (s *UserIdentityService) GetBEndIdentities(userID int64) ([]*model.UserIdentity, error) {
-	return s.identityRepo.GetBEndIdentities(userID)
-}
-
-// GetCEndIdentities 获取用户 C端身份
-func (s *UserIdentityService) GetCEndIdentities(userID int64) ([]*model.UserIdentity, error) {
-	return s.identityRepo.GetCEndIdentities(userID)
-}
-
-// GetPrimaryIdentity 获取用户主身份
-func (s *UserIdentityService) GetPrimaryIdentity(userID int64) (*model.UserIdentity, error) {
-	return s.identityRepo.GetPrimaryIdentity(userID)
-}
-
-// HasBEndIdentity 检查用户是否有 B端身份
-func (s *UserIdentityService) HasBEndIdentity(userID int64) (bool, error) {
-	return s.identityRepo.HasBEndIdentity(userID)
-}
-
-// HasCEndIdentity 检查用户是否有 C端身份
-func (s *UserIdentityService) HasCEndIdentity(userID int64) (bool, error) {
-	return s.identityRepo.HasCEndIdentity(userID)
-}
-
 // SyncIdentities 同步用户身份（替换为新列表）
 func (s *UserIdentityService) SyncIdentities(userID int64, newIdentities []string, stationID int64, grantedBy int64) error {
 	// 获取当前身份

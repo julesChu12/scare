@@ -28,14 +28,6 @@ func (r *ZoneRepository) GetByID(id int64) (*model.ServiceZone, error) {
 	return z.Where(z.ID.Eq(id)).First()
 }
 
-// GetByStationID 根据站点ID获取围栏列表
-func (r *ZoneRepository) GetByStationID(stationID int64) ([]*model.ServiceZone, error) {
-	z := r.q.ServiceZone
-	return z.Where(z.StationID.Eq(stationID), z.Status.Eq("active")).
-		Order(z.Priority.Desc(), z.ID.Asc()).
-		Find()
-}
-
 // ListActive 获取所有活跃围栏
 func (r *ZoneRepository) ListActive() ([]*model.ServiceZone, error) {
 	z := r.q.ServiceZone

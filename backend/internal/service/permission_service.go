@@ -365,7 +365,3 @@ func matchPath(pattern, path string) bool {
 	return true
 }
 
-// GetAllRoles 获取所有角色列表
-func (s *PermissionService) GetAllRoles() ([]model.Role, error) {
-	return s.roleRepo.List()
-}

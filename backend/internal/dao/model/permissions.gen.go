@@ -12,7 +12,7 @@ import (
 
 const TableNamePermission = "permissions"
 
-// Permission æƒé™è¡¨
+// Permission mapped from table <permissions>
 type Permission struct {
 	ID          int64          `gorm:"column:id;type:bigint unsigned;primaryKey;autoIncrement:true;comment:ä¸»é”®ID" json:"id"`                                                                                           // ä¸»é”®ID
 	Code        string         `gorm:"column:code;type:varchar(100);not null;uniqueIndex:uk_code,priority:1;comment:æƒé™ç ï¼Œæ ¼å¼: module:resource:action" json:"code"`                                              // æƒé™ç ï¼Œæ ¼å¼: module:resource:action

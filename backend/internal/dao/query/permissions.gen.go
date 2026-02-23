@@ -49,7 +49,6 @@ func newPermission(db *gorm.DB, opts ...gen.DOOption) permission {
 	return _permission
 }
 
-// permission æƒé™è¡¨
 type permission struct {
 	permissionDo
 

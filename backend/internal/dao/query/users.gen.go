@@ -37,12 +37,13 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 	_user.Gender = field.NewString(tableName, "gender")
 	_user.BirthDate = field.NewTime(tableName, "birth_date")
 	_user.IDCard = field.NewString(tableName, "id_card")
-	_user.IDCardHmac = field.NewString(tableName, "id_card_hmac")
 	_user.StationID = field.NewInt64(tableName, "station_id")
 	_user.Status = field.NewString(tableName, "status")
 	_user.CreatedAt = field.NewTime(tableName, "created_at")
 	_user.UpdatedAt = field.NewTime(tableName, "updated_at")
 	_user.DeletedAt = field.NewField(tableName, "deleted_at")
+	_user.IDCardHmac = field.NewString(tableName, "id_card_hmac")
+	_user.IDCardMasked = field.NewString(tableName, "id_card_masked")
 
 	_user.fillFieldMap()
 
@@ -63,12 +64,13 @@ type user struct {
 	Gender       field.String
 	BirthDate    field.Time
 	IDCard       field.String
-	IDCardHmac   field.String // 身份证号HMAC摘要
 	StationID    field.Int64
 	Status       field.String
 	CreatedAt    field.Time
 	UpdatedAt    field.Time
 	DeletedAt    field.Field
+	IDCardHmac   field.String // 身份证号HMAC摘要
+	IDCardMasked field.String // 身份证号脱敏值
 
 	fieldMap map[string]field.Expr
 }
@@ -94,12 +96,13 @@ func (u *user) updateTableName(table string) *user {
 	u.Gender = field.NewString(table, "gender")
 	u.BirthDate = field.NewTime(table, "birth_date")
 	u.IDCard = field.NewString(table, "id_card")
-	u.IDCardHmac = field.NewString(table, "id_card_hmac")
 	u.StationID = field.NewInt64(table, "station_id")
 	u.Status = field.NewString(table, "status")
 	u.CreatedAt = field.NewTime(table, "created_at")
 	u.UpdatedAt = field.NewTime(table, "updated_at")
 	u.DeletedAt = field.NewField(table, "deleted_at")
+	u.IDCardHmac = field.NewString(table, "id_card_hmac")
+	u.IDCardMasked = field.NewString(table, "id_card_masked")
 
 	u.fillFieldMap()
 
@@ -116,7 +119,7 @@ func (u *user) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (u *user) fillFieldMap() {
-	u.fieldMap = make(map[string]field.Expr, 15)
+	u.fieldMap = make(map[string]field.Expr, 16)
 	u.fieldMap["id"] = u.ID
 	u.fieldMap["phone"] = u.Phone
 	u.fieldMap["password_hash"] = u.PasswordHash
@@ -126,12 +129,13 @@ func (u *user) fillFieldMap() {
 	u.fieldMap["gender"] = u.Gender
 	u.fieldMap["birth_date"] = u.BirthDate
 	u.fieldMap["id_card"] = u.IDCard
-	u.fieldMap["id_card_hmac"] = u.IDCardHmac
 	u.fieldMap["station_id"] = u.StationID
 	u.fieldMap["status"] = u.Status
 	u.fieldMap["created_at"] = u.CreatedAt
 	u.fieldMap["updated_at"] = u.UpdatedAt
 	u.fieldMap["deleted_at"] = u.DeletedAt
+	u.fieldMap["id_card_hmac"] = u.IDCardHmac
+	u.fieldMap["id_card_masked"] = u.IDCardMasked
 }
 
 func (u user) clone(db *gorm.DB) user {

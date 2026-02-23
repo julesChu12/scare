@@ -375,6 +375,21 @@ definitions:
     required:
     - staff_id
     type: object
+  handler.updateRequestBody:
+    properties:
+      address:
+        type: string
+      contact_name:
+        type: string
+      contact_phone:
+        type: string
+      description:
+        type: string
+      service_type:
+        type: string
+      urgency:
+        type: string
+    type: object
   handler.updateStatusRequest:
     properties:
       reject_reason:
@@ -1373,6 +1388,99 @@ paths:
       summary: 获取服务需求详情
       tags:
       - c_request
+      - b_request
+    put:
+      consumes:
+      - application/json
+      description: B端编辑服务请求基本信息（仅 pending/dispatched 状态可编辑）
+      parameters:
+      - description: 需求ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 更新信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.updateRequestBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.RequestResponse'
+              type: object
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "409":
+          description: 状态不允许编辑
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: 编辑服务请求
+      tags:
+      - b_request
+  /b/requests/{id}/cancel:
+    post:
+      consumes:
+      - application/json
+      description: B端管理人员取消服务请求，同步取消关联任务
+      parameters:
+      - description: 需求ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 取消成功
+          schema:
+            allOf:
+            - $ref: '#/definitions/handler.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/handler.RequestResponse'
+              type: object
+        "400":
+          description: ID无效
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "401":
+          description: 未认证
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "409":
+          description: 状态不允许取消
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+        "500":
+          description: 服务器错误
+          schema:
+            $ref: '#/definitions/handler.APIResponse'
+      security:
+      - Bearer: []
+      summary: B端取消服务请求
+      tags:
       - b_request
   /b/requests/{id}/status:
     put:

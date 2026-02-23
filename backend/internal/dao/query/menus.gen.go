@@ -47,7 +47,6 @@ func newMenu(db *gorm.DB, opts ...gen.DOOption) menu {
 	return _menu
 }
 
-// menu èœå•è¡¨
 type menu struct {
 	menuDo
 

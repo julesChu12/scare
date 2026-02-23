@@ -12,9 +12,9 @@ import (
 
 const TableNameBanner = "banners"
 
-// Banner è½®æ’­å›¾è¡¨
+// Banner 轮播图表
 type Banner struct {
-	ID        int64          `gorm:"column:id;type:bigint;primaryKey;autoIncrement:true;comment:ä¸»é”®ID" json:"id"`                                                                   // ä¸»é”®ID
+	ID        int64          `gorm:"column:id;type:bigint;primaryKey;autoIncrement:true;comment:主键ID" json:"id"`                                                                       // 主键ID
 	StationID int64          `gorm:"column:station_id;type:bigint;not null;index:idx_banners_station_status,priority:1;comment:ç«™ç‚¹ID(0=å¹³å°çº§/å…¨å±€)" json:"station_id"`        // ç«™ç‚¹ID(0=å¹³å°çº§/å…¨å±€)
 	Title     string         `gorm:"column:title;type:varchar(100);comment:æ ‡é¢˜" json:"title"`                                                                                       // æ ‡é¢˜
 	ImageURL  string         `gorm:"column:image_url;type:varchar(255);not null;comment:å›¾ç‰‡URL" json:"image_url"`                                                                   // å›¾ç‰‡URL

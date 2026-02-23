@@ -110,7 +110,3 @@ func (s *BannerService) Delete(id int64) error {
 	return s.repo.Delete(id)
 }
 
-// GetByID 获取单个
-func (s *BannerService) GetByID(id int64) (*model.Banner, error) {
-	return s.repo.GetByID(id)
-}

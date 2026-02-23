@@ -26,6 +26,7 @@ var (
 	Report          *report
 	Role            *role
 	RolePermission  *rolePermission
+	SchemaMigration *schemaMigration
 	ServiceRequest  *serviceRequest
 	ServiceStation  *serviceStation
 	ServiceZone     *serviceZone
@@ -46,6 +47,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	Report = &Q.Report
 	Role = &Q.Role
 	RolePermission = &Q.RolePermission
+	SchemaMigration = &Q.SchemaMigration
 	ServiceRequest = &Q.ServiceRequest
 	ServiceStation = &Q.ServiceStation
 	ServiceZone = &Q.ServiceZone
@@ -67,6 +69,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		Report:          newReport(db, opts...),
 		Role:            newRole(db, opts...),
 		RolePermission:  newRolePermission(db, opts...),
+		SchemaMigration: newSchemaMigration(db, opts...),
 		ServiceRequest:  newServiceRequest(db, opts...),
 		ServiceStation:  newServiceStation(db, opts...),
 		ServiceZone:     newServiceZone(db, opts...),
@@ -89,6 +92,7 @@ type Query struct {
 	Report          report
 	Role            role
 	RolePermission  rolePermission
+	SchemaMigration schemaMigration
 	ServiceRequest  serviceRequest
 	ServiceStation  serviceStation
 	ServiceZone     serviceZone
@@ -112,6 +116,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		Report:          q.Report.clone(db),
 		Role:            q.Role.clone(db),
 		RolePermission:  q.RolePermission.clone(db),
+		SchemaMigration: q.SchemaMigration.clone(db),
 		ServiceRequest:  q.ServiceRequest.clone(db),
 		ServiceStation:  q.ServiceStation.clone(db),
 		ServiceZone:     q.ServiceZone.clone(db),
@@ -142,6 +147,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		Report:          q.Report.replaceDB(db),
 		Role:            q.Role.replaceDB(db),
 		RolePermission:  q.RolePermission.replaceDB(db),
+		SchemaMigration: q.SchemaMigration.replaceDB(db),
 		ServiceRequest:  q.ServiceRequest.replaceDB(db),
 		ServiceStation:  q.ServiceStation.replaceDB(db),
 		ServiceZone:     q.ServiceZone.replaceDB(db),
@@ -162,6 +168,7 @@ type queryCtx struct {
 	Report          IReportDo
 	Role            IRoleDo
 	RolePermission  IRolePermissionDo
+	SchemaMigration ISchemaMigrationDo
 	ServiceRequest  IServiceRequestDo
 	ServiceStation  IServiceStationDo
 	ServiceZone     IServiceZoneDo
@@ -182,6 +189,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		Report:          q.Report.WithContext(ctx),
 		Role:            q.Role.WithContext(ctx),
 		RolePermission:  q.RolePermission.WithContext(ctx),
+		SchemaMigration: q.SchemaMigration.WithContext(ctx),
 		ServiceRequest:  q.ServiceRequest.WithContext(ctx),
 		ServiceStation:  q.ServiceStation.WithContext(ctx),
 		ServiceZone:     q.ServiceZone.WithContext(ctx),

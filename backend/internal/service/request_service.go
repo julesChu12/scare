@@ -209,6 +209,97 @@ func (s *RequestService) ListByUser(userID int64, status string, page, pageSize 
 	return s.repo.ListByUser(userID, status, offset, pageSize)
 }
 
+// UpdateInput B端编辑服务请求的输入参数
+type UpdateInput struct {
+	ServiceType  string `json:"service_type"`
+	ContactName  string `json:"contact_name"`
+	ContactPhone string `json:"contact_phone"`
+	Address      string `json:"address"`
+	Description  string `json:"description"`
+	Urgency      string `json:"urgency"`
+}
+
+// Update B端编辑服务请求（仅 pending/dispatched 状态可编辑）
+func (s *RequestService) Update(id int64, input UpdateInput) (*model.ServiceRequest, error) {
+	req, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	// 仅 pending 和 dispatched 状态可编辑
+	if req.Status != consts.RequestStatusPending && req.Status != consts.RequestStatusDispatched {
+		return nil, ErrRequestConflict
+	}
+
+	updates := map[string]interface{}{}
+	if input.ServiceType != "" {
+		if !consts.IsValidServiceType(input.ServiceType) {
+			return nil, ErrInvalidRequest
+		}
+		updates["service_type"] = input.ServiceType
+	}
+	if input.ContactName != "" {
+		updates["contact_name"] = input.ContactName
+	}
+	if input.ContactPhone != "" {
+		updates["contact_phone"] = input.ContactPhone
+	}
+	if input.Address != "" {
+		updates["address"] = input.Address
+	}
+	if input.Description != "" {
+		updates["description"] = input.Description
+	}
+	if input.Urgency != "" {
+		updates["urgency"] = input.Urgency
+	}
+
+	if len(updates) == 0 {
+		return req, nil
+	}
+
+	if err := s.db.Model(&model.ServiceRequest{}).Where("id = ?", id).Updates(updates).Error; err != nil {
+		return nil, err
+	}
+
+	return s.repo.GetByID(id)
+}
+
+// CancelByAdmin B端取消服务请求
+func (s *RequestService) CancelByAdmin(id int64) (*model.ServiceRequest, error) {
+	req, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.Status == consts.RequestStatusCancelled {
+		return req, nil
+	}
+	if req.Status == consts.RequestStatusCompleted {
+		return nil, ErrRequestConflict
+	}
+
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&model.ServiceRequest{}).
+			Where("id = ?", req.ID).
+			Update("status", consts.RequestStatusCancelled).Error; err != nil {
+			return err
+		}
+		if err := tx.Model(&model.TaskAssignment{}).
+			Where("request_id = ?", req.ID).
+			Update("status", consts.TaskStatusCancelled).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	req.Status = consts.RequestStatusCancelled
+	return req, nil
+}
+
 // ListAll B端查询所有需求
 func (s *RequestService) ListAll(stationID int64, status string, page, pageSize int) ([]*repository.RequestWithStation, int64, error) {
 	offset := (page - 1) * pageSize
@@ -332,15 +423,6 @@ func validCoordinate(lat, lng float64) bool {
 		return false
 	}
 	return true
-}
-
-func randomString(seed *rand.Rand, length int) string {
-	const letters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	bytes := make([]byte, length)
-	for i := 0; i < length; i++ {
-		bytes[i] = letters[seed.Intn(len(letters))]
-	}
-	return string(bytes)
 }
 
 // generateRequestNo 生成服务请求编号

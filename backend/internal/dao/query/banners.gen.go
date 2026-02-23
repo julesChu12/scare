@@ -45,12 +45,12 @@ func newBanner(db *gorm.DB, opts ...gen.DOOption) banner {
 	return _banner
 }
 
-// banner è½®æ’­å›¾è¡¨
+// banner 轮播图表
 type banner struct {
 	bannerDo
 
 	ALL       field.Asterisk
-	ID        field.Int64  // ä¸»é”®ID
+	ID        field.Int64  // 主键ID
 	StationID field.Int64  // ç«™ç‚¹ID(0=å¹³å°çº§/å…¨å±€)
 	Title     field.String // æ ‡é¢˜
 	ImageURL  field.String // å›¾ç‰‡URL

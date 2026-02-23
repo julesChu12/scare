@@ -167,10 +167,6 @@ func (s *UserService) Update(input UserInput) (*UserWithIdentities, error) {
 	return s.buildUserWithIdentities(user)
 }
 
-func (s *UserService) List(page, pageSize int) ([]*UserWithIdentities, int64, error) {
-	return s.ListWithFilter(page, pageSize, UserFilter{})
-}
-
 // ListWithFilter 获取用户列表（带筛选条件）
 func (s *UserService) ListWithFilter(page, pageSize int, filter UserFilter) ([]*UserWithIdentities, int64, error) {
 	offset := (page - 1) * pageSize
@@ -206,15 +202,6 @@ func (s *UserService) GetByID(id int64) (*UserWithIdentities, error) {
 		return nil, ErrInvalidUser
 	}
 	user, err := s.repo.GetByID(id)
-	if err != nil {
-		return nil, err
-	}
-	return s.buildUserWithIdentities(user)
-}
-
-// GetByPhone 根据手机号获取用户及身份
-func (s *UserService) GetByPhone(phone string) (*UserWithIdentities, error) {
-	user, err := s.repo.GetByPhone(phone)
 	if err != nil {
 		return nil, err
 	}

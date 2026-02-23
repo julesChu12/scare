@@ -10,7 +10,7 @@ import (
 
 const TableNameRolePermission = "role_permissions"
 
-// RolePermission è§’è‰²æƒé™å…³è”è¡¨
+// RolePermission mapped from table <role_permissions>
 type RolePermission struct {
 	ID           int64     `gorm:"column:id;type:bigint unsigned;primaryKey;autoIncrement:true;comment:ä¸»é”®ID" json:"id"`                                                                         // ä¸»é”®ID
 	RoleID       int64     `gorm:"column:role_id;type:bigint unsigned;not null;uniqueIndex:uk_role_perm,priority:1;index:idx_role_id,priority:1;comment:è§’è‰²ID" json:"role_id"`                   // è§’è‰²ID

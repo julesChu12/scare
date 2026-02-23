@@ -44,35 +44,6 @@ func (r *UserRepository) GetByPhone(phone string) (*model.User, error) {
 	return u.Where(u.Phone.Eq(phone)).First()
 }
 
-// GetByPhoneWithIdentities 获取用户并预加载身份信息
-func (r *UserRepository) GetByPhoneWithIdentities(phone string) (*model.User, error) {
-	u := r.q.User
-	// 使用原生 DB 处理 Preload
-	db := u.UnderlyingDB().Preload("Identities", "status = ?", "active")
-	var user model.User
-	if err := db.Where("phone = ?", phone).First(&user).Error; err != nil {
-		return nil, err
-	}
-	return &user, nil
-}
-
-// GetByIDWithIdentities 获取用户并预加载身份信息
-func (r *UserRepository) GetByIDWithIdentities(id int64) (*model.User, error) {
-	u := r.q.User
-	// 使用原生 DB 处理 Preload
-	db := u.UnderlyingDB().Preload("Identities", "status = ?", "active")
-	var user model.User
-	if err := db.First(&user, id).Error; err != nil {
-		return nil, err
-	}
-	return &user, nil
-}
-
-// List 获取用户列表（分页，无筛选）
-func (r *UserRepository) List(offset, limit int) ([]*model.User, int64, error) {
-	return r.ListWithFilter(offset, limit, UserFilter{})
-}
-
 // ListWithFilter 获取用户列表（分页+筛选）
 //
 // 注意：由于筛选条件涉及子查询和复杂条件，此方法使用原生 GORM
@@ -117,20 +88,6 @@ func (r *UserRepository) ListWithFilter(offset, limit int, filter UserFilter) ([
 	}
 
 	return users, total, nil
-}
-
-// GetUserIDsByIdentityType 根据身份类型获取用户ID列表
-func (r *UserRepository) GetUserIDsByIdentityType(identityType string) ([]int64, error) {
-	ui := r.q.UserIdentity
-	identities, err := ui.Where(ui.IdentityType.Eq(identityType), ui.Status.Eq("active")).Find()
-	if err != nil {
-		return nil, err
-	}
-	userIDs := make([]int64, 0, len(identities))
-	for _, identity := range identities {
-		userIDs = append(userIDs, identity.UserID)
-	}
-	return userIDs, nil
 }
 
 // Update 更新用户

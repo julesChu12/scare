@@ -17,17 +17,6 @@ func (s *NewsService) ListPublished(page, pageSize int, newsType string, station
 	return s.newsRepo.ListPublished(page, pageSize, newsType, stationID)
 }
 
-func (s *NewsService) GetDetail(id int64) (*model.News, error) {
-	news, err := s.newsRepo.GetPublishedByID(id)
-	if err != nil {
-		return nil, err
-	}
-	go func() {
-		_ = s.newsRepo.IncrementViewCount(id)
-	}()
-	return news, nil
-}
-
 // GetByID 根据ID获取新闻（B端管理用，不限状态）
 func (s *NewsService) GetByID(id int64) (*model.News, error) {
 	return s.newsRepo.GetByID(id)

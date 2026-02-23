@@ -31,42 +31,48 @@ func newCustomerProfile(db *gorm.DB, opts ...gen.DOOption) customerProfile {
 	_customerProfile.ID = field.NewInt64(tableName, "id")
 	_customerProfile.UserID = field.NewInt64(tableName, "user_id")
 	_customerProfile.IDCard = field.NewString(tableName, "id_card")
+	_customerProfile.Address = field.NewString(tableName, "address")
+	_customerProfile.Latitude = field.NewFloat64(tableName, "latitude")
+	_customerProfile.Longitude = field.NewFloat64(tableName, "longitude")
+	_customerProfile.CustomerType = field.NewString(tableName, "customer_type")
+	_customerProfile.EmergencyContact = field.NewString(tableName, "emergency_contact")
+	_customerProfile.CreatedAt = field.NewTime(tableName, "created_at")
+	_customerProfile.UpdatedAt = field.NewTime(tableName, "updated_at")
+	_customerProfile.DeletedAt = field.NewField(tableName, "deleted_at")
 	_customerProfile.Gender = field.NewString(tableName, "gender")
 	_customerProfile.BirthDate = field.NewTime(tableName, "birth_date")
-	_customerProfile.Address = field.NewString(tableName, "address")
-	_customerProfile.CustomerType = field.NewString(tableName, "customer_type")
 	_customerProfile.HealthStatus = field.NewString(tableName, "health_status")
 	_customerProfile.DisabilityLevel = field.NewString(tableName, "disability_level")
 	_customerProfile.MedicalHistory = field.NewString(tableName, "medical_history")
 	_customerProfile.SpecialNeeds = field.NewString(tableName, "special_needs")
-	_customerProfile.EmergencyContact = field.NewString(tableName, "emergency_contact")
-	_customerProfile.CreatedAt = field.NewTime(tableName, "created_at")
-	_customerProfile.UpdatedAt = field.NewTime(tableName, "updated_at")
 
 	_customerProfile.fillFieldMap()
 
 	return _customerProfile
 }
 
-// customerProfile å®¢æˆ·æ¡£æ¡ˆè¡¨ï¼ˆæœåŠ¡å¯¹è±¡ï¼‰
+// customerProfile C端客户档案表
 type customerProfile struct {
 	customerProfileDo
 
 	ALL              field.Asterisk
-	ID               field.Int64
-	UserID           field.Int64  // å…³è”ç”¨æˆ·ID
-	IDCard           field.String // èº«ä»½è¯å·
+	ID               field.Int64   // 主键ID
+	UserID           field.Int64   // å…³è”ç”¨æˆ·ID
+	IDCard           field.String  // 身份证号
+	Address          field.String  // å±…ä½åœ°å€
+	Latitude         field.Float64 // 纬度
+	Longitude        field.Float64 // 经度
+	CustomerType     field.String  // å®¢æˆ·ç±»åž‹ï¼šelderly/disabled/pregnant/child/other
+	EmergencyContact field.String  // ç´§æ€¥è”ç³»äºº
+	CreatedAt        field.Time
+	UpdatedAt        field.Time
+	DeletedAt        field.Field  // 删除时间(软删除)
 	Gender           field.String // æ€§åˆ«
 	BirthDate        field.Time   // å‡ºç”Ÿæ—¥æœŸ
-	Address          field.String // å±…ä½åœ°å€
-	CustomerType     field.String // å®¢æˆ·ç±»åž‹ï¼šelderly/disabled/pregnant/child/other
 	HealthStatus     field.String // å¥åº·çŠ¶å†µ
 	DisabilityLevel  field.String // å¤±èƒ½ç­‰çº§ï¼šè‡ªç†/è½»åº¦/ä¸­åº¦/é‡åº¦
 	MedicalHistory   field.String // ç—…å²
 	SpecialNeeds     field.String // ç‰¹æ®Šéœ€æ±‚
-	EmergencyContact field.String // ç´§æ€¥è”ç³»äºº {"name":"","phone":"","relation":""}
-	CreatedAt        field.Time
-	UpdatedAt        field.Time
 
 	fieldMap map[string]field.Expr
 }
@@ -86,17 +92,20 @@ func (c *customerProfile) updateTableName(table string) *customerProfile {
 	c.ID = field.NewInt64(table, "id")
 	c.UserID = field.NewInt64(table, "user_id")
 	c.IDCard = field.NewString(table, "id_card")
+	c.Address = field.NewString(table, "address")
+	c.Latitude = field.NewFloat64(table, "latitude")
+	c.Longitude = field.NewFloat64(table, "longitude")
+	c.CustomerType = field.NewString(table, "customer_type")
+	c.EmergencyContact = field.NewString(table, "emergency_contact")
+	c.CreatedAt = field.NewTime(table, "created_at")
+	c.UpdatedAt = field.NewTime(table, "updated_at")
+	c.DeletedAt = field.NewField(table, "deleted_at")
 	c.Gender = field.NewString(table, "gender")
 	c.BirthDate = field.NewTime(table, "birth_date")
-	c.Address = field.NewString(table, "address")
-	c.CustomerType = field.NewString(table, "customer_type")
 	c.HealthStatus = field.NewString(table, "health_status")
 	c.DisabilityLevel = field.NewString(table, "disability_level")
 	c.MedicalHistory = field.NewString(table, "medical_history")
 	c.SpecialNeeds = field.NewString(table, "special_needs")
-	c.EmergencyContact = field.NewString(table, "emergency_contact")
-	c.CreatedAt = field.NewTime(table, "created_at")
-	c.UpdatedAt = field.NewTime(table, "updated_at")
 
 	c.fillFieldMap()
 
@@ -113,21 +122,24 @@ func (c *customerProfile) GetFieldByName(fieldName string) (field.OrderExpr, boo
 }
 
 func (c *customerProfile) fillFieldMap() {
-	c.fieldMap = make(map[string]field.Expr, 14)
+	c.fieldMap = make(map[string]field.Expr, 17)
 	c.fieldMap["id"] = c.ID
 	c.fieldMap["user_id"] = c.UserID
 	c.fieldMap["id_card"] = c.IDCard
+	c.fieldMap["address"] = c.Address
+	c.fieldMap["latitude"] = c.Latitude
+	c.fieldMap["longitude"] = c.Longitude
+	c.fieldMap["customer_type"] = c.CustomerType
+	c.fieldMap["emergency_contact"] = c.EmergencyContact
+	c.fieldMap["created_at"] = c.CreatedAt
+	c.fieldMap["updated_at"] = c.UpdatedAt
+	c.fieldMap["deleted_at"] = c.DeletedAt
 	c.fieldMap["gender"] = c.Gender
 	c.fieldMap["birth_date"] = c.BirthDate
-	c.fieldMap["address"] = c.Address
-	c.fieldMap["customer_type"] = c.CustomerType
 	c.fieldMap["health_status"] = c.HealthStatus
 	c.fieldMap["disability_level"] = c.DisabilityLevel
 	c.fieldMap["medical_history"] = c.MedicalHistory
 	c.fieldMap["special_needs"] = c.SpecialNeeds
-	c.fieldMap["emergency_contact"] = c.EmergencyContact
-	c.fieldMap["created_at"] = c.CreatedAt
-	c.fieldMap["updated_at"] = c.UpdatedAt
 }
 
 func (c customerProfile) clone(db *gorm.DB) customerProfile {

@@ -23,13 +23,13 @@ type User struct {
 	Gender       string         `gorm:"column:gender;type:varchar(10)" json:"gender"`
 	BirthDate    time.Time      `gorm:"column:birth_date;type:date" json:"birth_date"`
 	IDCard       string         `gorm:"column:id_card;type:varchar(64);index:idx_id_card,priority:1;index:idx_users_id_card,priority:1" json:"id_card"`
-	IDCardHmac   string         `gorm:"column:id_card_hmac;type:varchar(64);index:idx_users_id_card_hmac,priority:1;comment:身份证号HMAC摘要" json:"id_card_hmac"` // 身份证号HMAC摘要
-	IDCardMasked string         `gorm:"column:id_card_masked;type:varchar(20);default:'';comment:身份证号脱敏值" json:"id_card_masked"`
 	StationID    int64          `gorm:"column:station_id;type:bigint;index:idx_station_id,priority:1;index:idx_users_station_id,priority:1" json:"station_id"`
 	Status       string         `gorm:"column:status;type:varchar(20);index:idx_status,priority:1;index:idx_users_status,priority:1;default:active" json:"status"`
 	CreatedAt    time.Time      `gorm:"column:created_at;type:datetime(3)" json:"created_at"`
 	UpdatedAt    time.Time      `gorm:"column:updated_at;type:datetime(3)" json:"updated_at"`
 	DeletedAt    gorm.DeletedAt `gorm:"column:deleted_at;type:datetime(3);index:idx_deleted_at,priority:1;index:idx_users_deleted_at,priority:1" json:"deleted_at"`
+	IDCardHmac   string         `gorm:"column:id_card_hmac;type:varchar(64);index:idx_users_id_card_hmac,priority:1;comment:身份证号HMAC摘要" json:"id_card_hmac"` // 身份证号HMAC摘要
+	IDCardMasked string         `gorm:"column:id_card_masked;type:varchar(20);comment:身份证号脱敏值" json:"id_card_masked"`                                        // 身份证号脱敏值
 }
 
 // TableName User's table name

@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"community-elderly-care-platform/internal/consts"
 	"community-elderly-care-platform/internal/dao/model"
 	"community-elderly-care-platform/internal/dao/query"
 	"time"
@@ -61,47 +60,6 @@ func (r *RequestRepository) ListByUser(userID int64, status string, offset, limi
 	}
 
 	return reqs, total, nil
-}
-
-// ListDispatchedByStation 根据站点ID查询已分派的需求
-func (r *RequestRepository) ListDispatchedByStation(stationID int64, offset, limit int) ([]*model.ServiceRequest, int64, error) {
-	s := r.q.ServiceRequest
-
-	// 获取总数
-	total, err := s.Where(s.StationID.Eq(stationID), s.Status.Eq(consts.RequestStatusDispatched)).Count()
-	if err != nil {
-		return nil, 0, err
-	}
-
-	// 分页查询
-	reqs, err := s.Where(s.StationID.Eq(stationID), s.Status.Eq(consts.RequestStatusDispatched)).
-		Order(s.ID.Desc()).
-		Offset(offset).
-		Limit(limit).
-		Find()
-
-	if err != nil {
-		return nil, 0, err
-	}
-
-	return reqs, total, nil
-}
-
-// UpdateStatus 更新需求状态
-func (r *RequestRepository) UpdateStatus(id int64, status string) error {
-	s := r.q.ServiceRequest
-	_, err := s.Where(s.ID.Eq(id)).Update(s.Status, status)
-	return err
-}
-
-// UpdateStationAndStatus 更新站点和状态
-func (r *RequestRepository) UpdateStationAndStatus(id int64, stationID int64, status string) error {
-	s := r.q.ServiceRequest
-	_, err := s.Where(s.ID.Eq(id)).Updates(map[string]interface{}{
-		"station_id": stationID,
-		"status":     status,
-	})
-	return err
 }
 
 // UpdateRating 更新评价

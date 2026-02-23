@@ -12,7 +12,7 @@ import (
 
 const TableNameMenu = "menus"
 
-// Menu èœå•è¡¨
+// Menu mapped from table <menus>
 type Menu struct {
 	ID             int64          `gorm:"column:id;type:bigint unsigned;primaryKey;autoIncrement:true;comment:ä¸»é”®ID" json:"id"`                                                                 // ä¸»é”®ID
 	ParentID       int64          `gorm:"column:parent_id;type:bigint unsigned;not null;index:idx_parent_id,priority:1;comment:çˆ¶èœå•IDï¼Œ0è¡¨ç¤ºé¡¶çº§èœå•" json:"parent_id"`                // çˆ¶èœå•IDï¼Œ0è¡¨ç¤ºé¡¶çº§èœå•

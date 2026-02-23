@@ -52,7 +52,3 @@ func (e *Engine) Match(point Point) (int64, bool) {
 	return 0, false
 }
 
-// Zones 获取所有围栏区域
-func (e *Engine) Zones() []Zone {
-	return e.zones
-}

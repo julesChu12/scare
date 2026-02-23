@@ -37,24 +37,6 @@ func (r *MenuRepository) GetByID(id int64) (*consts.Menu, error) {
 	return &menu, nil
 }
 
-// GetByParentID 获取指定父级的子菜单
-func (r *MenuRepository) GetByParentID(parentID int64) ([]consts.Menu, error) {
-	var menus []consts.Menu
-	if err := r.db.Where("parent_id = ?", parentID).Order("sort ASC, id ASC").Find(&menus).Error; err != nil {
-		return nil, err
-	}
-	return menus, nil
-}
-
-// GetActiveMenus 获取所有激活的菜单
-func (r *MenuRepository) GetActiveMenus() ([]consts.Menu, error) {
-	var menus []consts.Menu
-	if err := r.db.Where("status = ?", "active").Order("sort ASC, id ASC").Find(&menus).Error; err != nil {
-		return nil, err
-	}
-	return menus, nil
-}
-
 // GetActiveMenusByPermissions 根据权限码列表获取可见菜单
 func (r *MenuRepository) GetActiveMenusByPermissions(permissionCodes []string) ([]consts.Menu, error) {
 	var menus []consts.Menu

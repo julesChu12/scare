@@ -19,24 +19,6 @@ func NewRolePermissionRepository(db *gorm.DB) *RolePermissionRepository {
 	return &RolePermissionRepository{db: db}
 }
 
-// GetByRoleID 获取角色的所有权限关联
-func (r *RolePermissionRepository) GetByRoleID(roleID int64) ([]model.RolePermission, error) {
-	var rps []model.RolePermission
-	if err := r.db.Where("role_id = ?", roleID).Find(&rps).Error; err != nil {
-		return nil, err
-	}
-	return rps, nil
-}
-
-// GetByRoleIDs 获取多个角色的所有权限关联
-func (r *RolePermissionRepository) GetByRoleIDs(roleIDs []int64) ([]model.RolePermission, error) {
-	var rps []model.RolePermission
-	if err := r.db.Where("role_id IN ?", roleIDs).Find(&rps).Error; err != nil {
-		return nil, err
-	}
-	return rps, nil
-}
-
 // GetPermissionIDsByRoleID 获取角色的所有权限ID
 func (r *RolePermissionRepository) GetPermissionIDsByRoleID(roleID int64) ([]int64, error) {
 	var ids []int64
@@ -53,29 +35,6 @@ func (r *RolePermissionRepository) GetPermissionIDsByRoleIDs(roleIDs []int64) ([
 		return nil, err
 	}
 	return ids, nil
-}
-
-// Create 创建角色权限关联
-func (r *RolePermissionRepository) Create(rp *model.RolePermission) error {
-	return r.db.Create(rp).Error
-}
-
-// BatchCreate 批量创建角色权限关联
-func (r *RolePermissionRepository) BatchCreate(rps []model.RolePermission) error {
-	if len(rps) == 0 {
-		return nil
-	}
-	return r.db.Create(&rps).Error
-}
-
-// DeleteByRoleID 删除角色的所有权限关联
-func (r *RolePermissionRepository) DeleteByRoleID(roleID int64) error {
-	return r.db.Where("role_id = ?", roleID).Delete(&model.RolePermission{}).Error
-}
-
-// DeleteByPermissionID 删除权限的所有角色关联
-func (r *RolePermissionRepository) DeleteByPermissionID(permissionID int64) error {
-	return r.db.Where("permission_id = ?", permissionID).Delete(&model.RolePermission{}).Error
 }
 
 // ReplaceRolePermissions 替换角色的所有权限（事务）
