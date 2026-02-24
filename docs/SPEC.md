@@ -74,7 +74,7 @@
 - **数据存储**: MySQL 8.0 (空间数据支持) + Redis 缓存
 - **可观测性**: 日志记录 + 操作审计
 - **部署方式**: Docker 容器化 + Nginx 反向代理
-- **权限系统**: Casbin RBAC 模型
+- **权限系统**: 自定义 RBAC 三表模型
 - **认证方式**: JWT Token
 
 ### Exceptions (if any)
@@ -89,10 +89,10 @@
 
 采用 **前后端分离架构** + **地理围栏智能分发** 的技术方案：
 
-**后端**：Go 1.25 + Gin + GORM + MySQL 8.0 + Redis + Casbin
+**后端**：Go 1.25 + Gin + GORM + MySQL 8.0 + Redis
 - 分层架构：Handler → Service → Repository
 - 地理围栏匹配：射线法算法 + MySQL 空间索引
-- 权限控制：Casbin RBAC 模型
+- 权限控制：自定义 RBAC（permissions/roles/role_permissions 三表）
 
 **前端**：Vue 3 + TypeScript + Pinia
 - C端：Naive UI + PWA（老年人友好）
@@ -102,7 +102,7 @@
 
 - **毕业设计规模适中**：小型试点（<1000用户），技术栈学习曲线平缓
 - **地理围栏核心技术**：MySQL 8.0 POLYGON 类型 + 空间索引满足需求
-- **权限系统完整**：Casbin 提供生产级 RBAC 支持
+- **权限系统完整**：自定义 RBAC 三表模型提供细粒度权限控制
 - **前后端独立开发**：符合毕业设计时间安排，可并行推进
 
 ### Risks
@@ -110,14 +110,14 @@
 - **R1**: 地理围栏匹配性能（多围栏场景）
   - **Mitigation**: 空间索引优化 + 兜底机制
 - **R2**: 前端权限复杂度（三端合一）
-  - **Mitigation**: Casbin.js + 动态路由守卫
+  - **Mitigation**: 自定义权限服务 + 动态路由守卫 + v-permission 指令
 - **R3**: PWA 兼容性
   - **Mitigation**: 渐进增强 + 降级方案
 
 ### Mitigations
 
 - 地理围栏：优先级排序 + 默认站点兜底
-- 权限系统：参考文档 `03-前端架构决策-权限集成方案.md`
+- 权限系统：自定义 RBAC 三表模型（permissions/roles/role_permissions）
 - PWA：Service Worker 离线缓存 + 在线同步
 
 ---
@@ -327,7 +327,7 @@ docker-compose up -d
 ### R5: 权限升级攻击
 
 **场景**: 恶意用户尝试越权操作
-**处理**: Casbin RBAC + 路由守卫 + 接口级权限检查
+**处理**: 自定义 RBAC + 路由守卫 + 接口级权限检查
 
 ### R6: 地理围栏边界情况
 
@@ -342,7 +342,7 @@ docker-compose up -d
 
 - [ ] 创建 Domain 层实体定义
 - [ ] 实现 Repository 层数据访问
-- [ ] 开发用户认证和权限 API（JWT + Casbin）
+- [ ] 开发用户认证和权限 API（JWT + 自定义 RBAC）
 - [ ] 实现地理围栏匹配算法（射线法）
 
 ### 阶段2: 前端基础功能（2-3天）

@@ -12,7 +12,7 @@
 
 **核心特性**：
 - 🎯 **地理围栏匹配**：基于点在多边形算法（射线法）实现需求自动分发
-- 🔐 **权限管理**：基于 Casbin RBAC 模型的细粒度权限控制
+- 🔐 **权限管理**：基于自定义 RBAC 三表模型的细粒度权限控制
 - 📱 **多端支持**：C端（用户端）+ 管理门户（工作人员+管理后台统一）
 - 🚀 **PWA 支持**：C端支持 PWA，可离线使用
 - 📊 **实时通知**：关键节点自动触发通知
@@ -26,7 +26,7 @@
 - **框架**：Gin（Web 框架）、GORM（ORM）
 - **数据库**：MySQL 8.0+
 - **缓存**：Redis 7.0+
-- **权限**：Casbin v2（RBAC 权限控制）
+- **权限**：自定义 RBAC（permissions/roles/role_permissions 三表）
 - **认证**：JWT
 
 ### 前端
@@ -36,7 +36,7 @@
 - **状态管理**：Pinia
 - **路由**：Vue Router 4
 - **图表**：ECharts + vue-echarts（管理门户）
-- **权限**：Casbin.js（管理门户）
+- **权限**：自定义 RBAC + v-permission 指令（管理门户）
 - **PWA**：Vite PWA（C端）
 
 ### 部署
@@ -108,10 +108,9 @@ sCare/
 │   │   ├── repository/         # 数据访问层
 │   │   ├── service/            # 业务逻辑层
 │   │   ├── handler/            # HTTP 处理器
-│   │   ├── middleware/         # 中间件（Casbin、CORS等）
+│   │   ├── middleware/         # 中间件（认证、权限、CORS等）
 │   │   └── algorithm/          # 算法实现（点在多边形）
 │   ├── pkg/                    # 公共库
-│   ├── configs/                # 配置文件（Casbin 模型）
 │   └── docs/                   # 后端文档
 │       ├── 02-系统架构设计.md   # 架构设计
 │       └── 03-数据库设计.md     # 数据库设计
@@ -141,7 +140,6 @@ sCare/
 │       │       ├── components/
 │       │       ├── composables/
 │       │       ├── config/
-│       │       │   └── casbin/
 │       │       ├── directives/
 │       │       ├── layouts/
 │       │       ├── router/
@@ -211,7 +209,7 @@ backend/
 │   │   └── task_handler.go
 │   ├── middleware/            # 中间件
 │   │   ├── auth.go            # JWT 认证
-│   │   ├── casbin.go          # Casbin 权限检查
+│   │   ├── permission.go       # RBAC 权限检查
 │   │   └── end_type.go        # 端隔离
 │   └── geofence/              # 地理围栏引擎
 │       └── engine.go          # 射线法实现
@@ -223,8 +221,7 @@ backend/
 │   └── errors/                # 错误处理
 │
 └── configs/                   # 配置文件
-    ├── casbin_model.conf      # Casbin RBAC 模型
-    └── policy.csv             # Casbin 策略文件
+    └── config.yaml            # 应用配置
 ```
 
 ### 前端结构详解
@@ -257,7 +254,6 @@ frontend/
         ├── store/
         │   └── modules/
         ├── config/
-        │   └── casbin/
         ├── directives/
         ├── composables/
         ├── types/
@@ -284,10 +280,11 @@ frontend/
 - 站点负责人：任务分配、转派、人员管理
 - 系统管理员：围栏管理、站点管理、用户管理、角色权限配置
 
-### 4. 权限控制（Casbin RBAC）
+### 4. 权限控制（自定义 RBAC）
+- 基于 permissions/roles/role_permissions 三表实现
 - 3种角色：工作人员（staff）、站点负责人（station_manager）、系统管理员（admin）
-- 角色继承：admin > station_manager > staff
-- 路由级权限 + 按钮级权限
+- Admin 角色跳过所有权限检查
+- 路由级权限 + v-permission 指令按钮级权限
 
 ### 5. 通知推送
 - 需求创建、任务认领、任务完成等关键节点触发通知

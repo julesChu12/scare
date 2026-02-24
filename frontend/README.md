@@ -18,7 +18,6 @@
 ```
 frontend/
 ├── README.md                      # 前端总览文档
-├── STRUCTURE_ANALYSIS.md          # 目录结构分析
 │
 ├── c-end/                         # C端用户端（独立项目）
 │   ├── src/
@@ -40,7 +39,7 @@ frontend/
     │   ├── layouts/               # 布局组件
     │   ├── router/                # 路由配置
     │   ├── store/                 # Pinia 状态管理
-    │   ├── config/                # Casbin 配置
+    │   ├── config/                # 项目配置
     │   └── ...
     ├── docs/                      # B端文档
     ├── package.json               # 依赖配置

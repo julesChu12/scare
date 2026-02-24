@@ -36,8 +36,6 @@
 📍 [frontend/management-portal/docs/](../frontend/management-portal/docs/)
 
 - B端前端设计
-- 权限集成方案
-- 技术规格说明
 
 ### 数据库模块
 📍 [database/docs/](../database/docs/)
@@ -50,17 +48,6 @@
 
 - 部署方案与配置
 - Docker配置说明
-
----
-
-## 📚 历史规划文档（归档）
-
-📍 [planning/](./planning/)
-
-- API规划文档
-- 多角色重构方案
-- 路由权限规划
-- 前端进度对照表
 
 ---
 
@@ -82,4 +69,4 @@
 
 ---
 
-**最后更新**：2026-01-31
+**最后更新**：2026-02-24
