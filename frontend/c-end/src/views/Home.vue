@@ -189,12 +189,12 @@ const fetchBanners = async () => {
 }
 
 const services = ref([
-  { key: 'meal_service', name: '助餐服务', icon: '🍱' },
-  { key: 'medical_care', name: '医疗护理', icon: '🏥' },
-  { key: 'daily_care', name: '日常照护', icon: '👴' },
-  { key: 'housekeeping', name: '家政服务', icon: '🧹' },
-  { key: 'mental_care', name: '心理关怀', icon: '💬' },
-  { key: 'rehabilitation', name: '康复训练', icon: '💪' },
+  { key: 'meal', name: '助餐服务', icon: '🍱' },
+  { key: 'medical', name: '就医陪护', icon: '🏥' },
+  { key: 'care', name: '日常照护', icon: '👴' },
+  { key: 'cleaning', name: '家政保洁', icon: '🧹' },
+  { key: 'psychology', name: '心理慰藉', icon: '🧠' },
+  { key: 'rehab', name: '康复理疗', icon: '💪' },
   { key: 'other', name: '其他服务', icon: '📋' }
 ])
 
@@ -235,23 +235,7 @@ const fetchLocation = async () => {
   locationLoading.value = true
   isDefaultLocation.value = false
   try {
-    let pos: { lat: number; lng: number }
-
-    // 开发环境下浏览器模拟模式无 GPS，直接使用默认坐标
-    if (import.meta.env.DEV) {
-      try {
-        pos = await getCurrentPosition()
-      } catch {
-        console.info('[Home] 开发环境定位不可用，使用默认坐标')
-        currentLat.value = DEFAULT_LOCATION.lat
-        currentLng.value = DEFAULT_LOCATION.lng
-        currentDistrict.value = DEFAULT_LOCATION.district
-        isDefaultLocation.value = true
-        return
-      }
-    } else {
-      pos = await getCurrentPosition()
-    }
+    const pos = await getCurrentPosition()
 
     currentLat.value = pos.lat
     currentLng.value = pos.lng

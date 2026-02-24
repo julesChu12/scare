@@ -1,14 +1,20 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { VitePWA } from 'vite-plugin-pwa'
+import basicSsl from '@vitejs/plugin-basic-ssl'
 import { resolve } from 'path'
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
+    basicSsl(),
     VitePWA({
       registerType: 'autoUpdate',
+      devOptions: {
+        enabled: true,
+        type: 'module'
+      },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {
         name: 'sCare 社区养老服务',
@@ -89,7 +95,9 @@ export default defineConfig({
     }
   },
   server: {
+    host: true,
     port: 5174,
+    hmr: false,
     proxy: {
       '/api': {
         target: 'http://localhost:8080',

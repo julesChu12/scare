@@ -19,6 +19,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.5",
+    "@vitejs/plugin-basic-ssl": "^1.2.0",
     "@vitejs/plugin-vue": "^5.0.3",
     "canvas": "^3.2.1",
     "png-to-ico": "^3.0.1",
