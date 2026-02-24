@@ -74,6 +74,7 @@ lerna-debug.log*
 # 构建产物
 dist/
 dist-ssr/
+dev-dist/
 build/
 *.local
 
