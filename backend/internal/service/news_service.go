@@ -5,37 +5,36 @@ import (
 	"community-elderly-care-platform/internal/repository"
 )
 
+// NewsService 新闻服务
 type NewsService struct {
-	newsRepo *repository.NewsRepository
+	repo *repository.NewsRepository
 }
 
-func NewNewsService(newsRepo *repository.NewsRepository) *NewsService {
-	return &NewsService{newsRepo: newsRepo}
+func NewNewsService(repo *repository.NewsRepository) *NewsService {
+	return &NewsService{repo: repo}
 }
 
+// ListPublished 获取已发布的新闻列表
 func (s *NewsService) ListPublished(page, pageSize int, newsType string, stationID *int64) ([]*model.News, int64, error) {
-	return s.newsRepo.ListPublished(page, pageSize, newsType, stationID)
+	return s.repo.ListPublished(page, pageSize, newsType, stationID)
 }
 
-// GetByID 根据ID获取新闻（B端管理用，不限状态）
+// GetByID 根据ID获取新闻
 func (s *NewsService) GetByID(id int64) (*model.News, error) {
-	return s.newsRepo.GetByID(id)
+	return s.repo.GetByID(id)
 }
 
 // Create 创建新闻
 func (s *NewsService) Create(news *model.News) error {
-	if news.Status == "" {
-		news.Status = "draft"
-	}
-	return s.newsRepo.Create(news)
+	return s.repo.Create(news)
 }
 
 // Update 更新新闻
 func (s *NewsService) Update(news *model.News) error {
-	return s.newsRepo.Update(news)
+	return s.repo.Update(news)
 }
 
 // Delete 删除新闻
 func (s *NewsService) Delete(id int64) error {
-	return s.newsRepo.Delete(id)
+	return s.repo.Delete(id)
 }

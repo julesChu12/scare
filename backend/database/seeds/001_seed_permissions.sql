@@ -17,7 +17,7 @@ TRUNCATE TABLE `permissions`;
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- =====================================================
--- 权限数据 (70条)
+-- 权限数据 (75条)
 -- =====================================================
 
 -- 公共权限
@@ -46,7 +46,12 @@ INSERT INTO `permissions` (`id`, `code`, `name`, `description`, `module`, `type`
 (16, 'service:task:pool', '任务池', '查看任务池', 'service', 'button', 15, '/api/v1/b/tasks/pool', 'GET', 0, 'active', 1),
 (17, 'service:task:my', '我的任务', '查看我的任务', 'service', 'button', 15, '/api/v1/b/tasks/my', 'GET', 0, 'active', 2),
 (18, 'service:task:claim', '认领任务', '认领任务', 'service', 'button', 15, '/api/v1/b/tasks/*/claim', 'POST', 0, 'active', 3),
-(19, 'service:task:complete', '完成任务', '完成任务', 'service', 'button', 15, '/api/v1/b/tasks/*/complete', 'POST', 0, 'active', 4);
+(19, 'service:task:complete', '完成任务', '完成任务', 'service', 'button', 15, '/api/v1/b/tasks/*/complete', 'POST', 0, 'active', 4),
+(71, 'service:task:transfer', '转派任务', '将任务转派给其他工作人员', 'service', 'button', 15, '/api/v1/b/tasks/*/transfer', 'POST', 0, 'active', 5),
+(72, 'service:task:list', '任务列表', '查看全部任务列表', 'service', 'button', 15, '/api/v1/b/tasks', 'GET', 0, 'active', 6),
+(73, 'service:task:detail', '任务详情', '查看任务详情', 'service', 'resource', 15, '/api/v1/b/tasks/*', 'GET', 0, 'active', 7),
+(74, 'service:request:update', '编辑请求', '编辑服务请求信息', 'service', 'button', 12, '/api/v1/b/requests/*', 'PUT', 0, 'active', 3),
+(75, 'service:request:cancel', '取消请求', '取消服务请求', 'service', 'button', 12, '/api/v1/b/requests/*/cancel', 'POST', 0, 'active', 4);
 
 -- 站点管理
 INSERT INTO `permissions` (`id`, `code`, `name`, `description`, `module`, `type`, `parent_id`, `api_path`, `api_method`, `is_public`, `status`, `sort`) VALUES
@@ -122,15 +127,16 @@ INSERT INTO `roles` (`id`, `code`, `name`, `description`, `is_system`, `status`,
 (5, 'family', '家属', 'C端家属用户', 1, 'active', 5);
 
 -- =====================================================
--- 角色权限关联 (51条)
+-- 角色权限关联 (56条)
 -- =====================================================
 
--- station_manager 角色权限 (33条)
+-- station_manager 角色权限 (38条)
 INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
 (2, 10), (2, 11), (2, 12), (2, 13), (2, 14), (2, 15), (2, 16), (2, 17), (2, 18), (2, 19),
 (2, 20), (2, 21), (2, 22), (2, 23), (2, 27), (2, 28), (2, 29), (2, 30), (2, 31),
 (2, 32), (2, 33), (2, 34), (2, 35), (2, 36), (2, 37), (2, 38),
-(2, 63), (2, 64), (2, 65), (2, 66), (2, 67), (2, 68), (2, 69);
+(2, 63), (2, 64), (2, 65), (2, 66), (2, 67), (2, 68), (2, 69),
+(2, 71), (2, 72), (2, 73), (2, 74), (2, 75);
 
 -- staff 角色权限 (18条)
 INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES

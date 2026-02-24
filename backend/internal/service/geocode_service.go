@@ -44,7 +44,6 @@ func (s *GeocodeService) Geocode(address string) (*GeocodeResult, error) {
 	}
 
 	// 调用高德地图地理编码 API
-	// 文档: https://lbs.amap.com/api/webservice/guide/api/georegeo
 	baseURL := "https://restapi.amap.com/v3/geocode/geo"
 	params := url.Values{}
 	params.Add("key", s.apiKey)
@@ -121,7 +120,6 @@ func (s *GeocodeService) ReverseGeocode(lat, lng float64) (*ReverseGeocodeResult
 	}
 
 	// 调用高德地图逆地理编码 API
-	// 文档: https://lbs.amap.com/api/webservice/guide/api/georegeo
 	baseURL := "https://restapi.amap.com/v3/geocode/regeo"
 	params := url.Values{}
 	params.Add("key", s.apiKey)
@@ -131,14 +129,17 @@ func (s *GeocodeService) ReverseGeocode(lat, lng float64) (*ReverseGeocodeResult
 
 	resp, err := http.Get(requestURL)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("http request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("read body failed: %w", err)
 	}
+
+	// 调试日志
+	fmt.Printf("[Geocode] lat=%f lng=%f API Response: %s\n", lat, lng, string(body))
 
 	// 解析响应
 	var result struct {
@@ -147,15 +148,15 @@ func (s *GeocodeService) ReverseGeocode(lat, lng float64) (*ReverseGeocodeResult
 		Regeocode struct {
 			FormattedAddress string `json:"formatted_address"`
 			AddressComponent struct {
-				Province string `json:"province"`
+				Province string      `json:"province"`
 				City     interface{} `json:"city"`     // 可能是字符串或空数组
-				District string `json:"district"`
+				District string      `json:"district"`
 			} `json:"addressComponent"`
 		} `json:"regeocode"`
 	}
 
 	if err := json.Unmarshal(body, &result); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("json unmarshal failed: %w", err)
 	}
 
 	if result.Status != "1" {

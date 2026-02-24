@@ -428,7 +428,168 @@ if [ -n "$C_TOKEN" ]; then
     fi
 
     # C端登出
-    test_api "C端 - 登出" "POST" "/c/auth/logout" "$C_TOKEN" "" "logout successful"
+    test_api "C端(elderly) - 登出" "POST" "/c/auth/logout" "$C_TOKEN" "" "logout successful"
+fi
+
+# =====================================================
+# Family 角色测试（C端家属）
+# =====================================================
+echo -e "\n${YELLOW}--- Family 角色测试 ---${NC}"
+FAMILY_TOKEN=$(c_login "13800000011" "Test@123")
+if [ -z "$FAMILY_TOKEN" ]; then
+    echo -e "${RED}✗${NC} Family(张小华) 登录失败"
+    FAILED=$((FAILED + 1))
+else
+    echo -e "${GREEN}✓${NC} Family(张小华) 登录成功"
+    PASSED=$((PASSED + 1))
+fi
+TOTAL=$((TOTAL + 1))
+
+if [ -n "$FAMILY_TOKEN" ]; then
+    test_api "Family - 获取当前用户" "GET" "/c/auth/me" "$FAMILY_TOKEN" "" "ok"
+    test_api "Family - Token检查" "GET" "/c/auth/check" "$FAMILY_TOKEN" "" ""
+    test_api "Family Token - 访问B端拒绝" "GET" "/b/auth/me" "$FAMILY_TOKEN" "" "token end type mismatch" "403"
+    test_api "Family - 更新个人资料" "PUT" "/c/profile" "$FAMILY_TOKEN" '{"name":"张小华","address":"北京市昌平区霍营街道华龙苑北里小区2号楼"}' "ok"
+    test_api "Family - 通知列表" "GET" "/c/notifications" "$FAMILY_TOKEN" "" "ok"
+
+    # 公开接口（无需 token 也能访问，但 family 访问也应正常）
+    test_api "Family - 新闻列表" "GET" "/c/news" "$FAMILY_TOKEN" "" "ok"
+    test_api "Family - Banner列表" "GET" "/c/banners" "$FAMILY_TOKEN" "" "ok"
+
+    # Family 创建服务请求（家属代老人提交）
+    FAMILY_REQ_RESP=$(api_call "POST" "/c/requests" "$FAMILY_TOKEN" '{"service_type":"meal","contact_name":"张小华","contact_phone":"13800000011","address":"北京市昌平区霍营街道华龙苑北里小区2号楼","description":"代父亲张大爷申请送餐","lat":40.07,"lng":116.37}')
+    FAMILY_REQUEST_ID=$(echo "$FAMILY_REQ_RESP" | jq -r '.data.id // empty')
+    FAMILY_REQUEST_MSG=$(echo "$FAMILY_REQ_RESP" | jq -r '.msg // empty')
+    if [ -n "$FAMILY_REQUEST_ID" ] && [ "$FAMILY_REQUEST_ID" != "null" ]; then
+        echo -e "${GREEN}✓${NC} Family - 创建服务请求(代提交) (ID=$FAMILY_REQUEST_ID)"
+        PASSED=$((PASSED + 1))
+    else
+        echo -e "${RED}✗${NC} Family - 创建服务请求失败 (msg=$FAMILY_REQUEST_MSG)"
+        FAILED=$((FAILED + 1))
+    fi
+    TOTAL=$((TOTAL + 1))
+
+    test_api "Family - 服务请求列表" "GET" "/c/requests" "$FAMILY_TOKEN" "" "ok"
+
+    if [ -n "$FAMILY_REQUEST_ID" ] && [ "$FAMILY_REQUEST_ID" != "null" ]; then
+        test_api "Family - 服务请求详情" "GET" "/c/requests/$FAMILY_REQUEST_ID" "$FAMILY_TOKEN" "" "ok"
+        test_api "Family - 取消服务请求" "POST" "/c/requests/$FAMILY_REQUEST_ID/cancel" "$FAMILY_TOKEN" "" "ok"
+    fi
+
+    # Family 创建请求 → Staff 完成 → Family 评价（完整流程）
+    FAMILY_FLOW_RESP=$(api_call "POST" "/c/requests" "$FAMILY_TOKEN" '{"service_type":"cleaning","contact_name":"张小华","contact_phone":"13800000011","address":"北京市昌平区霍营街道华龙苑北里小区2号楼","lat":40.07,"lng":116.37}')
+    FAMILY_FLOW_ID=$(echo "$FAMILY_FLOW_RESP" | jq -r '.data.id // empty')
+    if [ -n "$FAMILY_FLOW_ID" ] && [ "$FAMILY_FLOW_ID" != "null" ]; then
+        # 查找对应任务
+        FAMILY_TASK_LIST=$(api_call "GET" "/b/tasks?page_size=100" "$ADMIN_TOKEN" "")
+        FAMILY_TASK_ID=$(echo "$FAMILY_TASK_LIST" | jq -r --argjson rid "$FAMILY_FLOW_ID" '[.data.items[] | select(.request_id == $rid)] | .[0].id // empty')
+
+        if [ -n "$FAMILY_TASK_ID" ] && [ "$FAMILY_TASK_ID" != "null" ]; then
+            test_api "Staff - 认领Family请求任务" "POST" "/b/tasks/$FAMILY_TASK_ID/claim" "$STAFF_TOKEN" "" "ok"
+            test_api "Staff - 完成Family请求任务" "POST" "/b/tasks/$FAMILY_TASK_ID/complete" "$STAFF_TOKEN" '{"images":[]}' "ok"
+            test_api "Family - 评价服务" "POST" "/c/requests/$FAMILY_FLOW_ID/rate" "$FAMILY_TOKEN" '{"rating":4,"feedback":"家属评价：服务态度好"}' "ok"
+        else
+            echo -e "${YELLOW}⚠${NC} 未找到Family请求对应任务，跳过认领/完成/评价"
+        fi
+    fi
+
+    test_api "Family - 登出" "POST" "/c/auth/logout" "$FAMILY_TOKEN" "" "logout successful"
+fi
+
+# =====================================================
+# 任务转派流程测试
+# =====================================================
+echo -e "\n${YELLOW}--- 任务转派流程测试 ---${NC}"
+
+# 需要: 第二个 Staff 的 token（刘小明, id=5, 13800000005）
+STAFF2_TOKEN=$(login "13800000005" "Test@123")
+if [ -z "$STAFF2_TOKEN" ]; then
+    echo -e "${RED}✗${NC} Staff2(刘小明) 登录失败"
+    FAILED=$((FAILED + 1))
+else
+    echo -e "${GREEN}✓${NC} Staff2(刘小明) 登录成功"
+    PASSED=$((PASSED + 1))
+fi
+TOTAL=$((TOTAL + 1))
+
+if [ -n "$STAFF2_TOKEN" ]; then
+    # C端创建一个新请求用于转派测试
+    TRANSFER_C_TOKEN=$(c_login "13800000008" "Test@123")
+    TRANSFER_REQ_RESP=$(api_call "POST" "/c/requests" "$TRANSFER_C_TOKEN" '{"service_type":"repair","contact_name":"张大爷","contact_phone":"13800000008","address":"北京市昌平区霍营街道","description":"转派测试请求","lat":40.07,"lng":116.37}')
+    TRANSFER_REQUEST_ID=$(echo "$TRANSFER_REQ_RESP" | jq -r '.data.id // empty')
+
+    if [ -n "$TRANSFER_REQUEST_ID" ] && [ "$TRANSFER_REQUEST_ID" != "null" ]; then
+        echo -e "${GREEN}✓${NC} 转派测试 - 创建请求 (ID=$TRANSFER_REQUEST_ID)"
+        PASSED=$((PASSED + 1))
+        TOTAL=$((TOTAL + 1))
+
+        # 查找对应任务
+        TRANSFER_TASK_LIST=$(api_call "GET" "/b/tasks?page_size=100" "$ADMIN_TOKEN" "")
+        TRANSFER_TASK_ID=$(echo "$TRANSFER_TASK_LIST" | jq -r --argjson rid "$TRANSFER_REQUEST_ID" '[.data.items[] | select(.request_id == $rid)] | .[0].id // empty')
+
+        if [ -n "$TRANSFER_TASK_ID" ] && [ "$TRANSFER_TASK_ID" != "null" ]; then
+            # Staff1(王小红, id=4) 认领
+            test_api "转派 - Staff1认领任务" "POST" "/b/tasks/$TRANSFER_TASK_ID/claim" "$STAFF_TOKEN" "" "ok"
+
+            # 转派前: Staff2 无法完成此任务（不是认领人）
+            test_api "转派 - Staff2完成他人任务(应拒绝)" "POST" "/b/tasks/$TRANSFER_TASK_ID/complete" "$STAFF2_TOKEN" '{"images":[]}' "" "409"
+
+            # Admin 转派给 Staff2(刘小明, id=5)
+            test_api "转派 - Admin转派给Staff2" "POST" "/b/tasks/$TRANSFER_TASK_ID/transfer" "$ADMIN_TOKEN" '{"staff_id":5}' "ok"
+
+            # 验证转派后任务详情
+            TRANSFER_DETAIL=$(api_call "GET" "/b/tasks/$TRANSFER_TASK_ID" "$ADMIN_TOKEN" "")
+            TRANSFER_STAFF=$(echo "$TRANSFER_DETAIL" | jq -r '.data.staff_id // empty')
+            TOTAL=$((TOTAL + 1))
+            if [ "$TRANSFER_STAFF" = "5" ]; then
+                echo -e "${GREEN}✓${NC} 转派 - 任务已转给Staff2(staff_id=5)"
+                PASSED=$((PASSED + 1))
+            else
+                echo -e "${RED}✗${NC} 转派 - 任务staff_id预期5，实际$TRANSFER_STAFF"
+                FAILED=$((FAILED + 1))
+            fi
+
+            # Staff2 完成转派后的任务
+            test_api "转派 - Staff2完成任务" "POST" "/b/tasks/$TRANSFER_TASK_ID/complete" "$STAFF2_TOKEN" '{"images":[]}' "ok"
+
+            # 验证任务历史包含转派记录
+            HISTORY_RESP=$(api_call "GET" "/b/tasks/$TRANSFER_TASK_ID" "$ADMIN_TOKEN" "")
+            HISTORY_STATUS=$(echo "$HISTORY_RESP" | jq -r '.data.status // empty')
+            TOTAL=$((TOTAL + 1))
+            if [ "$HISTORY_STATUS" = "completed" ]; then
+                echo -e "${GREEN}✓${NC} 转派 - 任务最终状态为completed"
+                PASSED=$((PASSED + 1))
+            else
+                echo -e "${RED}✗${NC} 转派 - 任务状态预期completed，实际$HISTORY_STATUS"
+                FAILED=$((FAILED + 1))
+            fi
+
+            # SM(站长) 转派测试
+            TRANSFER_REQ2_RESP=$(api_call "POST" "/c/requests" "$TRANSFER_C_TOKEN" '{"service_type":"company","contact_name":"张大爷","contact_phone":"13800000008","address":"北京市昌平区霍营街道","description":"站长转派测试","lat":40.07,"lng":116.37}')
+            TRANSFER_REQUEST_ID2=$(echo "$TRANSFER_REQ2_RESP" | jq -r '.data.id // empty')
+            if [ -n "$TRANSFER_REQUEST_ID2" ] && [ "$TRANSFER_REQUEST_ID2" != "null" ]; then
+                TRANSFER_TASK_LIST2=$(api_call "GET" "/b/tasks?page_size=100" "$ADMIN_TOKEN" "")
+                TRANSFER_TASK_ID2=$(echo "$TRANSFER_TASK_LIST2" | jq -r --argjson rid "$TRANSFER_REQUEST_ID2" '[.data.items[] | select(.request_id == $rid)] | .[0].id // empty')
+                if [ -n "$TRANSFER_TASK_ID2" ] && [ "$TRANSFER_TASK_ID2" != "null" ]; then
+                    test_api "转派 - Staff2认领任务" "POST" "/b/tasks/$TRANSFER_TASK_ID2/claim" "$STAFF2_TOKEN" "" "ok"
+                    test_api "转派 - SM(站长)转派给Staff1" "POST" "/b/tasks/$TRANSFER_TASK_ID2/transfer" "$SM_TOKEN" '{"staff_id":4}' "ok"
+                    test_api "转派 - Staff1完成站长转派任务" "POST" "/b/tasks/$TRANSFER_TASK_ID2/complete" "$STAFF_TOKEN" '{"images":[]}' "ok"
+                fi
+            fi
+
+            # 边界测试: 转派给不存在的 staff
+            test_api "转派 - 转派给不存在用户(应失败)" "POST" "/b/tasks/$TRANSFER_TASK_ID/transfer" "$ADMIN_TOKEN" '{"staff_id":99999}' "" "409"
+
+            # 边界测试: 已完成任务不能转派
+            test_api "转派 - 已完成任务转派(应失败)" "POST" "/b/tasks/$TRANSFER_TASK_ID/transfer" "$ADMIN_TOKEN" '{"staff_id":4}' "" "409"
+        else
+            echo -e "${YELLOW}⚠${NC} 未找到转派测试对应任务，跳过转派测试"
+        fi
+    else
+        echo -e "${RED}✗${NC} 转派测试 - 创建请求失败"
+        FAILED=$((FAILED + 1))
+        TOTAL=$((TOTAL + 1))
+    fi
 fi
 
 # =====================================================

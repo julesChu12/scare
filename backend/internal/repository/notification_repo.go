@@ -18,8 +18,12 @@ func NewNotificationRepository(db *gorm.DB) *NotificationRepository {
 }
 
 // Create 创建通知
+// Omit sent_at/read_at：这两个字段在创建时应为 NULL，
+// 但 Gen 模型使用 time.Time（值类型），零值会被序列化为 '0000-00-00' 导致 MySQL 报错
 func (r *NotificationRepository) Create(notification *model.Notification) error {
-	return r.q.Notification.Create(notification)
+	return r.q.Notification.UnderlyingDB().
+		Omit("sent_at", "read_at").
+		Create(notification).Error
 }
 
 // ListByUser 获取用户的通知列表（分页）
