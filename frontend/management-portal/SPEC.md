@@ -5,7 +5,7 @@
 ### 项目信息
 - **项目名称**: sCare 社区养老平台 - B端管理后台
 - **技术栈**: Vue 3.4 + TypeScript + Vite + Element Plus + Pinia
-- **后端**: Go + Gin + GORM + Casbin + Redis
+- **后端**: Go + Gin + GORM + 自定义 RBAC + Redis
 - **认证方式**: JWT (localStorage) + Redis 黑名单
 - **权限模型**: RBAC（基于角色的访问控制），前端基于权限点控制
 - **状态**: Locked
@@ -664,62 +664,24 @@ type Claims struct {
 ---
 
 ### 6.2 中间件逻辑调整
-
-**Casbin 中间件**（权限检查）：
+**权限中间件**（自定义 RBAC 权限检查）：
 ```go
-// backend/internal/middleware/casbin.go
-func CasbinMiddleware(enforcer *casbin.Enforcer) gin.HandlerFunc {
+// backend/internal/middleware/permission.go
+func PermissionMiddleware(permService *service.PermissionService) gin.HandlerFunc {
     return func(c *gin.Context) {
-        roles, exists := c.Get("user_roles")
-        if !exists {
-            c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"msg": "missing roles"})
-            return
-        }
-
-        userRoles := roles.([]string)
-        obj := c.Request.URL.Path
-        act := c.Request.Method
-
-        // 自动添加 authenticated 角色（公共权限）
-        allRoles := append(userRoles, "authenticated")
-
-        // 遍历所有角色，任一匹配即通过
-        for _, role := range allRoles {
-            allowed, err := enforcer.Enforce("role:"+role, obj, act)
-            if err == nil && allowed {
-                c.Next()
-                return
-            }
-        }
-
-        c.AbortWithStatusJSON(http.StatusForbidden, gin.H{
-            "msg": "permission denied",
-        })
+        // Admin 角色跳过所有权限检查
+        // 其他角色通过 permissions/roles/role_permissions 三表查询权限
+        // 匹配当前路由的 permission_code，任一角色拥有即通过
     }
 }
 ```
 
 ---
 
-### 6.3 authenticated 角色的策略初始化
+### 6.3 权限初始化
 
-**在 seed.sql 中添加**：
-```sql
--- =====================================================
--- 公共权限（authenticated 角色 - 所有登录用户）
--- =====================================================
-INSERT INTO `casbin_rule` (`ptype`, `v0`, `v1`, `v2`) VALUES
-('p', 'role:authenticated', '/api/v1/b/auth/me', 'GET'),
-('p', 'role:authenticated', '/api/v1/b/auth/logout', 'POST'),
-('p', 'role:authenticated', '/api/v1/c/auth/me', 'GET'),
-('p', 'role:authenticated', '/api/v1/c/auth/logout', 'POST'),
-('p', 'role:authenticated', '/api/v1/b/upload', 'POST'),
-('p', 'role:authenticated', '/api/v1/c/upload', 'POST'),
-('p', 'role:authenticated', '/api/v1/b/notifications', 'GET'),
-('p', 'role:authenticated', '/api/v1/b/notifications/*/read', 'POST'),
-('p', 'role:authenticated', '/api/v1/c/notifications', 'GET'),
-('p', 'role:authenticated', '/api/v1/c/notifications/*/read', 'POST');
-```
+权限数据通过 `database/seeds/seed.sql` 初始化到 `permissions`、`roles`、`role_permissions` 三张表中。
+公共权限（如个人信息查看、登出等）已内置于权限表，无需额外配置。
 
 ---
 
@@ -814,7 +776,7 @@ frontend/management-portal/
 - [ ] 修改 `GenerateToken()` 方法接收多角色
 - [ ] 修改登录逻辑（查询用户的所有角色）
 - [ ] 调整认证中间件（设置 `user_roles`）
-- [ ] 调整 Casbin 中间件（自动注入 `authenticated` 角色）
+- [ ] 调整权限中间件（基于 permissions/roles/role_permissions 三表）
 - [ ] 新增接口：`GET /api/v1/b/permissions/tree`
 - [ ] 新增接口：`GET /api/v1/b/roles/:role/permissions`
 - [ ] 新增接口：`PUT /api/v1/b/roles/:role/permissions`

@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import AMapLoader from '@amap/amap-jsapi-loader'
 import { EditPen, Check } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'

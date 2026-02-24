@@ -475,7 +475,7 @@ function showEditDialog(user: User) {
   editForm.gender = user.gender || "";
   editForm.birth_date = user.birth_date || "";
   editForm.id_card = user.id_card || "";
-  editForm.status = user.status;
+  editForm.status = user.status as "active" | "inactive";
   editDialogVisible.value = true;
 }
 
