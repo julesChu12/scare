@@ -245,10 +245,11 @@ const callService = () => {
 .user-card {
   display: flex;
   align-items: center;
-  padding: 24px 16px;
-  background: linear-gradient(135deg, #409EFF 0%, #66b1ff 100%);
+  padding: 32px 20px;
+  background: linear-gradient(135deg, #409EFF 0%, #53a8ff 50%, #66b1ff 100%);
   color: white;
   cursor: pointer;
+  border-radius: 0 0 24px 24px;
 }
 
 .user-avatar {
@@ -340,7 +341,7 @@ const callService = () => {
 
 /* 底部占位 */
 .bottom-placeholder {
-  height: 80px;
+  height: calc(60px + env(safe-area-inset-bottom, 20px));
 }
 
 /* 底部导航 */
@@ -352,7 +353,7 @@ const callService = () => {
   background: white;
   display: flex;
   justify-content: space-around;
-  padding: 10px 0 20px;
+  padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 20px));
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
   z-index: 100;
 }

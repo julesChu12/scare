@@ -1,12 +1,22 @@
 <template>
+  <NetworkStatus />
   <router-view />
 </template>
 
 <script setup lang="ts">
-// 根组件，直接渲染路由视图
+import NetworkStatus from '@/components/NetworkStatus.vue'
 </script>
 
 <style>
+:root {
+  --primary-color: #409EFF;
+  --primary-gradient: linear-gradient(135deg, #409EFF 0%, #66b1ff 100%);
+  --bg-color: #f5f7fa;
+  --card-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  --card-radius: 12px;
+  --safe-area-bottom: env(safe-area-inset-bottom, 20px);
+}
+
 * {
   margin: 0;
   padding: 0;

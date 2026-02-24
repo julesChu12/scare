@@ -501,7 +501,15 @@ onMounted(async () => {
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  padding: 8px 0;
+  padding: 12px 8px;
+  background: #f8f9fc;
+  border-radius: 12px;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.service-item:active {
+  transform: scale(0.95);
+  background: #eef3fb;
 }
 
 .service-icon {
@@ -585,7 +593,7 @@ onMounted(async () => {
 
 /* 底部占位 */
 .bottom-placeholder {
-  height: 80px;
+  height: calc(60px + env(safe-area-inset-bottom, 20px));
 }
 
 /* 底部导航 */
@@ -597,7 +605,7 @@ onMounted(async () => {
   background: white;
   display: flex;
   justify-content: space-around;
-  padding: 10px 0 20px;
+  padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 20px));
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
   z-index: 100;
 }

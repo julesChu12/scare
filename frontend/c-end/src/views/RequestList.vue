@@ -180,7 +180,7 @@ onMounted(() => {
 .request-list-container {
   min-height: 100vh;
   background: var(--bg-color, #f5f5f5);
-  padding-bottom: 80px;
+  padding-bottom: calc(60px + env(safe-area-inset-bottom, 20px));
 }
 
 .header {
@@ -314,7 +314,13 @@ onMounted(() => {
 
 .request-card {
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.request-card:active {
+  transform: scale(0.98);
 }
 
 .request-card:hover {
@@ -373,7 +379,7 @@ onMounted(() => {
   background: white;
   display: flex;
   justify-content: space-around;
-  padding: 12px 0;
+  padding: 10px 0 calc(10px + env(safe-area-inset-bottom, 20px));
   box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
   z-index: 100;
 }
