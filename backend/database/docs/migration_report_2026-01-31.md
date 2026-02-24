@@ -185,7 +185,7 @@ curl http://localhost:8080/api/v1/c/news
    - 生产环境需要替换为真实图片 URL
 
 5. **权限配置**:
-   - Banner 管理接口需要配置 Casbin 权限
+   - Banner 管理接口权限已通过自定义 RBAC 三表配置
    - 参考 `backend/docs/banner_api.md` 中的权限配置说明
 
 ---
@@ -195,7 +195,7 @@ curl http://localhost:8080/api/v1/c/news
 1. **启动后端服务**测试 API 接口
 2. **前端集成** Banner 和 News 组件
 3. **上传真实图片**替换 placeholder
-4. **配置权限**为 Banner 管理接口添加 Casbin 策略
+4. **配置权限**为 Banner 管理接口配置 RBAC 权限
 5. **性能优化**考虑为 C端接口添加 Redis 缓存
 
 ---

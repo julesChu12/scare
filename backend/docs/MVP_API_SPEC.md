@@ -36,7 +36,7 @@
 
 ### Functional
 
-- **F1: 认证授权** - 5种角色登录，JWT认证，Casbin权限控制
+- **F1: 认证授权** - 5种角色登录，JWT认证，自定义 RBAC 权限控制
 - **F2: 需求提交** - C端提交需求，地理围栏匹配<50ms，拒绝围栏外请求
 - **F3: 任务派发** - 需求自动分配到站点，写入任务池
 - **F4: 任务认领** - 工作人员认领任务，并发控制防止重复认领
@@ -70,7 +70,7 @@
 - **语言框架**: Go 1.25 + Gin + GORM
 - **数据库**: MySQL 8.0 + Redis 7.0
 - **认证**: JWT Token
-- **权限**: Casbin RBAC
+- **权限**: 自定义 RBAC（三表模型）
 - **日志**: Zap日志库
 - **配置**: Viper配置管理
 
@@ -388,7 +388,7 @@ docker-compose up -d
 ### R4: 任务转派权限问题
 
 **场景**: staff尝试转派任务
-- **处理**: Casbin拦截，返回403
+- **处理**: 权限中间件拦截，返回403
 - **前端**: 隐藏转派按钮(role判断)
 
 ### R5: 需求提交重复
@@ -406,9 +406,9 @@ docker-compose up -d
 **Day 1: 认证基础**
 - [ ] 实现 `POST /api/auth/login` (JWT生成)
 - [ ] 实现 `GET /api/auth/profile` (从Token解析用户)
-- [ ] 配置Casbin RBAC权限模型
+- [ ] 配置自定义 RBAC 权限模型
 - [ ] 编写认证中间件 (`middleware/auth.go`)
-- [ ] 编写权限中间件 (`middleware/casbin.go`)
+- [ ] 编写权限中间件 (`middleware/permission.go`)
 
 **Day 2: 需求提交**
 - [ ] 优化地理围栏匹配引擎 (`geofence/engine.go`)
@@ -488,7 +488,7 @@ docker-compose up -d
 ### 代码实现
 - [ ] P0接口(10个)全部实现
 - [ ] P1接口(8个)全部实现
-- [ ] Casbin权限配置完成
+- [ ] RBAC 权限配置完成
 - [ ] JWT认证中间件就绪
 - [ ] 地理围栏匹配逻辑优化
 - [ ] 错误处理统一封装

@@ -89,3 +89,13 @@ func (r *UserIdentityRepository) SetPrimary(userID int64, identityType string) e
 	return err
 }
 
+// GetByStationAndType 根据站点ID和身份类型获取用户身份列表
+func (r *UserIdentityRepository) GetByStationAndType(stationID int64, identityType string) ([]*model.UserIdentity, error) {
+	ui := r.q.UserIdentity
+	return ui.Where(
+		ui.StationID.Eq(stationID),
+		ui.IdentityType.Eq(identityType),
+		ui.Status.Eq("active"),
+	).Find()
+}
+

@@ -85,7 +85,7 @@ func setupRequestServiceForTest(t *testing.T) (*RequestService, *gorm.DB) {
 	reqRepo := repository.NewRequestRepository(db)
 	taskRepo := repository.NewTaskRepository(db)
 	stationRepo := repository.NewStationRepository(db)
-	svc := NewRequestService(db, reqRepo, taskRepo, stationRepo, &GeofenceService{}, nil)
+	svc := NewRequestService(db, reqRepo, taskRepo, stationRepo, &GeofenceService{}, nil, nil, nil)
 	return svc, db
 }
 

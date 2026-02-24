@@ -160,8 +160,8 @@ func NewDeps(db *database.DB, rdb *redis.Client, cfg *config.Config) (*Deps, err
 	d.StationService.SetGeocodeService(d.GeocodeService)
 
 	d.ZoneService = service.NewZoneService(d.ZoneRepo, d.GeofenceService)
-	d.RequestService = service.NewRequestService(db.DB, d.RequestRepo, d.TaskRepo, d.StationRepo, d.GeofenceService, d.GeocodeService)
 	d.NotificationService = service.NewNotificationService(d.NotificationRepo, d.UserRepo, mailSender)
+	d.RequestService = service.NewRequestService(db.DB, d.RequestRepo, d.TaskRepo, d.StationRepo, d.GeofenceService, d.GeocodeService, d.NotificationService, d.UserIdentityRepo)
 	d.TaskService = service.NewTaskService(db.DB, d.TaskRepo, d.RequestRepo, d.NotificationService)
 	d.StorageService = service.NewStorageService(storageProvider)
 	d.UserService = service.NewUserService(d.UserRepo, d.UserIdentityRepo)

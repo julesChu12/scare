@@ -214,24 +214,9 @@ source /path/to/backend/database/seeds/modules/60_content.sql;
 ```
 
 ## 权限配置
+Banner 管理相关权限已在 `permissions` 表中配置，通过 `role_permissions` 关联到对应角色。
 
-需要在 Casbin 策略中添加以下权限：
-
-```csv
-p, admin, /api/v1/b/banners, GET
-p, admin, /api/v1/b/banners, POST
-p, admin, /api/v1/b/banners/:id, PUT
-p, admin, /api/v1/b/banners/:id, DELETE
-```
-
-或使用权限标识：
-
-```csv
-p, admin, banner:list, *
-p, admin, banner:create, *
-p, admin, banner:update, *
-p, admin, banner:delete, *
-```
+Admin 角色默认拥有所有权限，无需额外配置。站点管理员（station_manager）的 Banner 权限通过角色权限管理页面配置。
 
 ## 注意事项
 

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -22,12 +23,14 @@ var (
 )
 
 type RequestService struct {
-	db          *gorm.DB
-	repo        *repository.RequestRepository
-	taskRepo    *repository.TaskRepository
-	stationRepo *repository.StationRepository
-	geofenceSvc *GeofenceService
-	geocodeSvc  *GeocodeService
+	db               *gorm.DB
+	repo             *repository.RequestRepository
+	taskRepo         *repository.TaskRepository
+	stationRepo      *repository.StationRepository
+	geofenceSvc      *GeofenceService
+	geocodeSvc       *GeocodeService
+	notifySvc        *NotificationService
+	userIdentityRepo *repository.UserIdentityRepository
 }
 
 // RequestInput 创建服务请求的输入参数
@@ -43,14 +46,16 @@ type RequestInput struct {
 	Images       []string `json:"images"`        // 图片列表
 }
 
-func NewRequestService(db *gorm.DB, repo *repository.RequestRepository, taskRepo *repository.TaskRepository, stationRepo *repository.StationRepository, geofenceSvc *GeofenceService, geocodeSvc *GeocodeService) *RequestService {
+func NewRequestService(db *gorm.DB, repo *repository.RequestRepository, taskRepo *repository.TaskRepository, stationRepo *repository.StationRepository, geofenceSvc *GeofenceService, geocodeSvc *GeocodeService, notifySvc *NotificationService, userIdentityRepo *repository.UserIdentityRepository) *RequestService {
 	return &RequestService{
-		db:          db,
-		repo:        repo,
-		taskRepo:    taskRepo,
-		stationRepo: stationRepo,
-		geofenceSvc: geofenceSvc,
-		geocodeSvc:  geocodeSvc,
+		db:               db,
+		repo:             repo,
+		taskRepo:         taskRepo,
+		stationRepo:      stationRepo,
+		geofenceSvc:      geofenceSvc,
+		geocodeSvc:       geocodeSvc,
+		notifySvc:        notifySvc,
+		userIdentityRepo: userIdentityRepo,
 	}
 }
 
@@ -153,6 +158,8 @@ func (s *RequestService) Create(input RequestInput) (*model.ServiceRequest, bool
 		return nil, false, err
 	}
 
+	// 异步通知站点管理员
+	s.sendRequestNotification(stationID, "新服务需求", fmt.Sprintf("收到新的%s服务需求，请及时处理。", consts.GetServiceTypeName(input.ServiceType)))
 	return request, true, nil
 }
 
@@ -297,6 +304,8 @@ func (s *RequestService) CancelByAdmin(id int64) (*model.ServiceRequest, error) 
 	}
 
 	req.Status = consts.RequestStatusCancelled
+	// 异步通知站点管理员
+	s.sendRequestNotification(req.StationID, "服务需求已取消", "管理员已取消服务需求。")
 	return req, nil
 }
 
@@ -357,6 +366,8 @@ func (s *RequestService) Cancel(id int64, userID int64) (*model.ServiceRequest, 
 	}
 
 	req.Status = consts.RequestStatusCancelled
+	// 异步通知站点管理员
+	s.sendRequestNotification(req.StationID, "服务需求已取消", "用户已取消服务需求。")
 	return req, true, nil
 }
 
@@ -428,4 +439,19 @@ func validCoordinate(lat, lng float64) bool {
 // generateRequestNo 生成服务请求编号
 func generateRequestNo() string {
 	return fmt.Sprintf("REQ%d%04d", time.Now().Unix(), rand.Intn(10000))
+}
+// sendRequestNotification 异步通知站点管理员
+func (s *RequestService) sendRequestNotification(stationID int64, title, body string) {
+	if s.notifySvc == nil || s.userIdentityRepo == nil || stationID == 0 {
+		return
+	}
+	go func(sid int64, t, b string) {
+		identities, err := s.userIdentityRepo.GetByStationAndType(sid, consts.IdentityStationManager)
+		if err != nil {
+			return
+		}
+		for _, identity := range identities {
+			_ = s.notifySvc.SendInApp(context.Background(), identity.UserID, t, b)
+		}
+	}(stationID, title, body)
 }

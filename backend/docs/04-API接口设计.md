@@ -15,7 +15,7 @@
 
 ### 1.2 认证与鉴权
 *   **认证**: HTTP Header `Authorization: Bearer <JWT_TOKEN>`。
-*   **鉴权**: 基于 Casbin 的 RBAC 模型。
+*   **鉴权**: 基于自定义 RBAC 三表模型（permissions/roles/role_permissions）。
 
 ### 1.3 状态码规范
 *   `200`: 成功。
