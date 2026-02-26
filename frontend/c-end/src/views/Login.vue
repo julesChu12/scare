@@ -106,7 +106,7 @@ const userStore = useUserStore()
 const formRef = ref<FormInstance>()
 const loading = ref(false)
 const countdown = ref(0)
-const loginType = ref<'code' | 'password'>('code') // 默认验证码登录
+const loginType = ref<'code' | 'password'>('password') // 默认密码登录
 
 const form = reactive({
   phone: '',

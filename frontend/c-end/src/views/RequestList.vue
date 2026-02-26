@@ -98,6 +98,7 @@ import { useRouter } from 'vue-router'
 import { ArrowLeft, Star, HomeFilled, List, User, Document } from '@element-plus/icons-vue'
 import { requestsAPI, type ServiceRequest } from '@/api'
 import { getServiceTypeName } from '@/config/serviceTypes'
+import { formatDateTime } from '@/utils/format'
 
 const router = useRouter()
 
@@ -167,9 +168,7 @@ const getServiceTypeText = (type: string) => {
   return getServiceTypeName(type)
 }
 
-const formatTime = (time: string) => {
-  return new Date(time).toLocaleString('zh-CN')
-}
+const formatTime = formatDateTime
 
 onMounted(() => {
   loadRequests()

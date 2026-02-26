@@ -173,6 +173,7 @@ import { ArrowLeft, Loading, Star, Picture } from '@element-plus/icons-vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { requestsAPI, type ServiceRequest } from '@/api'
 import { getServiceTypeName, getServiceTypeIcon } from '@/config/serviceTypes'
+import { formatDateTime } from '@/utils/format'
 import RatingDialog from '@/components/RatingDialog.vue'
 
 const route = useRoute()
@@ -271,9 +272,7 @@ const getServiceTypeText = (type: string) => {
   return getServiceTypeName(type)
 }
 
-const formatTime = (time: string) => {
-  return new Date(time).toLocaleString('zh-CN')
-}
+const formatTime = formatDateTime
 
 onMounted(() => {
   loadDetail()

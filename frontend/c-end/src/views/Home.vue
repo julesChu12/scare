@@ -51,10 +51,10 @@
       </div>
       <div class="service-grid">
         <div
-          v-for="service in services"
+          v-for="service in homeServices"
           :key="service.key"
           class="service-item"
-          @click="selectService(service.key)"
+          @click="service.key === 'more' ? goToAllServices() : selectService(service.key)"
         >
           <span class="service-icon">{{ service.icon }}</span>
           <span class="service-name">{{ service.name }}</span>
@@ -188,14 +188,15 @@ const fetchBanners = async () => {
   }
 }
 
-const services = ref([
-  { key: 'meal', name: '助餐服务', icon: '🍱' },
+const homeServices = ref([
+  { key: 'meal', name: '送餐服务', icon: '🍱' },
   { key: 'medical', name: '就医陪护', icon: '🏥' },
   { key: 'care', name: '日常照护', icon: '👴' },
+  { key: 'repair', name: '居家维修', icon: '🔧' },
   { key: 'cleaning', name: '家政保洁', icon: '🧹' },
-  { key: 'psychology', name: '心理慰藉', icon: '🧠' },
-  { key: 'rehab', name: '康复理疗', icon: '💪' },
-  { key: 'other', name: '其他服务', icon: '📋' }
+  { key: 'company', name: '陪伴聊天', icon: '💬' },
+  { key: 'emergency', name: '紧急救助', icon: '🚨' },
+  { key: 'more', name: '更多服务', icon: '📋' }
 ])
 
 const newsList = ref<NewsItem[]>([])
