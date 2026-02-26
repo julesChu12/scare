@@ -49,7 +49,9 @@
 | 10 | B端任务详情/完成页 | `b-task-detail.png` | 第五章 5.6 |
 | 11 | B端围栏管理（含地图编辑器） | `b-zone-map.png` | 第五章 5.5/5.10.4 |
 | 12 | B端站点管理列表 | `b-station-list.png` | 第五章 |
-| 13 | B端用户管理/角色权限 | `b-user-role.png` | 第五章 5.3.3 |
+| 13 | B端用户管理 | `b-user.png` | 第五章 5.3.3 |
+| 13 | B端角色权限 | `b-role.png` | 第五章 5.3.3 |
+| 13 | B端菜单权限 | `b-menu.png` | 第五章 5.3.3 |
 | 14 | B端统计报表页 | `b-statistics.png` | 第五章 5.9 |
 
 ### 测试截图（4张）
@@ -58,38 +60,44 @@
 |------|---------|-----------|---------|
 | 15 | Go单元测试通过结果（终端截图） | `test-unit.png` | 第六章 |
 | 16 | Swagger API文档页面 | `test-swagger.png` | 第六章 |
-| 17 | C端PWA安装提示/主屏幕图标 | `test-pwa.png` | 第六章 |
+| 17 | C端PWA获取定位权限 | `test-location.png` | 第六章 |
+| 17 | C端主屏幕图标 | `test-home.png` | 第六章 |
 | 18 | 围栏匹配测试结果（Postman/终端） | `test-geofence.png` | 第六章 |
 
 ---
 
-## 🟡 需要你操作的导出任务（中优先级）
+## 🟡 需要你操作的绘图任务（中优先级）
 
-### Mermaid 图表导出为 PNG
+### 系统图表绘制
 
-1. 打开 [mermaid.live](https://mermaid.live)
-2. 将 `paper/thesis/图表集_Mermaid.md` 中每张图的代码粘贴进去
-3. 点击 "Download PNG" 导出
-4. 保存到 `paper/thesis/assets/diagrams/` 目录
+> ⚠️ **注意**：Mermaid 预览截图不适合用于论文，需使用专业绘图工具重新绘制。
 
-需要导出的图表：
+**推荐绘图工具：**
+- **流程图/架构图/模块图**：[Draw.io](https://app.diagrams.net) 或 [ProcessOn](https://processon.com)
+- **E-R图**：[dbdiagram.io](https://dbdiagram.io) 或 Draw.io
+- **用例图**：Draw.io 或 ProcessOn
+- **时序图**：Draw.io 或 PlantUML
 
-| 编号 | 图表名称 | 建议文件名 |
-|------|---------|-----------|
-| 1 | 图3-1 现有业务流程图 | `fig3-1-old-flow.png` |
-| 2 | 图3-2 目标业务流程图 | `fig3-2-new-flow.png` |
-| 3 | 图3-3 系统功能模块图 | `fig3-3-modules.png` |
-| 4 | 图3-4 地理围栏匹配流程图 | `fig3-4-geofence-flow.png` |
-| 5 | 图3-5 系统用例图 | `fig3-5-usecase.png` |
-| 6 | 图3-6 系统E-R图 | `fig3-6-er.png` |
-| 7 | 图4-1 系统架构图 | `fig4-1-architecture.png` |
-| 8 | 图4-2 后端分层架构图 | `fig4-2-layers.png` |
-| 9 | 图4-3 任务状态流转图 | `fig4-3-task-state.png` |
-| 10 | 图4-4 需求状态流转图 | `fig4-4-request-state.png` |
-| 11 | 图5-1 JWT认证流程图 | `fig5-1-jwt-flow.png` |
-| 12 | 图5-2 任务认领时序图 | `fig5-2-task-claim.png` |
-| 13 | 图5-3 射线法原理示意图 | `fig5-3-raycast-principle.png` |
-| 14 | 图5-3b 射线法算法流程图 | `fig5-3b-raycast-flow.png` |
+需要绘制的图表（参考 `paper/thesis/图表集_Mermaid.md` 中的逻辑）：
+
+| 编号 | 图表名称 | 建议文件名 | 图表类型 | 推荐工具 |
+|------|---------|-----------|---------|---------|
+| 1 | 图3-1 现有业务流程图 | `fig3-1-old-flow.png` | 流程图 | Draw.io |
+| 2 | 图3-2 目标业务流程图 | `fig3-2-new-flow.png` | 流程图 | Draw.io |
+| 3 | 图3-3 系统功能模块图 | `fig3-3-modules.png` | 层次图 | Draw.io |
+| 4 | 图3-4 地理围栏匹配流程图 | `fig3-4-geofence-flow.png` | 流程图 | Draw.io |
+| 5 | 图3-5 系统用例图 | `fig3-5-usecase.png` | UML用例图 | Draw.io |
+| 6 | 图3-6 系统E-R图 | `fig3-6-er.png` | E-R图 | dbdiagram.io |
+| 7 | 图4-1 系统架构图 | `fig4-1-architecture.png` | 架构图 | Draw.io |
+| 8 | 图4-2 后端分层架构图 | `fig4-2-layers.png` | 分层图 | Draw.io |
+| 9 | 图4-3 任务状态流转图 | `fig4-3-task-state.png` | 状态图 | Draw.io |
+| 10 | 图4-4 需求状态流转图 | `fig4-4-request-state.png` | 状态图 | Draw.io |
+| 11 | 图5-1 JWT认证流程图 | `fig5-1-jwt-flow.png` | 流程图 | Draw.io |
+| 12 | 图5-2 任务认领时序图 | `fig5-2-task-claim.png` | 时序图 | Draw.io |
+| 13 | 图5-3 射线法原理示意图 | `fig5-3-raycast-principle.png` | 原理图 | Draw.io |
+| 14 | 图5-3b 射线法算法流程图 | `fig5-3b-raycast-flow.png` | 流程图 | Draw.io |
+
+保存到 `paper/附件/diagrams/` 目录。
 
 ---
 
