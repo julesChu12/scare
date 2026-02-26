@@ -5,16 +5,16 @@
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
         <!-- 参与者 -->
-        <mxCell id="W" value="工作人员" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="W" value="工作人员" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=13;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="60" y="30" width="100" height="40" as="geometry"/>
         </mxCell>
-        <mxCell id="B" value="B端前端" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="B" value="B端前端" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=13;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="260" y="30" width="100" height="40" as="geometry"/>
         </mxCell>
-        <mxCell id="S" value="后端服务" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="S" value="后端服务" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=13;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="460" y="30" width="120" height="40" as="geometry"/>
         </mxCell>
-        <mxCell id="D" value="MySQL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="D" value="MySQL" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=13;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="700" y="30" width="100" height="40" as="geometry"/>
         </mxCell>
         <!-- 生命线 -->
@@ -52,32 +52,32 @@
         <mxCell id="m5" value="5. 查询任务当前状态" style="endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry"><mxPoint x="520" y="295" as="sourcePoint"/><mxPoint x="750" y="295" as="targetPoint"/></mxGeometry>
         </mxCell>
-        <mxCell id="m6" value="status = dispatched" style="endArrow=block;endFill=1;dashed=1;fontSize=11;" edge="1" parent="1">
+        <mxCell id="m6" value="status = dispatched" style="endArrow=open;endFill=0;dashed=1;fontSize=11;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry"><mxPoint x="750" y="330" as="sourcePoint"/><mxPoint x="520" y="330" as="targetPoint"/></mxGeometry>
         </mxCell>
-        <!-- 乐观锁更新 -->
-        <mxCell id="m7" value="6. 更新任务（乐观锁）" style="endArrow=block;endFill=1;fontSize=11;strokeColor=#333333;" edge="1" parent="1">
+        <!-- 行锁更新 -->
+        <mxCell id="m7" value="6. 行锁更新任务（FOR UPDATE）" style="endArrow=block;endFill=1;fontSize=11;strokeColor=#333333;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry"><mxPoint x="520" y="370" as="sourcePoint"/><mxPoint x="750" y="370" as="targetPoint"/></mxGeometry>
         </mxCell>
         <!-- 标注 -->
-        <mxCell id="note1" value="WHERE id=? AND status='dispatched'&#xa;防止并发冲突" style="text;html=1;align=left;fontSize=10;fillColor=#ffffff;strokeColor=#333333;rounded=1;spacingLeft=4;spacingTop=2;" vertex="1" parent="1">
+        <mxCell id="note1" value="SELECT ... FOR UPDATE + 状态校验&#xa;保证认领并发安全" style="text;html=1;align=left;fontSize=11;fillColor=#ffffff;strokeColor=#333333;rounded=0;spacingLeft=4;spacingTop=2;" vertex="1" parent="1">
           <mxGeometry x="560" y="385" width="220" height="35" as="geometry"/>
         </mxCell>
-        <mxCell id="m8" value="affected = 1（成功）" style="endArrow=block;endFill=1;dashed=1;fontSize=11;" edge="1" parent="1">
+        <mxCell id="m8" value="affected = 1（成功）" style="endArrow=open;endFill=0;dashed=1;fontSize=11;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry"><mxPoint x="750" y="435" as="sourcePoint"/><mxPoint x="520" y="435" as="targetPoint"/></mxGeometry>
         </mxCell>
         <!-- 后续操作 -->
-        <mxCell id="m9" value="7. 创建任务历史记录" style="endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1">
+        <mxCell id="m9" value="7. 更新关联需求状态为 claimed" style="endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry"><mxPoint x="520" y="470" as="sourcePoint"/><mxPoint x="750" y="470" as="targetPoint"/></mxGeometry>
         </mxCell>
-        <mxCell id="m10" value="8. 创建通知记录" style="endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1">
+        <mxCell id="m10" value="8. 发送认领通知（异步）" style="endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry"><mxPoint x="520" y="505" as="sourcePoint"/><mxPoint x="750" y="505" as="targetPoint"/></mxGeometry>
         </mxCell>
         <!-- 返回 -->
-        <mxCell id="m11" value="返回认领成功" style="endArrow=block;endFill=1;dashed=1;fontSize=11;" edge="1" parent="1">
+        <mxCell id="m11" value="返回认领成功" style="endArrow=open;endFill=0;dashed=1;fontSize=11;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry"><mxPoint x="520" y="545" as="sourcePoint"/><mxPoint x="310" y="545" as="targetPoint"/></mxGeometry>
         </mxCell>
-        <mxCell id="m12" value="显示认领成功" style="endArrow=block;endFill=1;dashed=1;fontSize=11;" edge="1" parent="1">
+        <mxCell id="m12" value="显示认领成功" style="endArrow=open;endFill=0;dashed=1;fontSize=11;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry"><mxPoint x="310" y="575" as="sourcePoint"/><mxPoint x="110" y="575" as="targetPoint"/></mxGeometry>
         </mxCell>
       </root>

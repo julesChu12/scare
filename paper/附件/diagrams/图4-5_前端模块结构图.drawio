@@ -6,7 +6,7 @@
         <mxCell id="1" parent="0"/>
 
         <!-- ===== C端用户端 ===== -->
-        <mxCell id="c_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=2;dashed=1;dashPattern=8 8;" vertex="1" parent="1">
+        <mxCell id="c_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=2;" vertex="1" parent="1">
           <mxGeometry x="30" y="30" width="500" height="830" as="geometry"/>
         </mxCell>
         <mxCell id="c_title" value="C端用户端（Vue 3 + PWA）" style="text;html=1;align=center;fontSize=14;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
@@ -14,7 +14,7 @@
         </mxCell>
 
         <!-- C端：视图层 -->
-        <mxCell id="c_views_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=1;" vertex="1" parent="1">
+        <mxCell id="c_views_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=1;" vertex="1" parent="1">
           <mxGeometry x="50" y="75" width="460" height="230" as="geometry"/>
         </mxCell>
         <mxCell id="c_views_label" value="视图层（views/）" style="text;html=1;align=left;fontSize=11;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
@@ -52,12 +52,12 @@
         </mxCell>
 
         <!-- C端：组件层 -->
-        <mxCell id="c_comp" value="组件层（components/）&#xa;OfflineIndicator / TabBar / ..." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="c_comp" value="组件层（components/）&#xa;OfflineIndicator / TabBar / ..." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="50" y="320" width="460" height="40" as="geometry"/>
         </mxCell>
 
         <!-- C端：逻辑层 -->
-        <mxCell id="c_logic_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=1;" vertex="1" parent="1">
+        <mxCell id="c_logic_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=1;" vertex="1" parent="1">
           <mxGeometry x="50" y="375" width="460" height="80" as="geometry"/>
         </mxCell>
         <mxCell id="c_logic_label" value="逻辑层" style="text;html=1;align=left;fontSize=11;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
@@ -74,17 +74,17 @@
         </mxCell>
 
         <!-- C端：接口层 -->
-        <mxCell id="c_api" value="接口层（api/）&#xa;auth.ts / request.ts / notification.ts / ..." style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="c_api" value="接口层（api/）&#xa;auth.ts / request.ts / notification.ts / ..." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="50" y="470" width="460" height="40" as="geometry"/>
         </mxCell>
 
         <!-- C端：工具层 -->
-        <mxCell id="c_util" value="工具层（utils/）&#xa;request.ts（Axios 封装 + JWT 自动附加 + 401 处理）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="c_util" value="工具层（utils/）&#xa;request.ts（Axios 封装 + JWT 自动附加 + 401 处理）" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="50" y="525" width="460" height="40" as="geometry"/>
         </mxCell>
 
         <!-- C端：PWA -->
-        <mxCell id="c_pwa" value="PWA 支持&#xa;Service Worker / 离线缓存 / manifest.json" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="c_pwa" value="PWA 支持&#xa;Service Worker / 离线缓存 / manifest.json" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="50" y="580" width="460" height="40" as="geometry"/>
         </mxCell>
 
@@ -96,7 +96,7 @@
 
 
         <!-- ===== B端管理门户 ===== -->
-        <mxCell id="b_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=2;dashed=1;dashPattern=8 8;" vertex="1" parent="1">
+        <mxCell id="b_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=2;" vertex="1" parent="1">
           <mxGeometry x="570" y="30" width="500" height="830" as="geometry"/>
         </mxCell>
         <mxCell id="b_title" value="B端管理门户（Vue 3 + Element Plus）" style="text;html=1;align=center;fontSize=14;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
@@ -104,7 +104,7 @@
         </mxCell>
 
         <!-- B端：视图层 -->
-        <mxCell id="b_views_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=1;" vertex="1" parent="1">
+        <mxCell id="b_views_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=1;" vertex="1" parent="1">
           <mxGeometry x="590" y="75" width="460" height="230" as="geometry"/>
         </mxCell>
         <mxCell id="b_views_label" value="页面层（pages/）" style="text;html=1;align=left;fontSize=11;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
@@ -139,12 +139,12 @@
         </mxCell>
 
         <!-- B端：布局与组件层 -->
-        <mxCell id="b_layout" value="布局层（layouts/）&#xa;MainLayout（侧边栏 + 顶栏 + 内容区）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="b_layout" value="布局层（layouts/）&#xa;MainLayout（侧边栏 + 顶栏 + 内容区）" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="590" y="320" width="460" height="40" as="geometry"/>
         </mxCell>
 
         <!-- B端：逻辑层 -->
-        <mxCell id="b_logic_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=1;" vertex="1" parent="1">
+        <mxCell id="b_logic_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=1;" vertex="1" parent="1">
           <mxGeometry x="590" y="375" width="460" height="80" as="geometry"/>
         </mxCell>
         <mxCell id="b_logic_label" value="逻辑层" style="text;html=1;align=left;fontSize=11;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
@@ -161,17 +161,17 @@
         </mxCell>
 
         <!-- B端：路由守卫 -->
-        <mxCell id="b_router" value="路由层（router/guards/）&#xa;权限路由守卫 + 登录守卫 + meta.permission_code" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="b_router" value="路由层（router/guards/）&#xa;权限路由守卫 + 登录守卫 + meta.permission_code" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="590" y="470" width="460" height="40" as="geometry"/>
         </mxCell>
 
         <!-- B端：接口层 -->
-        <mxCell id="b_api" value="接口层（api/index.ts）&#xa;集中导出：auth / task / station / zone / user / role / stats" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="b_api" value="接口层（api/index.ts）&#xa;集中导出：auth / task / station / zone / user / role / stats" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="590" y="525" width="460" height="40" as="geometry"/>
         </mxCell>
 
         <!-- B端：工具层 -->
-        <mxCell id="b_util" value="工具层（utils/request.ts）&#xa;Axios 封装 + JWT 自动附加 + 401 自动登出" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="b_util" value="工具层（utils/request.ts）&#xa;Axios 封装 + JWT 自动附加 + 401 自动登出" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="590" y="580" width="460" height="40" as="geometry"/>
         </mxCell>
 
@@ -183,15 +183,15 @@
         <mxCell id="be5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#333333;" edge="1" source="b_api" target="b_util" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
 
         <!-- 底部：共享后端 API -->
-        <mxCell id="backend_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=2;dashed=1;dashPattern=8 8;" vertex="1" parent="1">
+        <mxCell id="backend_box" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=2;" vertex="1" parent="1">
           <mxGeometry x="200" y="700" width="700" height="60" as="geometry"/>
         </mxCell>
         <mxCell id="backend" value="后端 API Server（Go + Gin, 端口 8080）  /api/v1/c/* (C端接口)    /api/v1/b/* (B端接口)" style="text;html=1;align=center;fontSize=12;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
           <mxGeometry x="250" y="715" width="600" height="30" as="geometry"/>
         </mxCell>
 
-        <mxCell id="fe1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#333333;dashed=1;" edge="1" source="c_util" target="backend_box" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="fe2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#333333;dashed=1;" edge="1" source="b_util" target="backend_box" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#333333;" edge="1" source="c_util" target="backend_box" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="fe2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#333333;" edge="1" source="b_util" target="backend_box" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
 
       </root>
     </mxGraphModel>

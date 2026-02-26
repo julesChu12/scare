@@ -69,7 +69,7 @@
           </mxGeometry>
         </mxCell>
         <!-- 痛点标注 -->
-        <mxCell id="17" value="⚠ 信息传递效率低&#xa;⚠ 无法追踪进度&#xa;⚠ 分配依赖人工经验" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fillColor=#ffffff;strokeColor=#333333;fontSize=11;fontColor=#333333;spacingLeft=4;spacingTop=2;" vertex="1" parent="1">
+        <mxCell id="17" value="信息传递效率低&#xa;无法追踪进度&#xa;分配依赖人工经验" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fillColor=#ffffff;strokeColor=#333333;fontSize=11;fontColor=#333333;spacingLeft=4;spacingTop=2;" vertex="1" parent="1">
           <mxGeometry x="560" y="370" width="170" height="60" as="geometry"/>
         </mxCell>
       </root>

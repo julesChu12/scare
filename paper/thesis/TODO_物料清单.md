@@ -50,19 +50,19 @@
 | 11 | B端围栏管理（含地图编辑器） | `b-zone-map.png` | 第五章 5.5/5.10.4 |
 | 12 | B端站点管理列表 | `b-station-list.png` | 第五章 |
 | 13 | B端用户管理 | `b-user.png` | 第五章 5.3.3 |
-| 13 | B端角色权限 | `b-role.png` | 第五章 5.3.3 |
-| 13 | B端菜单权限 | `b-menu.png` | 第五章 5.3.3 |
-| 14 | B端统计报表页 | `b-statistics.png` | 第五章 5.9 |
+| 14 | B端角色权限 | `b-role.png` | 第五章 5.3.3 |
+| 15 | B端菜单权限 | `b-menu.png` | 第五章 5.3.3 |
+| 16 | B端统计报表页 | `b-statistics.png` | 第五章 5.9 |
 
-### 测试截图（4张）
+### 测试截图（5张）
 
 | 编号 | 截图内容 | 建议文件名 | 用于章节 |
 |------|---------|-----------|---------|
-| 15 | Go单元测试通过结果（终端截图） | `test-unit.png` | 第六章 |
-| 16 | Swagger API文档页面 | `test-swagger.png` | 第六章 |
-| 17 | C端PWA获取定位权限 | `test-location.png` | 第六章 |
-| 17 | C端主屏幕图标 | `test-home.png` | 第六章 |
-| 18 | 围栏匹配测试结果（Postman/终端） | `test-geofence.png` | 第六章 |
+| 17 | Go单元测试通过结果（终端截图） | `test-unit.png` | 第六章 |
+| 18 | Swagger API文档页面 | `test-swagger.png` | 第六章 |
+| 19 | C端PWA获取定位权限 | `test-location.png` | 第六章 |
+| 20 | C端主屏幕图标 | `test-home.png` | 第六章 |
+| 21 | 围栏匹配测试结果（Postman/终端） | `test-geofence.png` | 第六章 |
 
 ---
 
@@ -82,20 +82,20 @@
 
 | 编号 | 图表名称 | 建议文件名 | 图表类型 | 推荐工具 |
 |------|---------|-----------|---------|---------|
-| 1 | 图3-1 现有业务流程图 | `fig3-1-old-flow.png` | 流程图 | Draw.io |
-| 2 | 图3-2 目标业务流程图 | `fig3-2-new-flow.png` | 流程图 | Draw.io |
-| 3 | 图3-3 系统功能模块图 | `fig3-3-modules.png` | 层次图 | Draw.io |
-| 4 | 图3-4 地理围栏匹配流程图 | `fig3-4-geofence-flow.png` | 流程图 | Draw.io |
-| 5 | 图3-5 系统用例图 | `fig3-5-usecase.png` | UML用例图 | Draw.io |
-| 6 | 图3-6 系统E-R图 | `fig3-6-er.png` | E-R图 | dbdiagram.io |
-| 7 | 图4-1 系统架构图 | `fig4-1-architecture.png` | 架构图 | Draw.io |
-| 8 | 图4-2 后端分层架构图 | `fig4-2-layers.png` | 分层图 | Draw.io |
-| 9 | 图4-3 任务状态流转图 | `fig4-3-task-state.png` | 状态图 | Draw.io |
-| 10 | 图4-4 需求状态流转图 | `fig4-4-request-state.png` | 状态图 | Draw.io |
-| 11 | 图5-1 JWT认证流程图 | `fig5-1-jwt-flow.png` | 流程图 | Draw.io |
-| 12 | 图5-2 任务认领时序图 | `fig5-2-task-claim.png` | 时序图 | Draw.io |
-| 13 | 图5-3 射线法原理示意图 | `fig5-3-raycast-principle.png` | 原理图 | Draw.io |
-| 14 | 图5-3b 射线法算法流程图 | `fig5-3b-raycast-flow.png` | 流程图 | Draw.io |
+| 1 | 图3-1 现有业务流程图 | `图3-1_现有业务流程图.png` | 流程图 | Draw.io |
+| 2 | 图3-2 目标业务流程图 | `图3-2_目标业务流程图.png` | 流程图 | Draw.io |
+| 3 | 图3-3 系统功能模块图 | `图3-3_系统功能模块图.png` | 层次图 | Draw.io |
+| 4 | 图3-4 地理围栏匹配流程图 | `图3-4_地理围栏匹配流程图.png` | 流程图 | Draw.io |
+| 5 | 图3-5 系统用例图 | `图3-5_系统用例图.png` | UML用例图 | Draw.io |
+| 6 | 图3-6 系统E-R图 | `图3-6_系统实体关系图.png` | E-R图 | dbdiagram.io |
+| 7 | 图4-1 系统架构图 | `图4-1_系统架构图.png` | 架构图 | Draw.io |
+| 8 | 图4-2 后端分层架构图 | `图4-2_后端分层架构图.png` | 分层图 | Draw.io |
+| 9 | 图4-3 任务状态流转图 | `图4-3_任务状态流转图.png` | 状态图 | Draw.io |
+| 10 | 图4-4 需求状态流转图 | `图4-4_需求状态流转图.png` | 状态图 | Draw.io |
+| 11 | 图5-1 JWT认证流程图 | `图5-1_令牌认证流程图.png` | 流程图 | Draw.io |
+| 12 | 图5-2 任务认领时序图 | `图5-2_任务认领时序图.png` | 时序图 | Draw.io |
+| 13 | 图5-3 射线法原理示意图 | `图5-3_射线法原理示意图.png` | 原理图 | Draw.io |
+| 14 | 图5-3b 射线法算法流程图 | `图5-3b_射线法算法流程图.png` | 流程图 | Draw.io |
 
 保存到 `paper/附件/diagrams/` 目录。
 
@@ -123,9 +123,9 @@ paper/thesis/
 │   │   ├── ...
 │   │   └── test-geofence.png
 │   └── diagrams/             ← Mermaid导出图片（14张）
-│       ├── fig3-1-old-flow.png
+│       ├── 图3-1_现有业务流程图.png
 │       ├── ...
-│       └── fig5-3b-raycast-flow.png
+│       └── 图5-3b_射线法算法流程图.png
 ├── 摘要.md
 ├── 第一章_绪论.md
 ├── 第二章_相关理论与技术.md

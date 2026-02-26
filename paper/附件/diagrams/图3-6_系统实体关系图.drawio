@@ -1,0 +1,297 @@
+<mxfile host="app.diagrams.net" modified="2026-02-27" agent="Claude" version="21.0.0" type="device">
+  <diagram id="native-er" name="图3-6 原生E-R图(Chen氏模型)">
+    <mxGraphModel dx="2200" dy="1400" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2200" pageHeight="1400" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- ============== 实体 ============== -->
+
+        <!-- 用户 -->
+        <mxCell id="E_USER" value="用户&#xa;(USER)" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="700" y="500" width="100" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 角色 -->
+        <mxCell id="E_ROLE" value="角色&#xa;(ROLE)" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="700" y="150" width="100" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 权限 -->
+        <mxCell id="E_PERM" value="权限&#xa;(PERMISSION)" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="150" width="100" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 站点 -->
+        <mxCell id="E_STAT" value="站点&#xa;(STATION)" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="500" width="100" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 围栏 -->
+        <mxCell id="E_ZONE" value="围栏&#xa;(ZONE)" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="500" width="100" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 服务需求 -->
+        <mxCell id="E_REQ" value="服务需求&#xa;(REQUEST)" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="700" y="900" width="100" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 处理任务 -->
+        <mxCell id="E_TASK" value="处理任务&#xa;(TASK)" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1100" y="900" width="100" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 通知 -->
+        <mxCell id="E_NOTI" value="通知&#xa;(NOTIFICATION)" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="300" y="500" width="100" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 客户档案 -->
+        <mxCell id="E_PROF" value="客户档案&#xa;(PROFILE)" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="700" y="700" width="100" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 用户身份 -->
+        <mxCell id="E_UID" value="用户身份&#xa;(IDENTITY)" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="350" y="300" width="100" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 新闻资讯 -->
+        <mxCell id="E_NEWS" value="新闻资讯&#xa;(NEWS)" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1500" y="150" width="100" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 轮播图 -->
+        <mxCell id="E_BAN" value="轮播图&#xa;(BANNER)" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1800" y="150" width="100" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 任务历史 -->
+        <mxCell id="E_HIST" value="任务历史&#xa;(HISTORY)" style="shape=rectangle;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1400" y="900" width="100" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- ============== 关系 ============== -->
+
+        <!-- 用户-角色 拥有 -->
+        <mxCell id="R_UR" value="拥有" style="shape=rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="710" y="320" width="80" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 角色-权限 包含 -->
+        <mxCell id="R_RP" value="包含" style="shape=rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="910" y="140" width="80" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 用户-站点 所属 -->
+        <mxCell id="R_US" value="所属" style="shape=rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="910" y="490" width="80" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 站点-围栏 划定 -->
+        <mxCell id="R_SZ" value="划定" style="shape=rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1310" y="490" width="80" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 用户-需求 提交 -->
+        <mxCell id="R_SR" value="提交" style="shape=rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="560" y="810" width="80" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 需求-任务 对应 -->
+        <mxCell id="R_RT" value="对应" style="shape=rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="910" y="890" width="80" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 站点-任务 归属 -->
+        <mxCell id="R_ST" value="归属" style="shape=rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="700" width="80" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 用户-任务 执行 -->
+        <mxCell id="R_UT" value="执行" style="shape=rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="910" y="700" width="80" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 用户-通知 接收 -->
+        <mxCell id="R_UN" value="接收" style="shape=rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="500" y="490" width="80" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 用户-客户档案 关联 -->
+        <mxCell id="R_UP" value="关联" style="shape=rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="710" y="610" width="80" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 用户-用户身份 绑定 -->
+        <mxCell id="R_UI" value="绑定" style="shape=rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="510" y="400" width="80" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 站点-新闻 发布 -->
+        <mxCell id="R_SN" value="发布" style="shape=rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1310" y="320" width="80" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 站点-轮播图 配置 -->
+        <mxCell id="R_SB" value="配置" style="shape=rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1510" y="320" width="80" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 任务-任务历史 记录 -->
+        <mxCell id="R_TH" value="记录" style="shape=rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="890" width="80" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 需求-站点 匹配 (地理围栏) -->
+        <mxCell id="R_RS" value="匹配" style="shape=rhombus;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;fontStyle=1;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="1110" y="800" width="80" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- ============== 关系连线 ============== -->
+
+        <!-- 用户 M:N 角色 -->
+        <mxCell id="L_U_UR" value="M" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="E_USER" target="R_UR"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_UR_R" value="N" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="R_UR" target="E_ROLE"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 角色 M:N 权限 -->
+        <mxCell id="L_R_RP" value="M" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="E_ROLE" target="R_RP"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_RP_P" value="N" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="R_RP" target="E_PERM"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 用户 N:1 站点 -->
+        <mxCell id="L_U_US" value="N" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="E_USER" target="R_US"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_US_S" value="1" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="R_US" target="E_STAT"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 站点 1:N 围栏 -->
+        <mxCell id="L_S_SZ" value="1" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="E_STAT" target="R_SZ"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_SZ_Z" value="N" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="R_SZ" target="E_ZONE"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 用户 1:N 需求 -->
+        <mxCell id="L_U_SR" value="1" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="E_USER" target="R_SR"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_SR_RQ" value="N" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="R_SR" target="E_REQ"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 需求 1:N 任务 (修正: 原1:1改为1:N) -->
+        <mxCell id="L_RQ_RT" value="1" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="E_REQ" target="R_RT"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_RT_T" value="N" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="R_RT" target="E_TASK"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 站点 1:N 任务 -->
+        <mxCell id="L_S_ST" value="1" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="E_STAT" target="R_ST"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_ST_T" value="N" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="R_ST" target="E_TASK"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 用户 1:N 任务 (执行) -->
+        <mxCell id="L_U_UT" value="1" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="E_USER" target="R_UT"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_UT_T" value="N" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="R_UT" target="E_TASK"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 用户 1:N 通知 -->
+        <mxCell id="L_U_UN" value="1" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="E_USER" target="R_UN"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_UN_N" value="N" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="R_UN" target="E_NOTI"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 用户 1:1 客户档案 -->
+        <mxCell id="L_U_UP" value="1" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="E_USER" target="R_UP"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_UP_P" value="1" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="R_UP" target="E_PROF"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 用户 1:N 用户身份 -->
+        <mxCell id="L_U_UI" value="1" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="E_USER" target="R_UI"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_UI_I" value="N" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="R_UI" target="E_UID"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 站点 1:N 新闻 -->
+        <mxCell id="L_S_SN" value="1" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="E_STAT" target="R_SN"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_SN_N" value="N" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="R_SN" target="E_NEWS"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 站点 1:N 轮播图 -->
+        <mxCell id="L_S_SB" value="1" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="E_STAT" target="R_SB"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_SB_B" value="N" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="R_SB" target="E_BAN"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 任务 1:N 任务历史 -->
+        <mxCell id="L_T_TH" value="1" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="E_TASK" target="R_TH"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_TH_H" value="N" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="R_TH" target="E_HIST"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 需求 N:1 站点 (地理围栏匹配) -->
+        <mxCell id="L_RQ_RS" value="N" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="E_REQ" target="R_RS"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_RS_S" value="1" style="endArrow=none;html=1;rounded=0;fontSize=14;fontStyle=1;strokeWidth=1.5;" edge="1" parent="1" source="R_RS" target="E_STAT"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- ============== 属性 (简化版,每个实体只显示主键和一个关键属性) ============== -->
+
+        <!-- 用户属性 -->
+        <mxCell id="A_U_1" value="&lt;u&gt;id&lt;/u&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="600" y="420" width="70" height="30" as="geometry"/></mxCell>
+        <mxCell id="A_U_2" value="phone" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="600" y="560" width="70" height="30" as="geometry"/></mxCell>
+        <mxCell id="L_A_U_1" edge="1" parent="1" source="E_USER" target="A_U_1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_A_U_2" edge="1" parent="1" source="E_USER" target="A_U_2"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 角色属性 -->
+        <mxCell id="A_R_1" value="&lt;u&gt;id&lt;/u&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="600" y="110" width="70" height="30" as="geometry"/></mxCell>
+        <mxCell id="A_R_2" value="name" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="715" y="80" width="70" height="30" as="geometry"/></mxCell>
+        <mxCell id="L_A_R_1" edge="1" parent="1" source="E_ROLE" target="A_R_1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_A_R_2" edge="1" parent="1" source="E_ROLE" target="A_R_2"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 权限属性 -->
+        <mxCell id="A_P_1" value="&lt;u&gt;id&lt;/u&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="1240" y="130" width="70" height="30" as="geometry"/></mxCell>
+        <mxCell id="A_P_2" value="code" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="1240" y="180" width="70" height="30" as="geometry"/></mxCell>
+        <mxCell id="L_A_P_1" edge="1" parent="1" source="E_PERM" target="A_P_1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_A_P_2" edge="1" parent="1" source="E_PERM" target="A_P_2"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 站点属性 -->
+        <mxCell id="A_S_1" value="&lt;u&gt;id&lt;/u&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="1060" y="420" width="70" height="30" as="geometry"/></mxCell>
+        <mxCell id="A_S_2" value="name" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="1170" y="420" width="70" height="30" as="geometry"/></mxCell>
+        <mxCell id="L_A_S_1" edge="1" parent="1" source="E_STAT" target="A_S_1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_A_S_2" edge="1" parent="1" source="E_STAT" target="A_S_2"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 围栏属性 -->
+        <mxCell id="A_Z_1" value="&lt;u&gt;id&lt;/u&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="1640" y="480" width="70" height="30" as="geometry"/></mxCell>
+        <mxCell id="A_Z_2" value="points" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="1640" y="530" width="70" height="30" as="geometry"/></mxCell>
+        <mxCell id="L_A_Z_1" edge="1" parent="1" source="E_ZONE" target="A_Z_1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_A_Z_2" edge="1" parent="1" source="E_ZONE" target="A_Z_2"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 需求属性 -->
+        <mxCell id="A_RQ_1" value="&lt;u&gt;id&lt;/u&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="600" y="880" width="70" height="30" as="geometry"/></mxCell>
+        <mxCell id="A_RQ_2" value="type" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="715" y="980" width="70" height="30" as="geometry"/></mxCell>
+        <mxCell id="L_A_RQ_1" edge="1" parent="1" source="E_REQ" target="A_RQ_1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_A_RQ_2" edge="1" parent="1" source="E_REQ" target="A_RQ_2"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 任务属性 -->
+        <mxCell id="A_T_1" value="&lt;u&gt;id&lt;/u&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="1240" y="880" width="70" height="30" as="geometry"/></mxCell>
+        <mxCell id="A_T_2" value="status" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="1115" y="980" width="70" height="30" as="geometry"/></mxCell>
+        <mxCell id="L_A_T_1" edge="1" parent="1" source="E_TASK" target="A_T_1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_A_T_2" edge="1" parent="1" source="E_TASK" target="A_T_2"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 通知属性 -->
+        <mxCell id="A_N_1" value="&lt;u&gt;id&lt;/u&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="315" y="420" width="70" height="30" as="geometry"/></mxCell>
+        <mxCell id="A_N_2" value="title" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="210" y="505" width="70" height="30" as="geometry"/></mxCell>
+        <mxCell id="L_A_N_1" edge="1" parent="1" source="E_NOTI" target="A_N_1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_A_N_2" edge="1" parent="1" source="E_NOTI" target="A_N_2"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 客户档案属性 -->
+        <mxCell id="A_PROF_1" value="&lt;u&gt;id&lt;/u&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="600" y="680" width="70" height="30" as="geometry"/></mxCell>
+        <mxCell id="A_PROF_2" value="address" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="715" y="780" width="70" height="30" as="geometry"/></mxCell>
+        <mxCell id="L_A_PROF_1" edge="1" parent="1" source="E_PROF" target="A_PROF_1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_A_PROF_2" edge="1" parent="1" source="E_PROF" target="A_PROF_2"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 用户身份属性 -->
+        <mxCell id="A_UID_1" value="&lt;u&gt;id&lt;/u&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="250" y="280" width="70" height="30" as="geometry"/></mxCell>
+        <mxCell id="A_UID_2" value="type" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="365" y="220" width="70" height="30" as="geometry"/></mxCell>
+        <mxCell id="L_A_UID_1" edge="1" parent="1" source="E_UID" target="A_UID_1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_A_UID_2" edge="1" parent="1" source="E_UID" target="A_UID_2"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 新闻属性 -->
+        <mxCell id="A_NEWS_1" value="&lt;u&gt;id&lt;/u&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="1640" y="130" width="70" height="30" as="geometry"/></mxCell>
+        <mxCell id="A_NEWS_2" value="title" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="1640" y="180" width="70" height="30" as="geometry"/></mxCell>
+        <mxCell id="L_A_NEWS_1" edge="1" parent="1" source="E_NEWS" target="A_NEWS_1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_A_NEWS_2" edge="1" parent="1" source="E_NEWS" target="A_NEWS_2"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 轮播图属性 -->
+        <mxCell id="A_BAN_1" value="&lt;u&gt;id&lt;/u&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="1940" y="130" width="70" height="30" as="geometry"/></mxCell>
+        <mxCell id="A_BAN_2" value="image" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="1940" y="180" width="70" height="30" as="geometry"/></mxCell>
+        <mxCell id="L_A_BAN_1" edge="1" parent="1" source="E_BAN" target="A_BAN_1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_A_BAN_2" edge="1" parent="1" source="E_BAN" target="A_BAN_2"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 任务历史属性 -->
+        <mxCell id="A_HIST_1" value="&lt;u&gt;id&lt;/u&gt;" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="1540" y="880" width="70" height="30" as="geometry"/></mxCell>
+        <mxCell id="A_HIST_2" value="action" style="shape=ellipse;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#000000;" vertex="1" parent="1"><mxGeometry x="1540" y="930" width="70" height="30" as="geometry"/></mxCell>
+        <mxCell id="L_A_HIST_1" edge="1" parent="1" source="E_HIST" target="A_HIST_1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="L_A_HIST_2" edge="1" parent="1" source="E_HIST" target="A_HIST_2"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

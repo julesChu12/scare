@@ -5,57 +5,57 @@
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
         <!-- 客户端层 -->
-        <mxCell id="L1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=2;dashed=1;dashPattern=8 8;" vertex="1" parent="1">
+        <mxCell id="L1" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=2;" vertex="1" parent="1">
           <mxGeometry x="180" y="30" width="700" height="100" as="geometry"/>
         </mxCell>
         <mxCell id="L1T" value="客户端层" style="text;html=1;align=left;fontSize=12;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
           <mxGeometry x="195" y="35" width="80" height="20" as="geometry"/>
         </mxCell>
-        <mxCell id="C1" value="C端用户端&#xa;Vue 3 + PWA" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="C1" value="C端用户端&#xa;Vue 3 + PWA" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=13;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="250" y="55" width="180" height="55" as="geometry"/>
         </mxCell>
-        <mxCell id="C2" value="B端管理门户&#xa;Vue 3 + Element Plus" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="C2" value="B端管理门户&#xa;Vue 3 + Element Plus" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=13;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="620" y="55" width="200" height="55" as="geometry"/>
         </mxCell>
 
         <!-- 网关层 -->
-        <mxCell id="L2" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=2;dashed=1;dashPattern=8 8;" vertex="1" parent="1">
+        <mxCell id="L2" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=2;" vertex="1" parent="1">
           <mxGeometry x="330" y="170" width="400" height="70" as="geometry"/>
         </mxCell>
         <mxCell id="L2T" value="网关层" style="text;html=1;align=left;fontSize=12;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
           <mxGeometry x="345" y="175" width="60" height="20" as="geometry"/>
         </mxCell>
-        <mxCell id="NG" value="Nginx 反向代理 / 静态资源" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
+        <mxCell id="NG" value="Nginx 反向代理 / 静态资源" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="400" y="195" width="260" height="35" as="geometry"/>
         </mxCell>
         <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="C1" target="NG" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
         <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="C2" target="NG" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
 
         <!-- 应用服务层 -->
-        <mxCell id="L3" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=2;dashed=1;dashPattern=8 8;" vertex="1" parent="1">
+        <mxCell id="L3" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=2;" vertex="1" parent="1">
           <mxGeometry x="100" y="280" width="860" height="170" as="geometry"/>
         </mxCell>
         <mxCell id="L3T" value="应用服务层" style="text;html=1;align=left;fontSize=12;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
           <mxGeometry x="115" y="285" width="90" height="20" as="geometry"/>
         </mxCell>
-        <mxCell id="API" value="Go + Gin&#xa;RESTful API Server" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="API" value="Go + Gin&#xa;RESTful API Server" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=13;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="410" y="310" width="240" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="NG" target="API" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
 
-        <mxCell id="AUTH" value="JWT 认证" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
+        <mxCell id="AUTH" value="JWT 认证" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="140" y="390" width="120" height="40" as="geometry"/>
         </mxCell>
-        <mxCell id="RBAC" value="RBAC 权限" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
+        <mxCell id="RBAC" value="RBAC 权限" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="300" y="390" width="120" height="40" as="geometry"/>
         </mxCell>
-        <mxCell id="GEO" value="地理围栏引擎" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;fontStyle=1;strokeWidth=2;" vertex="1" parent="1">
+        <mxCell id="GEO" value="地理围栏引擎" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;fontStyle=1;strokeWidth=1;" vertex="1" parent="1">
           <mxGeometry x="460" y="390" width="140" height="40" as="geometry"/>
         </mxCell>
-        <mxCell id="NOTIFY" value="通知服务" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
+        <mxCell id="NOTIFY" value="通知服务" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="640" y="390" width="120" height="40" as="geometry"/>
         </mxCell>
-        <mxCell id="STORE" value="文件存储" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
+        <mxCell id="STORE" value="文件存储" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="800" y="390" width="120" height="40" as="geometry"/>
         </mxCell>
         <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#333333;" edge="1" source="API" target="AUTH" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
@@ -65,7 +65,7 @@
         <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#333333;" edge="1" source="API" target="STORE" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
 
         <!-- 数据层 -->
-        <mxCell id="L4" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=2;dashed=1;dashPattern=8 8;" vertex="1" parent="1">
+        <mxCell id="L4" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=2;" vertex="1" parent="1">
           <mxGeometry x="220" y="500" width="620" height="100" as="geometry"/>
         </mxCell>
         <mxCell id="L4T" value="数据层" style="text;html=1;align=left;fontSize=12;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
@@ -81,19 +81,19 @@
         <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="API" target="REDIS" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
 
         <!-- 外部服务 -->
-        <mxCell id="L5" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=1;dashed=1;dashPattern=8 8;" vertex="1" parent="1">
+        <mxCell id="L5" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=2;" vertex="1" parent="1">
           <mxGeometry x="220" y="650" width="620" height="70" as="geometry"/>
         </mxCell>
         <mxCell id="L5T" value="外部服务" style="text;html=1;align=left;fontSize=12;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
           <mxGeometry x="235" y="655" width="60" height="20" as="geometry"/>
         </mxCell>
-        <mxCell id="AMAP" value="高德地图 API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
+        <mxCell id="AMAP" value="高德地图 API" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="270" y="675" width="130" height="35" as="geometry"/>
         </mxCell>
-        <mxCell id="SMTP" value="邮件服务（SMTP）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
+        <mxCell id="SMTP" value="邮件服务（SMTP）" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="460" y="675" width="140" height="35" as="geometry"/>
         </mxCell>
-        <mxCell id="OSS" value="OSS 文件存储" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
+        <mxCell id="OSS" value="OSS 文件存储" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="660" y="675" width="130" height="35" as="geometry"/>
         </mxCell>
       </root>

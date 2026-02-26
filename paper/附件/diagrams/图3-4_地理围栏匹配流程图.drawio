@@ -95,7 +95,7 @@
           <mxGeometry x="120" y="815" width="120" height="50" as="geometry"/>
         </mxCell>
         <!-- 标注 -->
-        <mxCell id="23" value="💡 射线法原理：&#xa;从点向右发射射线，&#xa;统计与多边形边的交点数，&#xa;奇数表示在内部，偶数表示在外部" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fillColor=#ffffff;strokeColor=#333333;fontSize=11;fontColor=#333333;spacingLeft=4;spacingTop=2;" vertex="1" parent="1">
+        <mxCell id="23" value="射线法原理：&#xa;从点向右发射射线，&#xa;统计与多边形边的交点数，&#xa;奇数表示在内部，偶数表示在外部" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fillColor=#ffffff;strokeColor=#333333;fontSize=11;fontColor=#333333;spacingLeft=4;spacingTop=2;" vertex="1" parent="1">
           <mxGeometry x="720" y="560" width="190" height="90" as="geometry"/>
         </mxCell>
       </root>
