@@ -1,0 +1,138 @@
+<mxfile host="app.diagrams.net" modified="2026-02-26" agent="Claude" version="21.0.0" type="device">
+  <diagram id="fig4-4" name="图4-2 系统部署架构图">
+    <mxGraphModel dx="1200" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- 标题 -->
+        <mxCell id="title" value="系统部署架构图" style="text;html=1;align=center;fontSize=16;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="400" y="10" width="300" height="30" as="geometry"/>
+        </mxCell>
+
+        <!-- 用户访问层 -->
+        <mxCell id="user_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=2;dashed=1;dashPattern=8 8;" vertex="1" parent="1">
+          <mxGeometry x="200" y="50" width="700" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="user_label" value="用户访问层" style="text;html=1;align=left;fontSize=12;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="215" y="55" width="90" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="browser" value="浏览器&#xa;(PC / 移动端)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="300" y="75" width="150" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="pwa" value="PWA 应用&#xa;(C端离线)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="600" y="75" width="150" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- Nginx 反向代理层 -->
+        <mxCell id="nginx_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=2;dashed=1;dashPattern=8 8;" vertex="1" parent="1">
+          <mxGeometry x="280" y="185" width="500" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="nginx_label" value="反向代理层" style="text;html=1;align=left;fontSize=12;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="295" y="190" width="90" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="nginx" value="Nginx&#xa;静态资源托管 / API 反向代理 / HTTPS 终止" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="340" y="210" width="380" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- 连线：用户→Nginx -->
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#333333;" edge="1" source="browser" target="nginx" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#333333;" edge="1" source="pwa" target="nginx" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- Docker 容器组 -->
+        <mxCell id="docker_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=2;dashed=1;dashPattern=8 8;" vertex="1" parent="1">
+          <mxGeometry x="100" y="310" width="900" height="260" as="geometry"/>
+        </mxCell>
+        <mxCell id="docker_label" value="Docker Compose 容器编排" style="text;html=1;align=left;fontSize=12;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="115" y="315" width="200" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- Go API 容器 -->
+        <mxCell id="go_container" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="130" y="350" width="280" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="go_label" value="Go API Server 容器" style="text;html=1;align=left;fontSize=11;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="145" y="355" width="150" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="gin" value="Gin Web 框架&#xa;(端口 8080)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="160" y="385" width="220" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="auth_mid" value="JWT 认证中间件" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="160" y="435" width="100" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="rbac_mid" value="RBAC 权限中间件" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="275" y="435" width="110" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="geo_engine" value="地理围栏引擎" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="160" y="480" width="100" height="35" as="geometry"/>
+        </mxCell>
+        <mxCell id="gorm" value="GORM ORM" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="275" y="480" width="110" height="35" as="geometry"/>
+        </mxCell>
+
+        <!-- MySQL 容器 -->
+        <mxCell id="mysql_container" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="460" y="350" width="240" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="mysql_label" value="MySQL 8.0 容器" style="text;html=1;align=left;fontSize=11;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="475" y="355" width="130" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="mysql" value="MySQL 8.0&#xa;(端口 3306)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;size=10;fillColor=#ffffff;strokeColor=#333333;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="510" y="390" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="mysql_detail1" value="utf8mb4 字符集" style="text;html=1;align=center;fontSize=10;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="510" y="460" width="140" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="mysql_detail2" value="InnoDB 存储引擎" style="text;html=1;align=center;fontSize=10;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="510" y="480" width="140" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="mysql_detail3" value="数据持久化卷挂载" style="text;html=1;align=center;fontSize=10;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="510" y="500" width="140" height="18" as="geometry"/>
+        </mxCell>
+
+        <!-- Redis 容器 -->
+        <mxCell id="redis_container" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=1;" vertex="1" parent="1">
+          <mxGeometry x="750" y="350" width="220" height="200" as="geometry"/>
+        </mxCell>
+        <mxCell id="redis_label" value="Redis 7.0 容器" style="text;html=1;align=left;fontSize=11;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="765" y="355" width="120" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="redis" value="Redis 7.0&#xa;(端口 6379)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;size=10;fillColor=#ffffff;strokeColor=#333333;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="800" y="390" width="130" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="redis_detail1" value="Token 黑名单" style="text;html=1;align=center;fontSize=10;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="800" y="460" width="130" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="redis_detail2" value="权限缓存" style="text;html=1;align=center;fontSize=10;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="800" y="480" width="130" height="18" as="geometry"/>
+        </mxCell>
+        <mxCell id="redis_detail3" value="会话管理" style="text;html=1;align=center;fontSize=10;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="800" y="500" width="130" height="18" as="geometry"/>
+        </mxCell>
+
+        <!-- 连线 -->
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#333333;" edge="1" source="nginx" target="gin" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#333333;" edge="1" source="gorm" target="mysql" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#333333;" edge="1" source="gin" target="redis" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+        <!-- 底部：持久化存储 -->
+        <mxCell id="storage_box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;strokeColor=#333333;strokeWidth=2;dashed=1;dashPattern=8 8;" vertex="1" parent="1">
+          <mxGeometry x="200" y="610" width="700" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="storage_label" value="持久化存储层" style="text;html=1;align=left;fontSize=12;fontStyle=1;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="215" y="615" width="100" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="vol_mysql" value="MySQL 数据卷&#xa;/var/lib/mysql" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="300" y="640" width="150" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="vol_upload" value="文件上传卷&#xa;/app/uploads" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="550" y="640" width="150" height="40" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#333333;dashed=1;" edge="1" source="mysql" target="vol_mysql" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#333333;dashed=1;" edge="1" source="gin" target="vol_upload" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

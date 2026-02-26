@@ -5,14 +5,14 @@
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
         <!-- 顶层：系统名称 -->
-        <mxCell id="2" value="社区养老信息分发平台" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a237e;fontColor=#ffffff;strokeColor=#1a237e;fontSize=16;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="2" value="社区养老信息分发平台" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;fontColor=#333333;strokeColor=#333333;fontSize=16;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="460" y="30" width="280" height="55" as="geometry"/>
         </mxCell>
         <!-- 第二层：C端 + B端 -->
-        <mxCell id="3" value="C端用户端" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#42a5f5;fontColor=#ffffff;strokeColor=#1e88e5;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="3" value="C端用户端" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;fontColor=#333333;strokeColor=#333333;fontSize=14;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="170" y="140" width="160" height="45" as="geometry"/>
         </mxCell>
-        <mxCell id="4" value="B端管理门户" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#66bb6a;fontColor=#ffffff;strokeColor=#43a047;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="4" value="B端管理门户" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;fontColor=#333333;strokeColor=#333333;fontSize=14;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="820" y="140" width="160" height="45" as="geometry"/>
         </mxCell>
         <mxCell id="5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="2" target="3" parent="1">
@@ -22,22 +22,22 @@
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
         <!-- C端子模块 -->
-        <mxCell id="10" value="快速开通" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#90caf9;fontSize=12;" vertex="1" parent="1">
+        <mxCell id="10" value="快速开通" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="30" y="240" width="100" height="36" as="geometry"/>
         </mxCell>
-        <mxCell id="11" value="需求提交" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#90caf9;fontSize=12;" vertex="1" parent="1">
+        <mxCell id="11" value="需求提交" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="140" y="240" width="100" height="36" as="geometry"/>
         </mxCell>
-        <mxCell id="12" value="需求管理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#90caf9;fontSize=12;" vertex="1" parent="1">
+        <mxCell id="12" value="需求管理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="250" y="240" width="100" height="36" as="geometry"/>
         </mxCell>
-        <mxCell id="13" value="服务评价" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#90caf9;fontSize=12;" vertex="1" parent="1">
+        <mxCell id="13" value="服务评价" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="30" y="300" width="100" height="36" as="geometry"/>
         </mxCell>
-        <mxCell id="14" value="个人中心" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#90caf9;fontSize=12;" vertex="1" parent="1">
+        <mxCell id="14" value="个人中心" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="140" y="300" width="100" height="36" as="geometry"/>
         </mxCell>
-        <mxCell id="15" value="消息通知" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e3f2fd;strokeColor=#90caf9;fontSize=12;" vertex="1" parent="1">
+        <mxCell id="15" value="消息通知" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="250" y="300" width="100" height="36" as="geometry"/>
         </mxCell>
         <mxCell id="16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="3" target="10" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
@@ -47,31 +47,31 @@
         <mxCell id="20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="3" target="14" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
         <mxCell id="21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="3" target="15" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
         <!-- B端子模块 -->
-        <mxCell id="30" value="登录认证" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#a5d6a7;fontSize=12;" vertex="1" parent="1">
+        <mxCell id="30" value="登录认证" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="580" y="240" width="100" height="36" as="geometry"/>
         </mxCell>
-        <mxCell id="31" value="任务管理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#a5d6a7;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="31" value="任务管理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="690" y="240" width="100" height="36" as="geometry"/>
         </mxCell>
-        <mxCell id="32" value="需求管理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#a5d6a7;fontSize=12;" vertex="1" parent="1">
+        <mxCell id="32" value="需求管理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="800" y="240" width="100" height="36" as="geometry"/>
         </mxCell>
-        <mxCell id="33" value="站点管理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#a5d6a7;fontSize=12;" vertex="1" parent="1">
+        <mxCell id="33" value="站点管理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="910" y="240" width="100" height="36" as="geometry"/>
         </mxCell>
-        <mxCell id="34" value="围栏管理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#a5d6a7;fontSize=12;" vertex="1" parent="1">
+        <mxCell id="34" value="围栏管理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="1020" y="240" width="100" height="36" as="geometry"/>
         </mxCell>
-        <mxCell id="35" value="用户管理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#a5d6a7;fontSize=12;" vertex="1" parent="1">
+        <mxCell id="35" value="用户管理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="580" y="300" width="100" height="36" as="geometry"/>
         </mxCell>
-        <mxCell id="36" value="权限管理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#a5d6a7;fontSize=12;" vertex="1" parent="1">
+        <mxCell id="36" value="权限管理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="690" y="300" width="100" height="36" as="geometry"/>
         </mxCell>
-        <mxCell id="37" value="统计报表" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#a5d6a7;fontSize=12;" vertex="1" parent="1">
+        <mxCell id="37" value="统计报表" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="800" y="300" width="100" height="36" as="geometry"/>
         </mxCell>
-        <mxCell id="38" value="通知管理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8f5e9;strokeColor=#a5d6a7;fontSize=12;" vertex="1" parent="1">
+        <mxCell id="38" value="通知管理" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=12;" vertex="1" parent="1">
           <mxGeometry x="910" y="300" width="100" height="36" as="geometry"/>
         </mxCell>
         <!-- B端连线 -->
@@ -85,16 +85,16 @@
         <mxCell id="47" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="4" target="37" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
         <mxCell id="48" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="4" target="38" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
         <!-- 任务管理子模块 -->
-        <mxCell id="50" value="任务池查看" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f8e9;strokeColor=#c5e1a5;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="50" value="任务池查看" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="620" y="400" width="90" height="32" as="geometry"/>
         </mxCell>
-        <mxCell id="51" value="任务认领" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f8e9;strokeColor=#c5e1a5;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="51" value="任务认领" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="720" y="400" width="90" height="32" as="geometry"/>
         </mxCell>
-        <mxCell id="52" value="任务完成" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f8e9;strokeColor=#c5e1a5;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="52" value="任务完成" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="620" y="445" width="90" height="32" as="geometry"/>
         </mxCell>
-        <mxCell id="53" value="任务转派" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1f8e9;strokeColor=#c5e1a5;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="53" value="任务转派" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="720" y="445" width="90" height="32" as="geometry"/>
         </mxCell>
         <mxCell id="54" style="edgeStyle=orthogonalEdgeStyle;rounded=0;" edge="1" source="31" target="50" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>

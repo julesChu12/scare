@@ -5,40 +5,40 @@
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
         <!-- 开始点 -->
-        <mxCell id="start" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+        <mxCell id="start" value="" style="ellipse;fillColor=#ffffff;strokeColor=#333333;" vertex="1" parent="1">
           <mxGeometry x="60" y="195" width="30" height="30" as="geometry"/>
         </mxCell>
         <!-- dispatched -->
-        <mxCell id="s1" value="dispatched&#xa;（已派单）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#bbdefb;strokeColor=#1e88e5;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="s1" value="dispatched&#xa;（已派单）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=13;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="150" y="180" width="140" height="55" as="geometry"/>
         </mxCell>
         <mxCell id="e0" value="系统派单" style="edgeStyle=orthogonalEdgeStyle;rounded=0;fontSize=11;" edge="1" source="start" target="s1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
         <!-- claimed -->
-        <mxCell id="s2" value="claimed&#xa;（已认领）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#f57f17;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="s2" value="claimed&#xa;（已认领）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=13;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="380" y="180" width="140" height="55" as="geometry"/>
         </mxCell>
         <mxCell id="e1" value="工作人员认领" style="edgeStyle=orthogonalEdgeStyle;rounded=0;fontSize=11;" edge="1" source="s1" target="s2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
         <!-- completed -->
-        <mxCell id="s3" value="completed&#xa;（已完成）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8e6c9;strokeColor=#43a047;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="s3" value="completed&#xa;（已完成）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=13;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="610" y="180" width="140" height="55" as="geometry"/>
         </mxCell>
         <mxCell id="e2" value="服务完成" style="edgeStyle=orthogonalEdgeStyle;rounded=0;fontSize=11;" edge="1" source="s2" target="s3" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
         <!-- 结束点 -->
-        <mxCell id="end1" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;strokeWidth=3;" vertex="1" parent="1">
+        <mxCell id="end1" value="" style="ellipse;fillColor=#ffffff;strokeColor=#333333;strokeWidth=3;" vertex="1" parent="1">
           <mxGeometry x="820" y="195" width="30" height="30" as="geometry"/>
         </mxCell>
         <mxCell id="e3" style="rounded=0;" edge="1" source="s3" target="end1" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
         <!-- cancelled -->
-        <mxCell id="s4" value="cancelled&#xa;（已取消）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffcdd2;strokeColor=#e53935;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="s4" value="cancelled&#xa;（已取消）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=13;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="150" y="340" width="140" height="55" as="geometry"/>
         </mxCell>
         <mxCell id="e4" value="取消需求" style="edgeStyle=orthogonalEdgeStyle;rounded=0;fontSize=11;" edge="1" source="s1" target="s4" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
-        <mxCell id="end2" value="" style="ellipse;fillColor=#000000;strokeColor=#000000;strokeWidth=3;" vertex="1" parent="1">
+        <mxCell id="end2" value="" style="ellipse;fillColor=#ffffff;strokeColor=#333333;strokeWidth=3;" vertex="1" parent="1">
           <mxGeometry x="60" y="352" width="30" height="30" as="geometry"/>
         </mxCell>
         <mxCell id="e4b" style="rounded=0;" edge="1" source="s4" target="end2" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>
         <!-- transferred -->
-        <mxCell id="s5" value="transferred&#xa;（已转派）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8eaf6;strokeColor=#5c6bc0;fontSize=13;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="s5" value="transferred&#xa;（已转派）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=13;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="380" y="340" width="140" height="55" as="geometry"/>
         </mxCell>
         <mxCell id="e5" value="转派他人" style="edgeStyle=orthogonalEdgeStyle;rounded=0;fontSize=11;" edge="1" source="s2" target="s5" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell>

@@ -5,64 +5,64 @@
         <mxCell id="0"/>
         <mxCell id="1" parent="0"/>
         <!-- 老年人/家属 -->
-        <mxCell id="2" value="老年人 / 家属" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="2" value="老年人 / 家属" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=14;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="310" y="30" width="200" height="50" as="geometry"/>
         </mxCell>
         <!-- C端系统 -->
-        <mxCell id="3" value="C端系统（PWA）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="3" value="C端系统（PWA）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=14;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="310" y="140" width="200" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="4" value="扫码 / 浏览器进入" style="edgeStyle=orthogonalEdgeStyle;rounded=0;fontSize=11;" edge="1" source="2" target="3" parent="1">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
         <!-- 需求提交 -->
-        <mxCell id="5" value="在线填写需求&#xa;+ 自动定位" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;" vertex="1" parent="1">
+        <mxCell id="5" value="在线填写需求&#xa;+ 自动定位" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=13;" vertex="1" parent="1">
           <mxGeometry x="310" y="250" width="200" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="6" value="填写需求表单" style="edgeStyle=orthogonalEdgeStyle;rounded=0;fontSize=11;" edge="1" source="3" target="5" parent="1">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
         <!-- 地理围栏匹配（核心亮点） -->
-        <mxCell id="7" value="🔲 地理围栏自动匹配" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#d6b656;fontSize=14;fontStyle=1;strokeWidth=2;" vertex="1" parent="1">
+        <mxCell id="7" value="🔲 地理围栏自动匹配" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=14;fontStyle=1;strokeWidth=2;" vertex="1" parent="1">
           <mxGeometry x="310" y="370" width="200" height="55" as="geometry"/>
         </mxCell>
         <mxCell id="8" value="提交地理坐标" style="edgeStyle=orthogonalEdgeStyle;rounded=0;fontSize=11;" edge="1" source="5" target="7" parent="1">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
         <!-- 标注 -->
-        <mxCell id="8b" value="⭐ 系统核心创新点&#xa;基于射线法判定用户坐标&#xa;所属围栏，自动派单" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fillColor=#fff9c4;strokeColor=#d6b656;fontSize=11;fontColor=#6d4c00;spacingLeft=4;spacingTop=2;" vertex="1" parent="1">
+        <mxCell id="8b" value="⭐ 系统核心创新点&#xa;基于射线法判定用户坐标&#xa;所属围栏，自动派单" style="text;html=1;align=left;verticalAlign=top;whiteSpace=wrap;rounded=0;fillColor=#ffffff;strokeColor=#333333;fontSize=11;fontColor=#333333;spacingLeft=4;spacingTop=2;" vertex="1" parent="1">
           <mxGeometry x="570" y="360" width="190" height="65" as="geometry"/>
         </mxCell>
         <!-- 服务站点任务池 -->
-        <mxCell id="9" value="服务站点任务池" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="9" value="服务站点任务池" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=14;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="310" y="490" width="200" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="10" value="自动分配" style="edgeStyle=orthogonalEdgeStyle;rounded=0;fontSize=11;" edge="1" source="7" target="9" parent="1">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
         <!-- 工作人员 -->
-        <mxCell id="11" value="工作人员" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="11" value="工作人员" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=14;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="310" y="600" width="200" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="12" value="主动认领" style="edgeStyle=orthogonalEdgeStyle;rounded=0;fontSize=11;" edge="1" source="9" target="11" parent="1">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
         <!-- 完成任务 -->
-        <mxCell id="13" value="完成任务&#xa;（上传照片凭证）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=13;" vertex="1" parent="1">
+        <mxCell id="13" value="完成任务&#xa;（上传照片凭证）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=13;" vertex="1" parent="1">
           <mxGeometry x="310" y="710" width="200" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="14" value="上门服务" style="edgeStyle=orthogonalEdgeStyle;rounded=0;fontSize=11;" edge="1" source="11" target="13" parent="1">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
         <!-- B端系统 -->
-        <mxCell id="15" value="B端管理系统" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="15" value="B端管理系统" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=14;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="310" y="820" width="200" height="50" as="geometry"/>
         </mxCell>
         <mxCell id="16" value="记录完成结果" style="edgeStyle=orthogonalEdgeStyle;rounded=0;fontSize=11;" edge="1" source="13" target="15" parent="1">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
         <!-- 通知推送回C端 -->
-        <mxCell id="17" value="推送通知" style="edgeStyle=orthogonalEdgeStyle;rounded=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;curved=1;dashed=0;fontSize=11;strokeColor=#6c8ebf;strokeWidth=1;" edge="1" source="15" target="3" parent="1">
+        <mxCell id="17" value="推送通知" style="edgeStyle=orthogonalEdgeStyle;rounded=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;curved=1;dashed=0;fontSize=11;strokeColor=#333333;strokeWidth=1;" edge="1" source="15" target="3" parent="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="200" y="845"/>
@@ -71,26 +71,26 @@
           </mxGeometry>
         </mxCell>
         <!-- 服务评价 -->
-        <mxCell id="18" value="查看进度 / 服务评价" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=13;" vertex="1" parent="1">
+        <mxCell id="18" value="查看进度 / 服务评价" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;fontSize=13;" vertex="1" parent="1">
           <mxGeometry x="310" y="940" width="200" height="45" as="geometry"/>
         </mxCell>
         <mxCell id="19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;fontSize=11;" edge="1" source="15" target="18" parent="1">
           <mxGeometry relative="1" as="geometry"/>
         </mxCell>
         <!-- 左侧色块图例 -->
-        <mxCell id="20" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+        <mxCell id="20" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;" vertex="1" parent="1">
           <mxGeometry x="50" y="30" width="20" height="15" as="geometry"/>
         </mxCell>
         <mxCell id="21" value="C端 / 用户侧" style="text;html=1;align=left;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="75" y="27" width="100" height="20" as="geometry"/>
         </mxCell>
-        <mxCell id="22" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+        <mxCell id="22" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;" vertex="1" parent="1">
           <mxGeometry x="50" y="55" width="20" height="15" as="geometry"/>
         </mxCell>
         <mxCell id="23" value="B端 / 服务侧" style="text;html=1;align=left;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="75" y="52" width="100" height="20" as="geometry"/>
         </mxCell>
-        <mxCell id="24" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#d6b656;" vertex="1" parent="1">
+        <mxCell id="24" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;" vertex="1" parent="1">
           <mxGeometry x="50" y="80" width="20" height="15" as="geometry"/>
         </mxCell>
         <mxCell id="25" value="核心引擎" style="text;html=1;align=left;fontSize=11;" vertex="1" parent="1">

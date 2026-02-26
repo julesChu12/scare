@@ -1,0 +1,179 @@
+<mxfile host="app.diagrams.net" modified="2026-02-26" agent="Claude" version="21.0.0" type="device">
+  <diagram id="fig5-4" name="图5-1 需求提交时序图">
+    <mxGraphModel dx="1200" dy="1000" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- 参与者（生命线） -->
+        <mxCell id="user" value="C端用户" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#ffffff;strokeColor=#333333;fontColor=#333333;fontSize=13;fontStyle=1;size=40;" vertex="1" parent="1">
+          <mxGeometry x="80" y="40" width="100" height="860" as="geometry"/>
+        </mxCell>
+        <mxCell id="frontend" value="C端前端&#xa;(Vue 3)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#ffffff;strokeColor=#333333;fontColor=#333333;fontSize=13;fontStyle=1;size=40;" vertex="1" parent="1">
+          <mxGeometry x="260" y="40" width="100" height="860" as="geometry"/>
+        </mxCell>
+        <mxCell id="api" value="API Server&#xa;(Go+Gin)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#ffffff;strokeColor=#333333;fontColor=#333333;fontSize=13;fontStyle=1;size=40;" vertex="1" parent="1">
+          <mxGeometry x="460" y="40" width="100" height="860" as="geometry"/>
+        </mxCell>
+        <mxCell id="geo" value="围栏引擎&#xa;(pkg/geo)" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#ffffff;strokeColor=#333333;fontColor=#333333;fontSize=13;fontStyle=1;size=40;" vertex="1" parent="1">
+          <mxGeometry x="660" y="40" width="100" height="860" as="geometry"/>
+        </mxCell>
+        <mxCell id="db" value="MySQL&#xa;数据库" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=0;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#ffffff;strokeColor=#333333;fontColor=#333333;fontSize=13;fontStyle=1;size=40;" vertex="1" parent="1">
+          <mxGeometry x="860" y="40" width="100" height="860" as="geometry"/>
+        </mxCell>
+
+        <!-- 步骤1：用户打开需求提交页面 -->
+        <mxCell id="s1" value="1. 打开需求提交页面" style="html=1;verticalAlign=bottom;endArrow=block;strokeColor=#333333;fontColor=#333333;fontSize=11;" edge="1" source="user" target="frontend" parent="1">
+          <mxGeometry x="0.02" relative="1" as="geometry">
+            <mxPoint y="10" as="offset"/>
+            <mxPoint as="sourcePoint"><mxPoint x="130" y="120"/></mxPoint>
+            <mxPoint as="targetPoint"><mxPoint x="310" y="120"/></mxPoint>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 步骤2：获取地理位置 -->
+        <mxCell id="s2" value="2. navigator.geolocation.getCurrentPosition()" style="html=1;verticalAlign=bottom;endArrow=block;strokeColor=#333333;fontColor=#333333;fontSize=11;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="310" y="160" as="sourcePoint"/>
+            <mxPoint x="310" y="190" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="370" y="160"/>
+              <mxPoint x="370" y="190"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s2r" value="返回经纬度坐标" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;strokeColor=#333333;fontColor=#333333;fontSize=11;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="310" y="220" as="sourcePoint"/>
+            <mxPoint x="130" y="220" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 步骤3：用户填写表单 -->
+        <mxCell id="s3" value="3. 选择服务类型、填写描述、确认地址" style="html=1;verticalAlign=bottom;endArrow=block;strokeColor=#333333;fontColor=#333333;fontSize=11;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="130" y="260" as="sourcePoint"/>
+            <mxPoint x="310" y="260" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 步骤4：前端参数校验 -->
+        <mxCell id="s4" value="4. 表单参数校验（binding:required）" style="html=1;verticalAlign=bottom;endArrow=block;strokeColor=#333333;fontColor=#333333;fontSize=11;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="310" y="300" as="sourcePoint"/>
+            <mxPoint x="310" y="330" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="370" y="300"/>
+              <mxPoint x="370" y="330"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 步骤5：提交API请求 -->
+        <mxCell id="s5" value="5. POST /api/v1/c/requests&#xa;{service_type_id, description, latitude, longitude, ...}" style="html=1;verticalAlign=bottom;endArrow=block;strokeColor=#333333;fontColor=#333333;fontSize=11;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="310" y="370" as="sourcePoint"/>
+            <mxPoint x="510" y="370" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 步骤6：JWT认证检查 -->
+        <mxCell id="s6" value="6. JWT认证中间件验证Token" style="html=1;verticalAlign=bottom;endArrow=block;strokeColor=#333333;fontColor=#333333;fontSize=11;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="510" y="410" as="sourcePoint"/>
+            <mxPoint x="510" y="440" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="570" y="410"/>
+              <mxPoint x="570" y="440"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 步骤7：生成需求编号 -->
+        <mxCell id="s7" value="7. 生成需求编号 REQ{date}{rand}" style="html=1;verticalAlign=bottom;endArrow=block;strokeColor=#333333;fontColor=#333333;fontSize=11;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="510" y="470" as="sourcePoint"/>
+            <mxPoint x="510" y="500" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="570" y="470"/>
+              <mxPoint x="570" y="500"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 步骤8：调用围栏引擎 -->
+        <mxCell id="s8" value="8. Match(lat, lng)&#xa;地理围栏匹配" style="html=1;verticalAlign=bottom;endArrow=block;strokeColor=#333333;fontColor=#333333;fontSize=11;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="510" y="530" as="sourcePoint"/>
+            <mxPoint x="710" y="530" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 步骤8a：围栏引擎内部 -->
+        <mxCell id="s8a" value="BoundingBox 快排除&#xa;→ 射线法精确匹配" style="html=1;verticalAlign=bottom;endArrow=block;strokeColor=#333333;fontColor=#333333;fontSize=11;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="710" y="560" as="sourcePoint"/>
+            <mxPoint x="710" y="600" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="770" y="560"/>
+              <mxPoint x="770" y="600"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 步骤8b：返回站点ID -->
+        <mxCell id="s8b" value="返回 stationID" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;strokeColor=#333333;fontColor=#333333;fontSize=11;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="710" y="630" as="sourcePoint"/>
+            <mxPoint x="510" y="630" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 步骤9：写入数据库 -->
+        <mxCell id="s9" value="9. INSERT service_requests&#xa;+ INSERT task_assignments" style="html=1;verticalAlign=bottom;endArrow=block;strokeColor=#333333;fontColor=#333333;fontSize=11;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="510" y="660" as="sourcePoint"/>
+            <mxPoint x="910" y="660" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 步骤9b：DB返回 -->
+        <mxCell id="s9b" value="写入成功" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;strokeColor=#333333;fontColor=#333333;fontSize=11;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="910" y="700" as="sourcePoint"/>
+            <mxPoint x="510" y="700" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 步骤10：触发通知 -->
+        <mxCell id="s10" value="10. 异步通知站点工作人员" style="html=1;verticalAlign=bottom;endArrow=block;strokeColor=#333333;fontColor=#333333;fontSize=11;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="510" y="730" as="sourcePoint"/>
+            <mxPoint x="510" y="760" as="targetPoint"/>
+            <Array as="points">
+              <mxPoint x="570" y="730"/>
+              <mxPoint x="570" y="760"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 步骤11：返回结果 -->
+        <mxCell id="s11" value="11. 返回 {msg:ok, data:{request_no, status:dispatched}}" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;strokeColor=#333333;fontColor=#333333;fontSize=11;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="510" y="790" as="sourcePoint"/>
+            <mxPoint x="310" y="790" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- 步骤12：前端展示 -->
+        <mxCell id="s12" value="12. 显示提交成功，跳转需求详情" style="html=1;verticalAlign=bottom;endArrow=open;dashed=1;strokeColor=#333333;fontColor=#333333;fontSize=11;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="310" y="830" as="sourcePoint"/>
+            <mxPoint x="130" y="830" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
