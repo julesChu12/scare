@@ -1,0 +1,156 @@
+# sCare 自动部署流水线
+# 触发条件：master 分支 push（含 merge）
+# 流程：构建前端 → 同步到服务器 → Docker Compose 部署
+
+name: Deploy to Production
+
+on:
+  push:
+    branches: [master]
+
+# 同一时间只允许一个部署，新的会取消旧的
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
+env:
+  DEPLOY_DIR: /opt/scare               # 服务器上的项目目录
+  NODE_VERSION: '18'
+
+jobs:
+  # ============================================
+  # 阶段 1：构建前端产物
+  # ============================================
+  build-frontend:
+    name: 构建前端
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: |
+            frontend/c-end/package-lock.json
+            frontend/management-portal/package-lock.json
+
+      # C 端构建
+      - name: 安装 C 端依赖
+        working-directory: frontend/c-end
+        run: npm ci
+
+      - name: 构建 C 端
+        working-directory: frontend/c-end
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: /api
+
+      # B 端管理门户构建
+      - name: 安装管理门户依赖
+        working-directory: frontend/management-portal
+        run: npm ci
+
+      - name: 构建管理门户
+        working-directory: frontend/management-portal
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: /api
+          VITE_AMAP_KEY: ${{ secrets.AMAP_KEY }}
+
+      # 上传构建产物
+      - name: 上传 C 端产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: c-end-dist
+          path: frontend/c-end/dist/
+          retention-days: 1
+
+      - name: 上传管理门户产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: management-portal-dist
+          path: frontend/management-portal/dist/
+          retention-days: 1
+
+  # ============================================
+  # 阶段 2：部署到服务器
+  # ============================================
+  deploy:
+    name: 部署到服务器
+    needs: build-frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      # 下载前端构建产物
+      - name: 下载 C 端产物
+        uses: actions/download-artifact@v4
+        with:
+          name: c-end-dist
+          path: deployment/dist/c-end/
+
+      - name: 下载管理门户产物
+        uses: actions/download-artifact@v4
+        with:
+          name: management-portal-dist
+          path: deployment/dist/management-portal/
+
+      # 配置 SSH
+      - name: 配置 SSH 密钥
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p ${{ secrets.SERVER_PORT || 22 }} ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      # 同步项目文件到服务器
+      - name: 同步文件到服务器
+        run: |
+          rsync -azP --delete \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='frontend/c-end/dist' \
+            --exclude='frontend/management-portal/dist' \
+            --exclude='frontend/c-end/node_modules' \
+            --exclude='frontend/management-portal/node_modules' \
+            --exclude='.env' \
+            --exclude='deployment/.env' \
+            --exclude='paper/' \
+            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SERVER_PORT || 22 }}" \
+            ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.DEPLOY_DIR }}/
+
+      # 在服务器上执行部署
+      - name: 执行部署
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            -p ${{ secrets.SERVER_PORT || 22 }} \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "cd ${{ env.DEPLOY_DIR }} && bash deployment/server-deploy.sh"
+
+      # 健康检查
+      - name: 健康检查
+        run: |
+          echo "等待服务启动..."
+          sleep 15
+          for i in $(seq 1 10); do
+            if ssh -i ~/.ssh/deploy_key \
+              -p ${{ secrets.SERVER_PORT || 22 }} \
+              ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+              "curl -sf http://localhost:8080/api/v1/health > /dev/null 2>&1"; then
+              echo "✅ 服务启动成功"
+              exit 0
+            fi
+            echo "等待中... ($i/10)"
+            sleep 5
+          done
+          echo "❌ 健康检查失败"
+          exit 1
+
+      # 清理
+      - name: 清理 SSH 密钥
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
