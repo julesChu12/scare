@@ -107,6 +107,10 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -p ${{ secrets.SERVER_PORT || 22 }} ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
 
+      - name: 生成 SSH 连接参数
+        run: |
+          echo "SSH_OPTS=-i ~/.ssh/deploy_key -p ${{ secrets.SERVER_PORT || 22 }} -o ServerAliveInterval=30 -o ServerAliveCountMax=20 -o TCPKeepAlive=yes -o StrictHostKeyChecking=yes" >> $GITHUB_ENV
+
       # 同步项目文件到服务器
       - name: 同步文件到服务器
         run: |
@@ -120,14 +124,13 @@ jobs:
             --exclude='.env' \
             --exclude='deployment/.env' \
             --exclude='paper/' \
-            -e "ssh -i ~/.ssh/deploy_key -p ${{ secrets.SERVER_PORT || 22 }}" \
+            -e "ssh $SSH_OPTS" \
             ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.DEPLOY_DIR }}/
 
       # 在服务器上执行部署
       - name: 执行部署
         run: |
-          ssh -i ~/.ssh/deploy_key \
-            -p ${{ secrets.SERVER_PORT || 22 }} \
+          ssh $SSH_OPTS \
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
             "cd ${{ env.DEPLOY_DIR }} && bash deployment/server-deploy.sh"
 
@@ -137,8 +140,7 @@ jobs:
           echo "等待服务启动..."
           sleep 15
           for i in $(seq 1 10); do
-            if ssh -i ~/.ssh/deploy_key \
-              -p ${{ secrets.SERVER_PORT || 22 }} \
+            if ssh $SSH_OPTS \
               ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
               "curl -sf http://localhost:8080/api/v1/health > /dev/null 2>&1"; then
               echo "✅ 服务启动成功"
