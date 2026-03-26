@@ -52,7 +52,7 @@ identities, _ := userIdentityRepo.GetActiveByUserID(userID)
 4. **Handler**：在 `internal/handler/` 创建 `xxx_handler.go`
 5. **依赖注入**：在 `internal/router/deps.go` 的 `Deps` 结构体和 `NewDeps()` 中注册
 6. **路由**：在 `internal/router/b_end.go` 或 `c_end.go` 中注册路由
-7. **Swagger**：运行 `swag init -g cmd/server/main.go -o docs --parseDependency --parseInternal`
+7. **Swagger**：运行 `swag init -g main.go -o docs --parseDependency --parseInternal`
 
 ## 注意事项
 

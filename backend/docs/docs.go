@@ -589,6 +589,228 @@ const docTemplate = `{
                 }
             }
         },
+        "/b/customers": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "分页查询老年人档案，支持关键词/站点/健康状况筛选",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "b_customer"
+                ],
+                "summary": "获取老人档案列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "每页数量",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "搜索关键词(姓名/手机号)",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "站点ID",
+                        "name": "station_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "健康状况(good/normal/poor)",
+                        "name": "health_status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取成功",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "B端为老人创建档案（同时创建用户账号和身份）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "b_customer"
+                ],
+                "summary": "创建老人档案",
+                "parameters": [
+                    {
+                        "description": "老人信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.customerCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "创建成功",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/b/customers/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "根据用户ID获取老年人档案详细信息",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "b_customer"
+                ],
+                "summary": "获取老人档案详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "用户ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取成功",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "更新老年人档案信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "b_customer"
+                ],
+                "summary": "更新老人档案",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "用户ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.customerUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新成功",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/b/customers/{id}/service-records": {
+            "get": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "获取指定老人的历史服务记录",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "b_customer"
+                ],
+                "summary": "获取老人服务记录",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "用户ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "每页数量",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取成功",
+                        "schema": {
+                            "$ref": "#/definitions/handler.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/b/menus": {
             "get": {
                 "security": [
@@ -5274,6 +5496,83 @@ const docTemplate = `{
             "properties": {
                 "refresh_token": {
                     "type": "string"
+                }
+            }
+        },
+        "handler.customerCreateRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "phone"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "birth_date": {
+                    "type": "string"
+                },
+                "disability_level": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "health_status": {
+                    "type": "string"
+                },
+                "id_card": {
+                    "type": "string"
+                },
+                "medical_history": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "special_needs": {
+                    "type": "string"
+                },
+                "station_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handler.customerUpdateRequest": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "birth_date": {
+                    "type": "string"
+                },
+                "disability_level": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "health_status": {
+                    "type": "string"
+                },
+                "id_card": {
+                    "type": "string"
+                },
+                "medical_history": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "special_needs": {
+                    "type": "string"
+                },
+                "station_id": {
+                    "type": "integer"
                 }
             }
         },

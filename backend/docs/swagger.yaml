@@ -267,6 +267,57 @@ definitions:
     required:
     - refresh_token
     type: object
+  handler.customerCreateRequest:
+    properties:
+      address:
+        type: string
+      birth_date:
+        type: string
+      disability_level:
+        type: string
+      gender:
+        type: string
+      health_status:
+        type: string
+      id_card:
+        type: string
+      medical_history:
+        type: string
+      name:
+        type: string
+      phone:
+        type: string
+      special_needs:
+        type: string
+      station_id:
+        type: integer
+    required:
+    - name
+    - phone
+    type: object
+  handler.customerUpdateRequest:
+    properties:
+      address:
+        type: string
+      birth_date:
+        type: string
+      disability_level:
+        type: string
+      gender:
+        type: string
+      health_status:
+        type: string
+      id_card:
+        type: string
+      medical_history:
+        type: string
+      name:
+        type: string
+      special_needs:
+        type: string
+      station_id:
+        type: integer
+    type: object
   handler.generateReportRequest:
     properties:
       end_date:
@@ -840,6 +891,147 @@ paths:
       summary: 更新轮播图
       tags:
       - b_banner
+  /b/customers:
+    get:
+      description: 分页查询老年人档案，支持关键词/站点/健康状况筛选
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      - description: 搜索关键词(姓名/手机号)
+        in: query
+        name: keyword
+        type: string
+      - description: 站点ID
+        in: query
+        name: station_id
+        type: integer
+      - description: 健康状况(good/normal/poor)
+        in: query
+        name: health_status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.Response'
+      security:
+      - Bearer: []
+      summary: 获取老人档案列表
+      tags:
+      - b_customer
+    post:
+      consumes:
+      - application/json
+      description: B端为老人创建档案（同时创建用户账号和身份）
+      parameters:
+      - description: 老人信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.customerCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            $ref: '#/definitions/handler.Response'
+      security:
+      - Bearer: []
+      summary: 创建老人档案
+      tags:
+      - b_customer
+  /b/customers/{id}:
+    get:
+      description: 根据用户ID获取老年人档案详细信息
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.Response'
+      security:
+      - Bearer: []
+      summary: 获取老人档案详情
+      tags:
+      - b_customer
+    put:
+      consumes:
+      - application/json
+      description: 更新老年人档案信息
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 更新信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.customerUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            $ref: '#/definitions/handler.Response'
+      security:
+      - Bearer: []
+      summary: 更新老人档案
+      tags:
+      - b_customer
+  /b/customers/{id}/service-records:
+    get:
+      description: 获取指定老人的历史服务记录
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/handler.Response'
+      security:
+      - Bearer: []
+      summary: 获取老人服务记录
+      tags:
+      - b_customer
   /b/menus:
     get:
       consumes:

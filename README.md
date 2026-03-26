@@ -315,7 +315,7 @@ go test ./...
 go fmt ./...
 
 # 构建
-go build -o bin/server cmd/server/main.go
+go build -o scare .
 ```
 
 ### 前端开发
