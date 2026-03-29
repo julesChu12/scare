@@ -19,6 +19,12 @@ type StationService struct {
 	geocodeService  *GeocodeService
 }
 
+type StationListFilter struct {
+	Keyword   string
+	Status    string
+	StationID int64
+}
+
 func NewStationService(repo *repository.StationRepository) *StationService {
 	return &StationService{repo: repo}
 }
@@ -49,9 +55,13 @@ func (s *StationService) GetByID(id int64) (*model.ServiceStation, error) {
 	return s.repo.GetByID(id)
 }
 
-func (s *StationService) List(page, pageSize int) ([]*model.ServiceStation, int64, error) {
+func (s *StationService) List(page, pageSize int, filter StationListFilter) ([]*model.ServiceStation, int64, error) {
 	offset := (page - 1) * pageSize
-	return s.repo.List(offset, pageSize)
+	return s.repo.List(offset, pageSize, repository.StationListFilter{
+		Keyword:   filter.Keyword,
+		Status:    filter.Status,
+		StationID: filter.StationID,
+	})
 }
 
 func (s *StationService) Update(station *model.ServiceStation) error {
@@ -117,9 +127,12 @@ func (s *StationService) MatchStation(input MatchStationInput) (*model.ServiceSt
 		}
 
 		// geofence 未匹配到，查找最近的站点
-		station, err := s.repo.FindNearest(lat, lng)
-		if err == nil && station != nil {
-			return station, nil
+		stations, err := s.repo.ListActive()
+		if err == nil {
+			nearest, nearestErr := nearestStationByHaversine(stations, lat, lng)
+			if nearestErr == nil {
+				return nearest, nil
+			}
 		}
 	}
 
@@ -132,7 +145,7 @@ func (s *StationService) getDefaultStation() (*model.ServiceStation, error) {
 	station, err := s.repo.GetByName(DefaultStationName)
 	if err != nil {
 		// 如果默认站点不存在，返回任意一个活跃站点
-		stations, _, listErr := s.repo.List(0, 1)
+		stations, _, listErr := s.repo.List(0, 1, repository.StationListFilter{Status: "active"})
 		if listErr != nil {
 			return nil, listErr
 		}

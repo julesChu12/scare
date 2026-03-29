@@ -318,14 +318,30 @@ async function submitCompleteTask() {
 
     // 关闭对话框
     showCompleteDialog.value = false
-
-    // 重新加载任务详情
-    await loadTaskDetail()
+    await navigateAfterComplete()
   } catch (error: any) {
     console.error('Failed to complete task:', error)
   } finally {
     completing.value = false
   }
+}
+
+async function navigateAfterComplete() {
+  const from = typeof route.query.from === 'string' ? route.query.from : ''
+  const tab = route.query.tab === 'pool' || route.query.tab === 'my' ? route.query.tab : 'my'
+
+  if (from === 'task-management') {
+    await router.push({
+      path: '/services/tasks',
+      query: { tab },
+    })
+    return
+  }
+
+  await router.push({
+    path: '/services/tasks',
+    query: { tab: 'my' },
+  })
 }
 
 /**
@@ -385,35 +401,39 @@ function getServiceTypeTag(type: string): string {
 /**
  * 获取优先级文本
  */
-function getPriorityText(priority: string): string {
+function getPriorityText(priority?: string): string {
   const priorityMap: Record<string, string> = {
     low: '低',
     normal: '普通',
     high: '高',
     urgent: '紧急',
   }
-  return priorityMap[priority] || priority
+  return priorityMap[priority || ''] || priority || '普通'
 }
 
 /**
  * 获取优先级标签颜色
  */
-function getPriorityTag(priority: string): string {
+function getPriorityTag(priority?: string): string {
   const tagMap: Record<string, string> = {
     low: 'info',
-    normal: '',
+    normal: 'primary',
     high: 'warning',
     urgent: 'danger',
   }
-  return tagMap[priority] || ''
+  return tagMap[priority || ''] || ''
 }
 
 /**
  * 格式化日期时间
  */
-function formatDateTime(dateTime?: string): string {
+function formatDateTime(dateTime?: string | null): string {
   if (!dateTime) return '-'
-  return dayjs(dateTime).format('YYYY-MM-DD HH:mm:ss')
+
+  const parsed = dayjs(dateTime)
+  if (!parsed.isValid() || parsed.year() <= 1) return '-'
+
+  return parsed.format('YYYY-MM-DD HH:mm:ss')
 }
 
 /**

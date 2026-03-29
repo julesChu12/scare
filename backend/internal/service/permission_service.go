@@ -26,16 +26,16 @@ type PermissionNode struct {
 
 // PermissionService 权限业务逻辑
 type PermissionService struct {
-	db                 *gorm.DB
-	permRepo           *repository.PermissionRepository
-	roleRepo           *repository.RoleRepository
-	rolePermRepo       *repository.RolePermissionRepository
-	blacklistService   *TokenBlacklistService
+	db               *gorm.DB
+	permRepo         *repository.PermissionRepository
+	roleRepo         *repository.RoleRepository
+	rolePermRepo     *repository.RolePermissionRepository
+	blacklistService *TokenBlacklistService
 
 	// 缓存
-	cacheMu            sync.RWMutex
-	permissionsCache   []model.Permission
-	publicAPIsCache    []model.Permission
+	cacheMu          sync.RWMutex
+	permissionsCache []model.Permission
+	publicAPIsCache  []model.Permission
 }
 
 // NewPermissionService 创建权限服务
@@ -315,12 +315,30 @@ func (s *PermissionService) CheckAPIPermission(roleCodes []string, path, method 
 		return false, err
 	}
 
-	// 检查是否有匹配的权限
+	// 如果该路径存在精确权限定义，则必须命中精确权限，不能被通配详情权限放大。
+	requireExact := s.hasExactAPIPermission(path, method)
+
+	// 先检查精确匹配
 	for _, p := range perms {
-		if p.APIPath != "" && p.APIMethod != "" {
-			if matchPath(p.APIPath, path) && strings.EqualFold(p.APIMethod, method) {
-				return true, nil
-			}
+		if p.APIPath == "" || p.APIMethod == "" || !strings.EqualFold(p.APIMethod, method) {
+			continue
+		}
+		if p.APIPath == path {
+			return true, nil
+		}
+	}
+
+	if requireExact {
+		return false, nil
+	}
+
+	// 再检查通配匹配
+	for _, p := range perms {
+		if p.APIPath == "" || p.APIMethod == "" || !strings.EqualFold(p.APIMethod, method) {
+			continue
+		}
+		if matchPath(p.APIPath, path) {
+			return true, nil
 		}
 	}
 
@@ -333,14 +351,43 @@ func (s *PermissionService) IsPublicAPI(path, method string) bool {
 	publicPerms := s.publicAPIsCache
 	s.cacheMu.RUnlock()
 
+	requireExact := s.hasExactAPIPermission(path, method)
+
 	for _, p := range publicPerms {
-		if p.APIPath != "" && p.APIMethod != "" {
-			if matchPath(p.APIPath, path) && strings.EqualFold(p.APIMethod, method) {
-				return true
-			}
+		if p.APIPath == "" || p.APIMethod == "" || !strings.EqualFold(p.APIMethod, method) {
+			continue
+		}
+		if p.APIPath == path {
+			return true
 		}
 	}
 
+	if requireExact {
+		return false
+	}
+
+	for _, p := range publicPerms {
+		if p.APIPath == "" || p.APIMethod == "" || !strings.EqualFold(p.APIMethod, method) {
+			continue
+		}
+		if matchPath(p.APIPath, path) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (s *PermissionService) hasExactAPIPermission(path, method string) bool {
+	s.cacheMu.RLock()
+	perms := s.permissionsCache
+	s.cacheMu.RUnlock()
+
+	for _, p := range perms {
+		if p.APIPath == path && strings.EqualFold(p.APIMethod, method) {
+			return true
+		}
+	}
 	return false
 }
 
@@ -364,4 +411,3 @@ func matchPath(pattern, path string) bool {
 	}
 	return true
 }
-

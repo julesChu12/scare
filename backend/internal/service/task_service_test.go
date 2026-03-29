@@ -158,6 +158,9 @@ func TestTaskService_Claim(t *testing.T) {
 	if updatedTask.Status != consts.TaskStatusClaimed || updatedTask.StaffID != 41 {
 		t.Fatalf("unexpected claimed task values: status=%s staff=%d", updatedTask.Status, updatedTask.StaffID)
 	}
+	if updatedTask.ClaimedAt.IsZero() {
+		t.Fatalf("expected claimed_at to be populated")
+	}
 
 	var updatedReq model.ServiceRequest
 	if err := db.First(&updatedReq, reqSuccess.ID).Error; err != nil {
@@ -177,6 +180,9 @@ func TestTaskService_Claim(t *testing.T) {
 	}
 	if rollbackTask.Status != consts.TaskStatusDispatched || rollbackTask.StaffID != 0 {
 		t.Fatalf("expected task update rollback, got status=%s staff=%d", rollbackTask.Status, rollbackTask.StaffID)
+	}
+	if !rollbackTask.ClaimedAt.IsZero() {
+		t.Fatalf("expected claimed_at rollback, got %v", rollbackTask.ClaimedAt)
 	}
 	var rollbackReq model.ServiceRequest
 	if err := db.First(&rollbackReq, reqRollback.ID).Error; err != nil {
@@ -230,6 +236,9 @@ func TestTaskService_Complete(t *testing.T) {
 	if updatedTask.Images != "[\"proof1.jpg\",\"proof2.jpg\"]" {
 		t.Fatalf("unexpected task images payload: %s", updatedTask.Images)
 	}
+	if updatedTask.CompletedAt.IsZero() {
+		t.Fatalf("expected completed_at to be populated")
+	}
 
 	var updatedReq model.ServiceRequest
 	if err := db.First(&updatedReq, reqSuccess.ID).Error; err != nil {
@@ -276,6 +285,9 @@ func TestTaskService_Transfer(t *testing.T) {
 	}
 	if dbTask.StaffID != 121 || dbTask.Status != consts.TaskStatusClaimed {
 		t.Fatalf("transfer not persisted: staff=%d status=%s", dbTask.StaffID, dbTask.Status)
+	}
+	if dbTask.ClaimedAt.IsZero() {
+		t.Fatalf("expected claimed_at to be populated on transfer")
 	}
 
 	var updatedReq model.ServiceRequest

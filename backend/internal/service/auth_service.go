@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -242,14 +243,17 @@ func (s *AuthService) Refresh(refreshToken string) (*Tokens, error) {
 
 // QuickStartInput 快速开通的输入参数
 type QuickStartInput struct {
-	Phone       string
-	Code        string
-	Name        string
-	Address     string
-	Latitude    *float64
-	Longitude   *float64
-	ServiceType string
-	Description *string
+	Phone        string
+	Code         string
+	Name         string
+	Address      string
+	Latitude     *float64
+	Longitude    *float64
+	ServiceType  string
+	Description  *string
+	Images       []string // 图片 URL 列表
+	ContactName  string   // 联系人姓名（用于服务请求）
+	ContactPhone string   // 联系人电话（用于服务请求）
 }
 
 // QuickStartResult 快速开通的返回结果
@@ -355,8 +359,9 @@ func (s *AuthService) QuickStart(input QuickStartInput) (*QuickStartResult, erro
 
 		if existingProfile == nil {
 			newProfile := &model.CustomerProfile{
-				UserID:  user.ID,
-				Address: input.Address,
+				UserID:           user.ID,
+				Address:          input.Address,
+				EmergencyContact: `{}`, // JSON 列不能为空字符串，用空对象替代
 			}
 			if err := customerRepoTx.Create(newProfile); err != nil {
 				return err
@@ -386,10 +391,19 @@ func (s *AuthService) QuickStart(input QuickStartInput) (*QuickStartResult, erro
 			SubmitLocationLng: lng,
 			Address:           input.Address,
 			StationID:         stationID,
+			ContactName:       input.ContactName,
+			ContactPhone:      input.ContactPhone,
 		}
 
 		if input.Description != nil {
 			newRequest.Description = *input.Description
+		}
+
+		if len(input.Images) > 0 {
+			imagesJSON, _ := json.Marshal(input.Images)
+			newRequest.Images = string(imagesJSON)
+		} else {
+			newRequest.Images = "[]" // JSON 列不能为空字符串，用空数组替代
 		}
 
 		if err := requestRepo.Create(newRequest); err != nil {
@@ -448,17 +462,11 @@ func (s *AuthService) findNearestStation(lat, lng float64) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	if len(stations) == 0 {
-		return 0, ErrNoStation
+
+	nearest, err := nearestStationByHaversine(stations, lat, lng)
+	if err != nil {
+		return 0, err
 	}
-	nearestID := stations[0].ID
-	minDistance := HaversineDistance(lat, lng, stations[0].Latitude, stations[0].Longitude)
-	for _, station := range stations[1:] {
-		distance := HaversineDistance(lat, lng, station.Latitude, station.Longitude)
-		if distance < minDistance {
-			minDistance = distance
-			nearestID = station.ID
-		}
-	}
-	return nearestID, nil
+
+	return nearest.ID, nil
 }

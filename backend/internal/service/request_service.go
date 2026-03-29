@@ -64,14 +64,14 @@ func NewRequestService(db *gorm.DB, repo *repository.RequestRepository, taskRepo
 // 业务目的：客户提交服务需求，系统自动匹配站点并创建任务
 //
 // 主要流程：
-// 1. 验证输入参数（用户ID、服务类型必填）
-// 2. 解析坐标（优先使用传入坐标，否则通过地址反向地理编码）
-// 3. 幂等性检查：如果提供了 RequestNo，检查是否已存在
-// 4. 生成请求编号（REQ + 时间戳 + 随机数）
-// 5. 匹配服务站点：
-//    a. 首先检查地理围栏（点是否在多边形内）
-//    b. 如果没有匹配的围栏，查找最近的站点（Haversine 距离计算）
-// 6. 在事务中创建服务请求和对应任务（状态为 dispatched）
+//  1. 验证输入参数（用户ID、服务类型必填）
+//  2. 解析坐标（优先使用传入坐标，否则通过地址反向地理编码）
+//  3. 幂等性检查：如果提供了 RequestNo，检查是否已存在
+//  4. 生成请求编号（REQ + 时间戳 + 随机数）
+//  5. 匹配服务站点：
+//     a. 首先检查地理围栏（点是否在多边形内）
+//     b. 如果没有匹配的围栏，查找最近的站点（Haversine 距离计算）
+//  6. 在事务中创建服务请求和对应任务（状态为 dispatched）
 //
 // 坐标解析优先级：显式传入坐标 > 地址反向地理编码
 //
@@ -407,23 +407,21 @@ func (s *RequestService) Rate(id int64, userID int64, rating int, feedback strin
 }
 
 func (s *RequestService) findNearestStation(lat, lng float64) (int64, error) {
+	if s.stationRepo == nil {
+		return 0, ErrNoStation
+	}
+
 	stations, err := s.stationRepo.ListActive()
 	if err != nil {
 		return 0, err
 	}
-	if len(stations) == 0 {
-		return 0, ErrNoStation
+
+	nearest, err := nearestStationByHaversine(stations, lat, lng)
+	if err != nil {
+		return 0, err
 	}
-	nearestID := stations[0].ID
-	minDistance := HaversineDistance(lat, lng, stations[0].Latitude, stations[0].Longitude)
-	for _, station := range stations[1:] {
-		distance := HaversineDistance(lat, lng, station.Latitude, station.Longitude)
-		if distance < minDistance {
-			minDistance = distance
-			nearestID = station.ID
-		}
-	}
-	return nearestID, nil
+
+	return nearest.ID, nil
 }
 
 func validCoordinate(lat, lng float64) bool {
@@ -440,6 +438,7 @@ func validCoordinate(lat, lng float64) bool {
 func generateRequestNo() string {
 	return fmt.Sprintf("REQ%d%04d", time.Now().Unix(), rand.Intn(10000))
 }
+
 // sendRequestNotification 异步通知站点管理员
 func (s *RequestService) sendRequestNotification(stationID int64, title, body string) {
 	if s.notifySvc == nil || s.userIdentityRepo == nil || stationID == 0 {
@@ -451,7 +450,9 @@ func (s *RequestService) sendRequestNotification(stationID int64, title, body st
 			return
 		}
 		for _, identity := range identities {
-			_ = s.notifySvc.SendInApp(context.Background(), identity.UserID, t, b)
+			_ = s.notifySvc.SendInAppWithOptions(context.Background(), identity.UserID, t, b, NotificationSendOptions{
+				Type: NotificationTypeTask,
+			})
 		}
 	}(stationID, title, body)
 }

@@ -7,8 +7,11 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import App from './App.vue'
 import router from './router'
 import './styles/variables.css'
+import { initFontSize } from './composables/useFontSize'
 import { useUserStore } from './store/userStore'
 import { useTokenStore } from './store/tokenStore'
+
+initFontSize()
 
 const app = createApp(App)
 

@@ -8,6 +8,7 @@
             <p class="subtitle">配置系统导航菜单、路由路径及权限标识</p>
           </div>
           <div class="header-actions">
+            <el-button :icon="Expand" @click="toggleExpand">{{ isExpandAll ? '折叠' : '展开' }}</el-button>
             <el-button :icon="Refresh" @click="loadMenuTree">刷新</el-button>
             <el-button type="primary" :icon="Plus" @click="handleCreate">
               新建菜单
@@ -34,11 +35,11 @@
       </div>
 
       <el-table
+        ref="tableRef"
         v-loading="loading"
         :data="filteredMenuTree"
         row-key="id"
         border
-        default-expand-all
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
       >
         <el-table-column prop="name" label="菜单名称" min-width="180" />
@@ -212,9 +213,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, watch, nextTick } from 'vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import { Plus, Search, Refresh } from '@element-plus/icons-vue'
+import { Plus, Search, Refresh, Expand } from '@element-plus/icons-vue'
 import { menuApi } from '@/api'
 import type { Menu, MenuRequest } from '@/types/api'
 
@@ -265,6 +266,14 @@ const submitting = ref(false)
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const editingId = ref<number | null>(null)
+const isExpandAll = ref(false)
+const tableRef = ref()
+
+// 折叠/展开切换
+const toggleExpand = () => {
+  isExpandAll.value = !isExpandAll.value
+  applyExpandState()
+}
 
 // 搜索
 const searchKeyword = ref('')
@@ -298,9 +307,27 @@ const filteredMenuTree = computed(() => {
   return filterTree(menuTree.value)
 })
 
+const toggleTreeRows = (nodes: Menu[], expanded: boolean) => {
+  nodes.forEach((node) => {
+    if (node.children && node.children.length > 0) {
+      tableRef.value?.toggleRowExpansion(node, expanded)
+      toggleTreeRows(node.children, expanded)
+    }
+  })
+}
+
+const applyExpandState = async () => {
+  await nextTick()
+  toggleTreeRows(filteredMenuTree.value, isExpandAll.value)
+}
+
 const handleSearch = () => {
   // Computed property handles search
 }
+
+watch(filteredMenuTree, () => {
+  applyExpandState()
+}, { deep: true, immediate: true })
 
 // 表单
 const formRef = ref<FormInstance>()

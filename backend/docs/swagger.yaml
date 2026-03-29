@@ -327,6 +327,8 @@ definitions:
         - xlsx
         - csv
         type: string
+      preview:
+        type: boolean
       start_date:
         type: string
       station_id:
@@ -521,7 +523,7 @@ host: localhost:8080
 info:
   contact: {}
   description: 昌平区霍营街道社区养老信息分发平台后端 API
-  title: sCare 社区养老服务平台 API
+  title: 霍营街道社区养老服务平台 API
   version: "1.0"
 paths:
   /api/v1/b/news:
@@ -1253,6 +1255,14 @@ paths:
         in: query
         name: page_size
         type: integer
+      - description: 通知类型(system/task/alert/request)
+        in: query
+        name: type
+        type: string
+      - description: 是否已读
+        in: query
+        name: is_read
+        type: boolean
       produces:
       - application/json
       responses:
@@ -1824,6 +1834,18 @@ paths:
         in: query
         name: page_size
         type: integer
+      - description: 关键词搜索(站点名称/编号/地址/电话)
+        in: query
+        name: keyword
+        type: string
+      - description: 站点名称(兼容旧参数，等同于 keyword)
+        in: query
+        name: name
+        type: string
+      - description: 状态筛选(active/inactive)
+        in: query
+        name: status
+        type: string
       produces:
       - application/json
       responses:
@@ -2507,6 +2529,18 @@ paths:
         in: query
         name: page_size
         type: integer
+      - description: 任务状态
+        in: query
+        name: status
+        type: string
+      - description: 服务类型
+        in: query
+        name: service_type
+        type: string
+      - description: 需求编号（模糊匹配）
+        in: query
+        name: request_no
+        type: string
       produces:
       - application/json
       responses:
@@ -3128,8 +3162,16 @@ paths:
               type: string
             code:
               type: string
+            contact_name:
+              type: string
+            contact_phone:
+              type: string
             description:
               type: string
+            images:
+              items:
+                type: string
+              type: array
             latitude:
               format: float64
               type: number
@@ -3340,6 +3382,14 @@ paths:
         in: query
         name: page_size
         type: integer
+      - description: 通知类型(system/task/alert/request)
+        in: query
+        name: type
+        type: string
+      - description: 是否已读
+        in: query
+        name: is_read
+        type: boolean
       produces:
       - application/json
       responses:

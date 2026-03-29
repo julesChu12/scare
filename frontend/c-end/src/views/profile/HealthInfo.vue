@@ -148,7 +148,7 @@ onMounted(() => {
 }
 
 .header h1 {
-  font-size: 24px;
+  font-size: calc(24px * var(--font-scale));
   font-weight: bold;
 }
 
@@ -165,29 +165,29 @@ onMounted(() => {
 }
 
 :deep(.el-form-item__label) {
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   font-weight: 500;
   color: var(--text-color-primary, #303133);
   margin-bottom: 8px;
 }
 
 :deep(.el-input__inner) {
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   height: 48px;
 }
 
 :deep(.el-select .el-input__inner) {
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
 }
 
 :deep(.el-textarea__inner) {
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   line-height: 1.6;
   padding: 12px;
 }
 
 .field-tip {
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: var(--text-color-secondary, #909399);
   margin-top: 4px;
 }
@@ -201,6 +201,6 @@ onMounted(() => {
 .form-actions .el-button {
   flex: 1;
   height: 48px;
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
 }
 </style>

@@ -116,6 +116,12 @@ router.beforeEach((to, _from, next) => {
   // 设置页面标题
   document.title = to.meta.title ? `${to.meta.title} - sCare` : 'sCare 社区养老服务'
 
+  // 已登录用户访问 login 页面，重定向到首页
+  if (to.name === 'Login' && tokenStore.isLoggedIn) {
+    next({ name: 'Home' })
+    return
+  }
+
   // 检查是否需要登录
   if (to.meta.requiresAuth && !tokenStore.isLoggedIn) {
     // 保存原始目标路径

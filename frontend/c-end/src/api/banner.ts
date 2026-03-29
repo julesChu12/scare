@@ -1,10 +1,13 @@
 import client from './client'
 
+export type LinkType = 'none' | 'news' | 'url'
+
 export interface Banner {
     id: number
     title: string
     image_url: string
-    link_url: string
+    link_type: LinkType
+    link_value: string
     sort: number
 }
 

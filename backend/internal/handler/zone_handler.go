@@ -18,11 +18,11 @@ func NewZoneHandler(service *service.ZoneService) *ZoneHandler {
 }
 
 type zoneRequest struct {
-	StationID int64            `json:"station_id" binding:"required"`
-	Name      string           `json:"name" binding:"required"`
+	StationID int64       `json:"station_id" binding:"required"`
+	Name      string      `json:"name" binding:"required"`
 	Points    []geo.Point `json:"points" binding:"required"`
-	Priority  int              `json:"priority"`
-	Status    string           `json:"status"`
+	Priority  int         `json:"priority"`
+	Status    string      `json:"status"`
 }
 
 // Create 创建服务围栏
@@ -47,6 +47,14 @@ func (h *ZoneHandler) Create(c *gin.Context) {
 	if len(req.Points) < 3 {
 		RespondError(c, http.StatusBadRequest, "invalid points")
 		return
+	}
+
+	if !containsRole(GetUserIdentities(c), "admin") {
+		stationID, ok := GetStationID(c)
+		if !ok || stationID == 0 || req.StationID != stationID {
+			RespondError(c, http.StatusForbidden, "forbidden")
+			return
+		}
 	}
 
 	zone, err := h.service.Create(service.ZoneInput{
@@ -90,6 +98,24 @@ func (h *ZoneHandler) Update(c *gin.Context) {
 		return
 	}
 
+	if !containsRole(GetUserIdentities(c), "admin") {
+		stationID, ok := GetStationID(c)
+		if !ok || stationID == 0 {
+			RespondError(c, http.StatusForbidden, "forbidden")
+			return
+		}
+
+		existingZone, err := h.service.GetByID(id)
+		if err != nil {
+			RespondError(c, http.StatusNotFound, "zone not found")
+			return
+		}
+		if existingZone.StationID != stationID || req.StationID != stationID {
+			RespondError(c, http.StatusForbidden, "forbidden")
+			return
+		}
+	}
+
 	zone, err := h.service.Update(service.ZoneInput{
 		ID:        id,
 		StationID: req.StationID,
@@ -126,6 +152,25 @@ func (h *ZoneHandler) Delete(c *gin.Context) {
 		RespondError(c, http.StatusBadRequest, "invalid id")
 		return
 	}
+
+	if !containsRole(GetUserIdentities(c), "admin") {
+		stationID, ok := GetStationID(c)
+		if !ok || stationID == 0 {
+			RespondError(c, http.StatusForbidden, "forbidden")
+			return
+		}
+
+		existingZone, err := h.service.GetByID(id)
+		if err != nil {
+			RespondError(c, http.StatusNotFound, "zone not found")
+			return
+		}
+		if existingZone.StationID != stationID {
+			RespondError(c, http.StatusForbidden, "forbidden")
+			return
+		}
+	}
+
 	if err := h.service.Delete(id); err != nil {
 		RespondError(c, http.StatusInternalServerError, "delete zone failed")
 		return
@@ -148,7 +193,18 @@ func (h *ZoneHandler) Delete(c *gin.Context) {
 // @Router       /b/zones [get]
 func (h *ZoneHandler) List(c *gin.Context) {
 	page, pageSize := GetPagination(c)
-	zones, total, err := h.service.List(page, pageSize)
+	filter := service.ZoneListFilter{}
+
+	if !containsRole(GetUserIdentities(c), "admin") {
+		stationID, ok := GetStationID(c)
+		if !ok || stationID == 0 {
+			RespondError(c, http.StatusForbidden, "forbidden")
+			return
+		}
+		filter.StationID = stationID
+	}
+
+	zones, total, err := h.service.List(page, pageSize, filter)
 	if err != nil {
 		RespondError(c, http.StatusInternalServerError, "list zones failed")
 		return

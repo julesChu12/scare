@@ -1,7 +1,7 @@
 <template>
   <div class="login-container">
     <div class="login-card">
-      <h1>sCare 登录</h1>
+      <h1>霍营街道服务站</h1>
 
       <!-- 登录方式切换 -->
       <div class="login-tabs">
@@ -209,7 +209,7 @@ const handleLogin = async () => {
 
       // 跳转到原目标页面或首页
       const redirect = route.query.redirect as string || '/home'
-      router.push(redirect)
+      router.replace(redirect)
     } catch (error) {
       console.error('登录失败:', error)
     } finally {

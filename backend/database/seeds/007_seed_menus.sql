@@ -29,7 +29,7 @@ INSERT INTO `menus` (`id`, `parent_id`, `name`, `path`, `component`, `icon`, `pe
 -- =====================================================
 INSERT INTO `menus` (`id`, `parent_id`, `name`, `path`, `component`, `icon`, `permission_code`, `sort`, `hidden`, `status`) VALUES
 (8, 2, '服务请求', '/services/requests', 'ServiceRequests', '', 'service:request:list', 1, 0, 'active'),
-(9, 2, '任务管理', '/services/tasks', 'TaskManagement', '', 'service:task:pool', 2, 0, 'active');
+(9, 2, '任务管理', '/services/tasks', 'TaskManagement', '', 'service:task', 2, 0, 'active');
 
 -- =====================================================
 -- 站点管理子菜单 (parent_id=3)

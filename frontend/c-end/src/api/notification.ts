@@ -5,7 +5,7 @@ export interface Notification {
   id: number
   user_id: number
   title: string
-  content: string
+  body: string
   type: string
   is_read: boolean
   created_at: string

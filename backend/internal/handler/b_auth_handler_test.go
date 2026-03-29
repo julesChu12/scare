@@ -28,7 +28,7 @@ func init() {
 
 func setupBAuthTestDB(t *testing.T) *gorm.DB {
 	tmpFile := t.TempDir() + "/test.db"
-	dsn := tmpFile + "?_loc=Local&_parseTime=true"
+	dsn := tmpFile + "?_loc=auto&parseTime=true"
 	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
 		DisableForeignKeyConstraintWhenMigrating: true,
 	})
@@ -36,12 +36,78 @@ func setupBAuthTestDB(t *testing.T) *gorm.DB {
 		t.Fatalf("failed to connect database: %v", err)
 	}
 
-	err = db.AutoMigrate(&model.User{}, &model.UserIdentity{}, &model.CustomerProfile{})
-	if err != nil {
-		t.Fatalf("failed to migrate database: %v", err)
+	createBAuthTables(t, db)
+	return db
+}
+
+func createBAuthTables(t *testing.T, db *gorm.DB) {
+	t.Helper()
+
+	statements := []string{
+		`
+		CREATE TABLE users (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			phone TEXT UNIQUE,
+			password_hash TEXT NOT NULL,
+			name TEXT,
+			email TEXT,
+			avatar TEXT,
+			gender TEXT,
+			birth_date DATE,
+			id_card TEXT,
+			station_id INTEGER DEFAULT 0,
+			status TEXT DEFAULT 'active',
+			created_at DATETIME,
+			updated_at DATETIME,
+			deleted_at DATETIME,
+			id_card_hmac TEXT,
+			id_card_masked TEXT
+		);
+		`,
+		`
+		CREATE TABLE user_identities (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL,
+			identity_type TEXT NOT NULL,
+			is_primary INTEGER NOT NULL DEFAULT 0,
+			station_id INTEGER DEFAULT 0,
+			status TEXT NOT NULL DEFAULT 'active',
+			granted_at DATETIME,
+			granted_by INTEGER,
+			revoked_at DATETIME,
+			created_at DATETIME,
+			updated_at DATETIME,
+			deleted_at DATETIME
+		);
+		`,
+		`
+		CREATE TABLE customer_profiles (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			user_id INTEGER NOT NULL,
+			id_card TEXT,
+			address TEXT,
+			latitude REAL,
+			longitude REAL,
+			customer_type TEXT,
+			emergency_contact TEXT,
+			created_at DATETIME,
+			updated_at DATETIME,
+			deleted_at DATETIME,
+			gender TEXT,
+			birth_date DATE,
+			health_status TEXT,
+			disability_level TEXT,
+			medical_history TEXT,
+			special_needs TEXT
+		);
+		`,
 	}
 
-	return db
+	for _, stmt := range statements {
+		if err := db.Exec(stmt).Error; err != nil {
+			t.Fatalf("failed to create test tables: %v", err)
+		}
+	}
 }
 
 func createBAuthTestUser(db *gorm.DB, phone string, identities []string, stationID int64) *model.User {

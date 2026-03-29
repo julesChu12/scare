@@ -195,8 +195,13 @@ func createTables(t *testing.T, db *gorm.DB) {
 			customer_type TEXT,
 			gender TEXT,
 			address TEXT,
+			latitude REAL,
+			longitude REAL,
+			emergency_contact TEXT,
 			health_status TEXT,
 			disability_level TEXT,
+			medical_history TEXT,
+			special_needs TEXT,
 			created_at DATETIME,
 			updated_at DATETIME,
 			deleted_at DATETIME

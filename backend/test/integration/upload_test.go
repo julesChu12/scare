@@ -7,6 +7,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"net/textproto"
 	"testing"
 
 	"community-elderly-care-platform/test/integration/testutil"
@@ -37,7 +38,10 @@ func TestUpload(t *testing.T) {
 	t.Run("C端文件上传", func(t *testing.T) {
 		body := &bytes.Buffer{}
 		writer := multipart.NewWriter(body)
-		part, _ := writer.CreateFormFile("file", "photo.jpg")
+		header := textproto.MIMEHeader{}
+		header.Set("Content-Disposition", `form-data; name="file"; filename="photo.jpg"`)
+		header.Set("Content-Type", "image/jpeg")
+		part, _ := writer.CreatePart(header)
 		part.Write([]byte("fake image data"))
 		writer.Close()
 

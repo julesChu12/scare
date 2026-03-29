@@ -136,7 +136,7 @@ async function handleLogin() {
 
     // 跳转到重定向页面或首页
     const redirect = (route.query.redirect as string) || '/'
-    router.push(redirect)
+    router.replace(redirect)
   } catch (error: any) {
     console.error('Login failed:', error)
     // Axios 拦截器已经处理了错误提示

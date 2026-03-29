@@ -21,16 +21,21 @@ var (
 
 // SMSService 短信验证码服务
 type SMSService struct {
-	rdb *redis.Client
-	env string // "development" or "production"
+	rdb      *redis.Client
+	fallback *expiringStore
+	env      string // "development" or "production"
 }
 
 // NewSMSService 创建短信服务
 func NewSMSService(rdb *redis.Client, env string) *SMSService {
-	return &SMSService{
+	svc := &SMSService{
 		rdb: rdb,
 		env: env,
 	}
+	if rdb == nil {
+		svc.fallback = newExpiringStore()
+	}
+	return svc
 }
 
 // SendCode 发送验证码
@@ -66,8 +71,24 @@ func (s *SMSService) SendCode(phone string) error {
 
 // VerifyCode 验证验证码
 func (s *SMSService) VerifyCode(phone, code string) error {
+	// 测试环境：万能验证码
+	if s.env == "development" || s.env == "debug" {
+		if code == "000000" {
+			return nil // 万能验证码直接通过
+		}
+	}
+
 	ctx := context.Background()
 	key := fmt.Sprintf("sms_code:%s", phone)
+
+	if s.rdb == nil {
+		storedCode, ok := s.fallback.get(key)
+		if !ok || storedCode != code {
+			return ErrCodeInvalid
+		}
+		s.fallback.del(key)
+		return nil
+	}
 
 	// 从Redis获取验证码
 	storedCode, err := s.rdb.Get(ctx, key).Result()
@@ -92,6 +113,21 @@ func (s *SMSService) checkRateLimit(phone string) error {
 
 	// 检查分钟级限制
 	minuteKey := fmt.Sprintf("sms_rate:%s:minute", phone)
+	if s.rdb == nil {
+		if s.fallback.exists(minuteKey) {
+			return ErrRateLimitMinute
+		}
+
+		dailyKey := fmt.Sprintf("sms_rate:%s:daily", phone)
+		if count, ok := s.fallback.get(dailyKey); ok {
+			dailyCount, _ := strconv.Atoi(count)
+			if dailyCount >= 10 {
+				return ErrRateLimitDaily
+			}
+		}
+		return nil
+	}
+
 	exists, err := s.rdb.Exists(ctx, minuteKey).Result()
 	if err != nil {
 		return err
@@ -131,6 +167,10 @@ func (s *SMSService) generateCode() (string, error) {
 func (s *SMSService) storeCode(phone, code string) error {
 	ctx := context.Background()
 	key := fmt.Sprintf("sms_code:%s", phone)
+	if s.rdb == nil {
+		s.fallback.set(key, code, 300*time.Second)
+		return nil
+	}
 	return s.rdb.SetEx(ctx, key, code, 300*time.Second).Err() // 5分钟有效期
 }
 
@@ -156,6 +196,18 @@ func (s *SMSService) updateRateLimit(phone string) error {
 
 	// 设置分钟级限制
 	minuteKey := fmt.Sprintf("sms_rate:%s:minute", phone)
+	if s.rdb == nil {
+		s.fallback.set(minuteKey, "1", 60*time.Second)
+
+		dailyKey := fmt.Sprintf("sms_rate:%s:daily", phone)
+		if s.fallback.exists(dailyKey) {
+			_, err := s.fallback.incr(dailyKey)
+			return err
+		}
+		s.fallback.set(dailyKey, "1", 24*time.Hour)
+		return nil
+	}
+
 	if err := s.rdb.SetEx(ctx, minuteKey, "1", 60*time.Second).Err(); err != nil {
 		return err
 	}

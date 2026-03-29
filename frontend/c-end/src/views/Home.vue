@@ -10,7 +10,10 @@
       </div>
       <div class="station-right" @click="showStationInfo">
         <el-icon><OfficeBuilding /></el-icon>
-        <span class="station-name">{{ stationName }}</span>
+        <div class="station-meta">
+          <span class="station-label">附近服务站</span>
+          <span class="station-name">{{ stationName }}</span>
+        </div>
         <el-icon><ArrowRight /></el-icon>
       </div>
     </div>
@@ -104,11 +107,15 @@
     <!-- 站点信息弹窗 -->
     <el-dialog
       v-model="stationDialogVisible"
-      title="服务站点信息"
+      title="附近服务站信息"
       width="85%"
       center
     >
       <div v-if="currentStation" class="station-dialog-content">
+        <div class="station-tip">
+          <el-icon><InfoFilled /></el-icon>
+          <span>根据当前位置匹配展示，实际服务站点以提交需求后的系统分发结果为准。</span>
+        </div>
         <div class="station-info-item">
           <span class="info-label">站点名称</span>
           <span class="info-value">{{ currentStation.name }}</span>
@@ -152,6 +159,7 @@ import {
   RefreshRight,
   OfficeBuilding,
   ArrowRight,
+  InfoFilled,
   HomeFilled,
   List,
   User,
@@ -310,13 +318,24 @@ const goToNews = () => { router.push('/news') }
 const viewNews = (news: any) => { router.push(`/news/${news.id}`) }
 
 const viewBanner = (banner: Banner) => {
-  if (!banner.link_url) return
+  // 无链接类型或链接值时不跳转
+  if (banner.link_type === 'none' || !banner.link_value) return
 
-  // 简单判断是否为外部链接
-  if (banner.link_url.startsWith('http')) {
-    window.location.href = banner.link_url
-  } else {
-    router.push(banner.link_url)
+  // 如果是完整 URL，直接跳转
+  if (banner.link_value.startsWith('http')) {
+    window.location.href = banner.link_value
+    return
+  }
+
+  switch (banner.link_type) {
+    case 'news':
+      // 跳转到新闻详情页，link_value 可能是 ID 或完整路径
+      router.push(banner.link_value.startsWith('/') ? banner.link_value : `/news/${banner.link_value}`)
+      break
+    case 'url':
+      // 跳转到外部链接
+      window.location.href = banner.link_value
+      break
   }
 }
 const goToServices = () => { router.push('/services') }
@@ -349,8 +368,8 @@ onMounted(async () => {
 .station-right {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 14px;
+  gap: 6px;
+  font-size: calc(14px * var(--font-scale));
   color: #303133;
   cursor: pointer;
 }
@@ -361,20 +380,37 @@ onMounted(async () => {
 }
 
 .location-hint {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: #E6A23C;
 }
 
 .refresh-icon {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: #909399 !important;
 }
 
+.station-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  min-width: 0;
+}
+
+.station-label {
+  font-size: calc(11px * var(--font-scale));
+  line-height: 1;
+  color: #909399;
+}
+
 .station-name {
+  display: block;
   max-width: 120px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-size: calc(13px * var(--font-scale));
+  line-height: 1.2;
 }
 
 /* Banner */
@@ -408,7 +444,7 @@ onMounted(async () => {
 
 .banner-overlay h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   font-weight: 500;
 }
 
@@ -420,7 +456,7 @@ onMounted(async () => {
   justify-content: center;
   align-items: center;
   color: #909399;
-  font-size: 32px;
+  font-size: calc(32px * var(--font-scale));
 }
 
 .banner-skeleton {
@@ -460,7 +496,7 @@ onMounted(async () => {
 }
 
 .section-title {
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   font-weight: bold;
   color: #303133;
 }
@@ -469,7 +505,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 2px;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: #909399;
   cursor: pointer;
 }
@@ -498,11 +534,11 @@ onMounted(async () => {
 }
 
 .service-icon {
-  font-size: 36px;
+  font-size: calc(36px * var(--font-scale));
 }
 
 .service-name {
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: #303133;
   text-align: center;
 }
@@ -532,7 +568,7 @@ onMounted(async () => {
 .news-tag {
   padding: 4px 8px;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   font-weight: 500;
   flex-shrink: 0;
 }
@@ -558,7 +594,7 @@ onMounted(async () => {
 }
 
 .news-title {
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: #303133;
   margin-bottom: 4px;
   overflow: hidden;
@@ -567,7 +603,7 @@ onMounted(async () => {
 }
 
 .news-date {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: #909399;
 }
 
@@ -602,11 +638,11 @@ onMounted(async () => {
   gap: 4px;
   cursor: pointer;
   color: #909399;
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
 }
 
 .nav-item .el-icon {
-  font-size: 24px;
+  font-size: calc(24px * var(--font-scale));
 }
 
 .nav-item.active {
@@ -616,6 +652,25 @@ onMounted(async () => {
 /* 站点信息弹窗 */
 .station-dialog-content {
   padding: 8px 0;
+}
+
+.station-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f4f8ff;
+  color: #5b6b8b;
+  font-size: calc(12px * var(--font-scale));
+  line-height: 1.6;
+}
+
+.station-tip .el-icon {
+  margin-top: 2px;
+  color: #409EFF;
+  flex-shrink: 0;
 }
 
 .station-info-item {
@@ -630,13 +685,13 @@ onMounted(async () => {
 }
 
 .info-label {
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: #909399;
   margin-bottom: 6px;
 }
 
 .info-value {
-  font-size: 15px;
+  font-size: calc(15px * var(--font-scale));
   color: #303133;
   line-height: 1.5;
 }

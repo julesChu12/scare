@@ -3,6 +3,7 @@
 package integration
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -15,19 +16,22 @@ func TestServiceRequest(t *testing.T) {
 	env := testutil.Setup(t)
 	elderlyToken := testutil.CEndElderlyToken()
 	adminToken := testutil.AdminToken()
+	var requestID int64
 
 	t.Run("C端_创建服务请求", func(t *testing.T) {
 		body := `{
-			"service_type": "daily_care",
+			"service_type": "care",
 			"description": "需要日常照护",
+			"contact_name": "张大爷",
 			"contact_phone": "13900000001",
-			"longitude": 116.4,
-			"latitude": 39.9
+			"lng": 116.4,
+			"lat": 39.9
 		}`
 		w := testutil.DoRequest(env.Engine, http.MethodPost,
 			"/api/v1/c/requests", elderlyToken, body)
 		data := testutil.AssertOK(t, w)
 		assert.NotNil(t, data)
+		requestID = int64(data["id"].(float64))
 	})
 
 	t.Run("C端_请求列表", func(t *testing.T) {
@@ -38,10 +42,8 @@ func TestServiceRequest(t *testing.T) {
 
 	t.Run("C端_请求详情", func(t *testing.T) {
 		w := testutil.DoRequest(env.Engine, http.MethodGet,
-			"/api/v1/c/requests/1", elderlyToken)
-		// 可能 200 或 404，取决于种子数据
-		assert.Contains(t,
-			[]int{http.StatusOK, http.StatusNotFound}, w.Code)
+			"/api/v1/c/requests/"+itoa(requestID), elderlyToken)
+		assert.Equal(t, http.StatusOK, w.Code)
 	})
 
 	t.Run("B端_请求列表", func(t *testing.T) {
@@ -52,16 +54,17 @@ func TestServiceRequest(t *testing.T) {
 
 	t.Run("B端_请求详情", func(t *testing.T) {
 		w := testutil.DoRequest(env.Engine, http.MethodGet,
-			"/api/v1/b/requests/1", adminToken)
-		assert.Contains(t,
-			[]int{http.StatusOK, http.StatusNotFound}, w.Code)
+			"/api/v1/b/requests/"+itoa(requestID), adminToken)
+		assert.Equal(t, http.StatusOK, w.Code)
 	})
 
 	t.Run("C端_取消请求", func(t *testing.T) {
 		w := testutil.DoRequest(env.Engine, http.MethodPost,
-			"/api/v1/c/requests/1/cancel", elderlyToken)
-		// 取消结果取决于请求是否存在及状态
-		assert.Contains(t,
-			[]int{http.StatusOK, http.StatusNotFound, http.StatusBadRequest}, w.Code)
+			"/api/v1/c/requests/"+itoa(requestID)+"/cancel", elderlyToken)
+		assert.Equal(t, http.StatusOK, w.Code)
 	})
+}
+
+func itoa(id int64) string {
+	return fmt.Sprintf("%d", id)
 }

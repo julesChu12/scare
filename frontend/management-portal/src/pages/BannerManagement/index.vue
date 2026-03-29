@@ -107,6 +107,7 @@
       :title="isEdit ? '编辑轮播图' : '新增轮播图'"
       width="800px"
       top="5vh"
+      destroy-on-close
       @close="resetForm"
     >
       <el-form
@@ -231,8 +232,7 @@ const isEdit = ref(false)
 const editingId = ref<number | null>(null)
 const formRef = ref<FormInstance>()
 
-// 表单数据
-const formData = reactive<BannerRequest>({
+const createDefaultFormData = (): BannerRequest => ({
   title: '',
   image_url: '',
   link_type: 'none',
@@ -241,6 +241,9 @@ const formData = reactive<BannerRequest>({
   status: 'active',
   station_id: 0,
 })
+
+// 表单数据
+const formData = reactive<BannerRequest>(createDefaultFormData())
 
 // 表单验证规则
 const formRules: FormRules = {
@@ -355,16 +358,10 @@ async function handleSubmit() {
  * 重置表单
  */
 function resetForm() {
-  Object.assign(formData, {
-    title: '',
-    image_url: '',
-    link_type: 'none',
-    link_value: '',
-    sort: 0,
-    status: 'active',
-    station_id: 0,
-  })
-  formRef.value?.resetFields()
+  isEdit.value = false
+  editingId.value = null
+  Object.assign(formData, createDefaultFormData())
+  formRef.value?.clearValidate()
 }
 
 /**

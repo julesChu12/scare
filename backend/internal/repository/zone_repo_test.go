@@ -114,7 +114,7 @@ func TestZoneRepository_List(t *testing.T) {
 	}
 
 	// 测试分页
-	zones, total, err := repo.List(0, 3)
+	zones, total, err := repo.List(0, 3, ZoneListFilter{})
 	if err != nil {
 		t.Fatalf("failed to list zones: %v", err)
 	}

@@ -9,6 +9,7 @@
           </div>
           <div class="header-actions">
             <el-select
+              v-if="isSystemAdmin"
               v-model="filterStationId"
               placeholder="站点筛选"
               clearable
@@ -136,6 +137,7 @@
             </el-button>
             <el-button
               v-if="row.status === 'pending' || row.status === 'dispatched'"
+              v-permission="'service:request:update'"
               type="primary"
               size="small"
               link
@@ -146,6 +148,7 @@
             </el-button>
             <el-button
               v-if="!['completed', 'cancelled', 'rejected'].includes(row.status)"
+              v-permission="'service:request:cancel'"
               type="danger"
               size="small"
               link
@@ -324,14 +327,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive, nextTick } from 'vue'
+import { ref, onMounted, reactive, nextTick, computed } from 'vue'
 import { Refresh, Edit } from '@element-plus/icons-vue'
 import { requestApi, stationApi } from '@/api'
+import { useAuthStore } from '@/store/modules/auth'
 import type { ServiceRequest, Station } from '@/types/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 
 import dayjs from 'dayjs'
+
+const authStore = useAuthStore()
+
+const isSystemAdmin = computed(() => authStore.hasRole('admin'))
+const canViewStationList = computed(() => authStore.hasPermission('station:list:view'))
 
 // 加载状态
 const loading = ref(false)
@@ -365,7 +374,7 @@ async function loadRequests() {
       page: pagination.page,
       page_size: pagination.pageSize,
       status: filterStatus.value || undefined,
-      station_id: filterStationId.value || undefined,
+      station_id: isSystemAdmin.value ? (filterStationId.value || undefined) : undefined,
     } as any)
 
     const { items, total } = response.data
@@ -506,7 +515,7 @@ function getPriorityText(priority?: string): string {
 function getPriorityTag(priority?: string): string {
   const tagMap: Record<string, string> = {
     low: 'info',
-    normal: '',
+    normal: 'primary',
     high: 'warning',
     urgent: 'danger',
   }
@@ -554,6 +563,11 @@ const rules = reactive<FormRules>({
  * 加载站点列表
  */
 async function loadStations() {
+  if (!canViewStationList.value) {
+    stationList.value = []
+    return
+  }
+
   try {
     const res = await stationApi.getStations({ page: 1, page_size: 100 })
     stationList.value = res.data.items
@@ -571,7 +585,7 @@ function handleEdit(row: ServiceRequest) {
   formData.contact_name = row.contact_name
   formData.contact_phone = row.contact_phone
   formData.address = row.address
-  formData.priority = row.priority
+  formData.priority = row.priority || row.urgency || 'normal'
   formData.description = row.description
   formData.scheduled_at = row.scheduled_at || ''
   formData.station_id = row.station_id || undefined

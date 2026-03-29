@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"time"
 
-	"community-elderly-care-platform/internal/dao/model"
 	"community-elderly-care-platform/internal/consts"
+	"community-elderly-care-platform/internal/dao/model"
 	"community-elderly-care-platform/internal/repository"
 
 	"gorm.io/gorm"
@@ -40,8 +41,8 @@ type TaskPoolFilter struct {
 	Status    string // 任务状态，空表示默认 dispatched
 }
 
-// ListPoolWithFilter 根据筛选条件查询任务池
-func (s *TaskService) ListPoolWithFilter(filter TaskPoolFilter, page, pageSize int) ([]*model.TaskAssignment, int64, error) {
+// ListPoolWithFilter 根据筛选条件查询任务池（包含关联的服务请求）
+func (s *TaskService) ListPoolWithFilter(filter TaskPoolFilter, page, pageSize int) ([]*repository.TaskWithRequest, int64, error) {
 	offset := (page - 1) * pageSize
 	repoFilter := repository.TaskPoolFilter{
 		StationID: filter.StationID,
@@ -50,12 +51,20 @@ func (s *TaskService) ListPoolWithFilter(filter TaskPoolFilter, page, pageSize i
 	return s.taskRepo.ListPool(repoFilter, offset, pageSize)
 }
 
-func (s *TaskService) ListByStaff(staffID int64, page, pageSize int) ([]*model.TaskAssignment, int64, error) {
+func (s *TaskService) ListByStaff(staffID int64, page, pageSize int) ([]*repository.TaskWithRequest, int64, error) {
 	if staffID == 0 {
 		return nil, 0, ErrTaskInvalid
 	}
 	offset := (page - 1) * pageSize
 	return s.taskRepo.ListByStaff(staffID, offset, pageSize)
+}
+
+func (s *TaskService) ListByStaffWithFilter(filter repository.TaskListFilter, page, pageSize int) ([]*repository.TaskWithRequest, int64, error) {
+	if filter.StaffID == 0 {
+		return nil, 0, ErrTaskInvalid
+	}
+	offset := (page - 1) * pageSize
+	return s.taskRepo.ListWithRequest(filter, offset, pageSize)
 }
 
 // Claim 认领任务
@@ -100,11 +109,14 @@ func (s *TaskService) Claim(taskID, staffID int64) (*model.TaskAssignment, bool,
 			return ErrTaskConflict
 		}
 
+		claimedAt := time.Now()
 		task.StaffID = staffID
 		task.Status = consts.TaskStatusClaimed
+		task.ClaimedAt = claimedAt
 		if err := tx.Model(&task).Updates(map[string]interface{}{
-			"staff_id": staffID,
-			"status":   consts.TaskStatusClaimed,
+			"staff_id":   staffID,
+			"status":     consts.TaskStatusClaimed,
+			"claimed_at": claimedAt,
 		}); err.Error != nil {
 			return err.Error
 		}
@@ -174,11 +186,14 @@ func (s *TaskService) Complete(taskID, staffID int64, images []string) (*model.T
 		if err != nil {
 			return err
 		}
+		completedAt := time.Now()
 		task.Status = consts.TaskStatusCompleted
 		task.Images = string(payload)
+		task.CompletedAt = completedAt
 		if err := tx.Model(&task).Updates(map[string]interface{}{
-			"status": consts.TaskStatusCompleted,
-			"images": string(payload),
+			"status":       consts.TaskStatusCompleted,
+			"images":       string(payload),
+			"completed_at": completedAt,
 		}); err.Error != nil {
 			return err.Error
 		}
@@ -209,7 +224,11 @@ func (s *TaskService) sendClaimNotification(requestID int64) {
 		return
 	}
 	go func(userID int64) {
-		_ = s.notifySvc.SendInApp(context.Background(), userID, "task claimed", "Your request has been claimed by a staff member.")
+		_ = s.notifySvc.SendInAppWithOptions(context.Background(), userID, "任务已接单", "您的服务请求已被工作人员接单，请等待服务。", NotificationSendOptions{
+			Type:        NotificationTypeTask,
+			RelatedID:   requestID,
+			RelatedType: "request",
+		})
 	}(req.UserID)
 }
 
@@ -222,8 +241,16 @@ func (s *TaskService) sendCompleteNotification(requestID int64) {
 		return
 	}
 	go func(userID int64) {
-		_ = s.notifySvc.SendInApp(context.Background(), userID, "task completed", "Your request has been completed.")
-		_ = s.notifySvc.SendEmail(context.Background(), userID, "Request completed", "Your request has been completed.")
+		_ = s.notifySvc.SendInAppWithOptions(context.Background(), userID, "任务完成", "您的服务请求已完成，感谢您的使用！", NotificationSendOptions{
+			Type:        NotificationTypeTask,
+			RelatedID:   requestID,
+			RelatedType: "request",
+		})
+		_ = s.notifySvc.SendEmailWithOptions(context.Background(), userID, "服务请求已完成", "您的服务请求已完成，感谢您的使用！", NotificationSendOptions{
+			Type:        NotificationTypeTask,
+			RelatedID:   requestID,
+			RelatedType: "request",
+		})
 	}(req.UserID)
 }
 
@@ -275,12 +302,15 @@ func (s *TaskService) Transfer(taskID, newStaffID int64) (*model.TaskAssignment,
 			return nil
 		}
 
+		claimedAt := time.Now()
 		task.StaffID = newStaffID
 		task.Status = consts.TaskStatusClaimed
+		task.ClaimedAt = claimedAt
 		// 使用 Updates 只更新指定字段，避免零值时间字段问题
 		if err := tx.Model(&task).Updates(map[string]interface{}{
-			"staff_id": newStaffID,
-			"status":   consts.TaskStatusClaimed,
+			"staff_id":   newStaffID,
+			"status":     consts.TaskStatusClaimed,
+			"claimed_at": claimedAt,
 		}).Error; err != nil {
 			return err
 		}
@@ -307,6 +337,10 @@ func (s *TaskService) sendTransferNotification(requestID, staffID int64) {
 		return
 	}
 	go func(userID int64) {
-		_ = s.notifySvc.SendInApp(context.Background(), userID, "任务指派", "您有新的任务被指派，请及时处理。")
+		_ = s.notifySvc.SendInAppWithOptions(context.Background(), userID, "任务指派", "您有新的任务被指派，请及时处理。", NotificationSendOptions{
+			Type:        NotificationTypeTask,
+			RelatedID:   requestID,
+			RelatedType: "request",
+		})
 	}(staffID)
 }

@@ -87,7 +87,7 @@
           <div class="section-header">
             <div class="header-title">
               <el-icon class="header-icon"><List /></el-icon>
-              <span>最新待处理任务</span>
+              <span>{{ recentTaskTitle }}</span>
             </div>
             <el-button type="primary" link @click="goToTaskPool">查看全部</el-button>
           </div>
@@ -170,6 +170,10 @@ dayjs.locale('zh-cn')
 const router = useRouter()
 const authStore = useAuthStore()
 
+const isRegularStaff = computed(() => {
+  return authStore.hasRole('staff') && !authStore.hasRole('station_manager') && !authStore.hasRole('admin')
+})
+
 // 用户名
 const userName = computed(() => authStore.user?.name || '用户')
 
@@ -205,6 +209,10 @@ const todayStats = ref<TodayStatsData>({
 
 const myTaskStats = ref<MyTaskStatsData>({
   claimed: 0, completed: 0, total: 0
+})
+
+const recentTaskTitle = computed(() => {
+  return isRegularStaff.value ? '我的待处理任务' : '最新待处理任务'
 })
 
 // 图表配置
@@ -256,9 +264,12 @@ async function loadDashboardStats() {
 // 加载最近任务
 async function loadRecentTasks() {
   try {
-    const response = await taskApi.getTaskPool({
+    const params = {
       page: 1, page_size: 5, sort_by: 'created_at', sort_order: 'desc'
-    } as TaskListParams & { sort_by: string; sort_order: string })
+    } as TaskListParams & { sort_by: string; sort_order: string }
+    const response = isRegularStaff.value && authStore.hasPermission('service:task:my')
+      ? await taskApi.getMyTasks(params)
+      : await taskApi.getTaskPool(params)
     const items = response.data.items || []
     const tasksWithRequests = await Promise.all(items.map(async (task: Task) => {
       if (task.request) return task
@@ -278,7 +289,14 @@ async function loadRecentTasks() {
 
 // 快捷导航
 function goToTaskPool() { router.push('/services/tasks') }
-function handleViewTask(task: RecentTask) { router.push(`/services/tasks/${task.id}`) }
+function handleViewTask(task: RecentTask) {
+  router.push({
+    path: `/services/tasks/${task.id}`,
+    query: {
+      from: 'dashboard',
+    },
+  })
+}
 
 function getServiceTypeText(type?: string): string {
   const map: Record<string, string> = {
@@ -607,4 +625,3 @@ onMounted(() => {
   }
 }
 </style>
-

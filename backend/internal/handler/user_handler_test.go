@@ -17,7 +17,6 @@ import (
 	"community-elderly-care-platform/internal/service"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -25,20 +24,8 @@ import (
 // 运行方式: go test -tags=integration ./...
 
 func setupUserHandlerTestDB(t *testing.T) *gorm.DB {
-	tmpFile := t.TempDir() + "/test.db"
-	dsn := tmpFile + "?_loc=Local&_parseTime=true"
-	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
-		DisableForeignKeyConstraintWhenMigrating: true,
-	})
-	if err != nil {
-		t.Fatalf("failed to connect database: %v", err)
-	}
-
-	err = db.AutoMigrate(&model.User{}, &model.UserIdentity{})
-	if err != nil {
-		t.Fatalf("failed to migrate database: %v", err)
-	}
-
+	db := openHandlerTestDB(t, "user_handler_integration_test.db")
+	createHandlerTables(t, db)
 	return db
 }
 

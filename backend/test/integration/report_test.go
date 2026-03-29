@@ -23,7 +23,8 @@ func TestReports(t *testing.T) {
 		}`
 		w := testutil.DoRequest(env.Engine, http.MethodPost, "/api/v1/b/reports/generate", testutil.AdminToken(), body)
 		assert.Equal(t, http.StatusOK, w.Code)
-		assert.Contains(t, w.Body.String(), "application/octet-stream")
+		assert.Equal(t, "application/octet-stream", w.Header().Get("Content-Type"))
+		assert.Contains(t, w.Header().Get("Content-Disposition"), "attachment;")
 	})
 
 	t.Run("生成报表-人员绩效Excel", func(t *testing.T) {
@@ -35,7 +36,8 @@ func TestReports(t *testing.T) {
 		}`
 		w := testutil.DoRequest(env.Engine, http.MethodPost, "/api/v1/b/reports/generate", testutil.AdminToken(), body)
 		assert.Equal(t, http.StatusOK, w.Code)
-		assert.Contains(t, w.Body.String(), "application/octet-stream")
+		assert.Equal(t, "application/octet-stream", w.Header().Get("Content-Type"))
+		assert.Contains(t, w.Header().Get("Content-Disposition"), "attachment;")
 	})
 
 	t.Run("生成报表-需求分析Excel", func(t *testing.T) {
@@ -47,7 +49,8 @@ func TestReports(t *testing.T) {
 		}`
 		w := testutil.DoRequest(env.Engine, http.MethodPost, "/api/v1/b/reports/generate", testutil.AdminToken(), body)
 		assert.Equal(t, http.StatusOK, w.Code)
-		assert.Contains(t, w.Body.String(), "application/octet-stream")
+		assert.Equal(t, "application/octet-stream", w.Header().Get("Content-Type"))
+		assert.Contains(t, w.Header().Get("Content-Disposition"), "attachment;")
 	})
 
 	t.Run("生成报表-站点运营Excel", func(t *testing.T) {
@@ -59,19 +62,35 @@ func TestReports(t *testing.T) {
 		}`
 		w := testutil.DoRequest(env.Engine, http.MethodPost, "/api/v1/b/reports/generate", testutil.AdminToken(), body)
 		assert.Equal(t, http.StatusOK, w.Code)
-		assert.Contains(t, w.Body.String(), "application/octet-stream")
+		assert.Equal(t, "application/octet-stream", w.Header().Get("Content-Type"))
+		assert.Contains(t, w.Header().Get("Content-Disposition"), "attachment;")
 	})
 
 	t.Run("生成报表-CSV格式", func(t *testing.T) {
 		body := `{
-			"type": "service",
+				"type": "service",
 			"format": "csv",
 			"start_date": "2026-01-01",
 			"end_date": "2026-01-31"
 		}`
 		w := testutil.DoRequest(env.Engine, http.MethodPost, "/api/v1/b/reports/generate", testutil.AdminToken(), body)
 		assert.Equal(t, http.StatusOK, w.Code)
-		assert.Contains(t, w.Body.String(), "application/octet-stream")
+		assert.Equal(t, "application/octet-stream", w.Header().Get("Content-Type"))
+		assert.Contains(t, w.Header().Get("Content-Disposition"), "attachment;")
+	})
+
+	t.Run("预览报表-服务统计", func(t *testing.T) {
+		body := `{
+				"type": "service",
+				"format": "xlsx",
+				"start_date": "2026-01-01",
+				"end_date": "2026-01-31",
+				"preview": true
+			}`
+		w := testutil.DoRequest(env.Engine, http.MethodPost, "/api/v1/b/reports/generate", testutil.AdminToken(), body)
+		assert.Equal(t, http.StatusOK, w.Code)
+		testutil.AssertOK(t, w)
+		assert.Contains(t, w.Body.String(), "request_count")
 	})
 
 	t.Run("生成报表-参数错误-结束日期早于开始日期", func(t *testing.T) {

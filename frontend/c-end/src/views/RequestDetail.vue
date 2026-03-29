@@ -188,9 +188,9 @@ const canRate = computed(() => {
   return request.value?.status === 'completed' && !request.value?.rating
 })
 
-// 是否可以取消（待处理状态）
+// 是否可以取消（已派发、未被认领）
 const canCancel = computed(() => {
-  return request.value?.status === 'pending'
+  return request.value?.status === 'dispatched'
 })
 
 const goBack = () => {
@@ -259,8 +259,8 @@ const getStatusText = (status: string) => {
   const textMap: Record<string, string> = {
     pending: '待处理',
     dispatched: '已派单',
-    accepted: '已接单',
-    in_progress: '服务中',
+    claimed: '已认领',
+    processing: '服务中',
     completed: '已完成',
     cancelled: '已取消',
     rejected: '已拒绝'
@@ -298,7 +298,7 @@ onMounted(() => {
 }
 
 .header h1 {
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   font-weight: bold;
   color: #303133;
 }
@@ -344,12 +344,14 @@ onMounted(() => {
   background: linear-gradient(135deg, #909399 0%, #b4b4b4 100%);
 }
 
-.status-card.status-in_progress {
+.status-card.status-dispatched,
+.status-card.status-claimed,
+.status-card.status-processing {
   background: linear-gradient(135deg, #409EFF 0%, #66b1ff 100%);
 }
 
 .status-icon {
-  font-size: 48px;
+  font-size: calc(48px * var(--font-scale));
 }
 
 .status-info {
@@ -357,13 +359,13 @@ onMounted(() => {
 }
 
 .status-type {
-  font-size: 20px;
+  font-size: calc(20px * var(--font-scale));
   font-weight: bold;
   margin-bottom: 4px;
 }
 
 .status-tag {
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   opacity: 0.9;
 }
 
@@ -379,12 +381,12 @@ onMounted(() => {
 
 .order-no .label {
   color: #909399;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
 }
 
 .order-no .value {
   color: #303133;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   font-family: monospace;
 }
 
@@ -396,7 +398,7 @@ onMounted(() => {
 }
 
 .section-title {
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   font-weight: 500;
   color: #303133;
   margin-bottom: 12px;
@@ -412,7 +414,7 @@ onMounted(() => {
 
 .info-row {
   display: flex;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
 }
 
 .info-label {
@@ -435,7 +437,7 @@ onMounted(() => {
 /* 取消原因 */
 .cancel-reason {
   color: #f56c6c;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   padding: 12px;
   background: #fef0f0;
   border-radius: 8px;
@@ -463,7 +465,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   color: #909399;
-  font-size: 24px;
+  font-size: calc(24px * var(--font-scale));
 }
 
 /* 评价展示 */
@@ -475,7 +477,7 @@ onMounted(() => {
 
 .rating-display .feedback {
   color: #606266;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   padding: 12px;
   background: #f5f7fa;
   border-radius: 8px;
@@ -492,7 +494,7 @@ onMounted(() => {
 
 .action-btn {
   width: 100%;
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   height: 48px;
   border-radius: 24px;
   margin: 0 !important;

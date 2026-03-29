@@ -250,21 +250,24 @@ func (h *CAuthHandler) SendCode(c *gin.Context) {
 // @Tags         c_auth
 // @Accept       json
 // @Produce      json
-// @Param        request body object{phone=string,code=string,name=string,address=string,latitude=float64,longitude=float64,service_type=string,description=string} true "快速开通请求"
+// @Param        request body object{phone=string,code=string,name=string,address=string,latitude=float64,longitude=float64,service_type=string,description=string,images=[]string,contact_name=string,contact_phone=string} true "快速开通请求"
 // @Success      200  {object} APIResponse "快速开通成功"
 // @Failure      400  {object} APIResponse "请求参数错误"
 // @Failure      500  {object} APIResponse "服务器错误"
 // @Router       /c/auth/quick-start [post]
 func (h *CAuthHandler) QuickStart(c *gin.Context) {
 	var req struct {
-		Phone       string   `json:"phone" binding:"required"`
-		Code        string   `json:"code" binding:"required"`
-		Name        string   `json:"name" binding:"required"`
-		Address     string   `json:"address"`
-		Latitude    *float64 `json:"latitude"`
-		Longitude   *float64 `json:"longitude"`
-		ServiceType string   `json:"service_type" binding:"required"`
-		Description *string  `json:"description"`
+		Phone        string   `json:"phone" binding:"required"`
+		Code         string   `json:"code" binding:"required"`
+		Name         string   `json:"name" binding:"required"`
+		Address      string   `json:"address"`
+		Latitude     *float64 `json:"latitude"`
+		Longitude    *float64 `json:"longitude"`
+		ServiceType  string   `json:"service_type" binding:"required"`
+		Description  *string  `json:"description"`
+		Images       []string `json:"images"`
+		ContactName  string   `json:"contact_name"`  // 联系人姓名
+		ContactPhone string   `json:"contact_phone"` // 联系人电话
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -280,14 +283,17 @@ func (h *CAuthHandler) QuickStart(c *gin.Context) {
 
 	// 调用快速开通服务
 	result, err := h.authService.QuickStart(service.QuickStartInput{
-		Phone:       req.Phone,
-		Code:        req.Code,
-		Name:        req.Name,
-		Address:     req.Address,
-		Latitude:    req.Latitude,
-		Longitude:   req.Longitude,
-		ServiceType: req.ServiceType,
-		Description: req.Description,
+		Phone:        req.Phone,
+		Code:         req.Code,
+		Name:         req.Name,
+		Address:      req.Address,
+		Latitude:     req.Latitude,
+		Longitude:    req.Longitude,
+		ServiceType:  req.ServiceType,
+		Description:  req.Description,
+		Images:       req.Images,
+		ContactName:  req.ContactName,
+		ContactPhone: req.ContactPhone,
 	})
 
 	if err != nil {
@@ -317,11 +323,14 @@ func (h *CAuthHandler) QuickStart(c *gin.Context) {
 			"address": result.Profile.Address,
 		},
 		"request": gin.H{
-			"id":           result.Request.ID,
-			"request_no":   result.Request.RequestNo,
-			"service_type": result.Request.ServiceType,
-			"status":       result.Request.Status,
-			"created_at":   result.Request.CreatedAt,
+			"id":            result.Request.ID,
+			"request_no":    result.Request.RequestNo,
+			"service_type":  result.Request.ServiceType,
+			"status":        result.Request.Status,
+			"contact_name":   result.Request.ContactName,
+			"contact_phone": result.Request.ContactPhone,
+			"images":        result.Request.Images,
+			"created_at":    result.Request.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
 		},
 	}
 

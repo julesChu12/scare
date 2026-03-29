@@ -2,7 +2,7 @@
   <div class="page-container">
     <div class="page-header">
       <h2>站点管理</h2>
-      <el-button type="primary" @click="handleAdd">新增站点</el-button>
+      <el-button v-if="canCreateStation" type="primary" @click="handleAdd">新增站点</el-button>
     </div>
 
     <div class="search-bar">
@@ -31,10 +31,11 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="200" fixed="right">
+      <el-table-column label="操作" width="280" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
-          <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
+          <el-button link type="success" @click="handleShowQrCode(row)">站点二维码</el-button>
+          <el-button v-if="canUpdateStation" link type="primary" @click="handleEdit(row)">编辑</el-button>
+          <el-button v-if="canDeleteStation" link type="danger" @click="handleDelete(row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -101,17 +102,50 @@
         <el-button type="primary" :loading="submitting" @click="submitForm">确定</el-button>
       </template>
     </el-dialog>
+
+    <el-dialog
+      v-model="qrDialogVisible"
+      title="站点二维码"
+      width="420px"
+      destroy-on-close
+    >
+      <div class="qr-dialog-content">
+        <div class="qr-station-name">{{ qrStationName }}</div>
+        <div class="qr-hint">扫码后进入 C 端快速开通页，来源站点会以参数形式附带。</div>
+
+        <div v-loading="qrLoading" class="qr-preview-wrapper">
+          <img v-if="qrCodeDataUrl" :src="qrCodeDataUrl" alt="站点二维码" class="qr-preview" />
+        </div>
+
+        <el-input
+          :model-value="qrCodeUrl"
+          type="textarea"
+          :rows="3"
+          readonly
+        />
+      </div>
+
+      <template #footer>
+        <el-button @click="qrDialogVisible = false">关闭</el-button>
+        <el-button :disabled="!qrCodeUrl" @click="handleCopyQrLink">复制链接</el-button>
+        <el-button type="primary" :disabled="!qrCodeDataUrl" @click="handleDownloadQrCode">下载二维码</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { computed, ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
+import QRCode from 'qrcode'
 import { stationApi } from '@/api'
+import { PERM_STATION_CREATE, PERM_STATION_DELETE, PERM_STATION_UPDATE } from '@/constants/permissions'
+import { useAuthStore } from '@/store/modules/auth'
 import type { Station } from '@/types/api'
 
 // 数据
+const authStore = useAuthStore()
 const loading = ref(false)
 const tableData = ref<Station[]>([])
 const pagination = reactive({
@@ -138,9 +172,55 @@ const formData = reactive({
   status: 'active'
 })
 
+const qrDialogVisible = ref(false)
+const qrLoading = ref(false)
+const qrStationName = ref('')
+const qrCodeUrl = ref('')
+const qrCodeDataUrl = ref('')
+
 const rules: FormRules = {
   name: [{ required: true, message: '请输入站点名称', trigger: 'blur' }],
   code: [{ required: true, message: '请输入站点编号', trigger: 'blur' }]
+}
+
+const canCreateStation = computed(() => authStore.hasPermission(PERM_STATION_CREATE))
+const canUpdateStation = computed(() => authStore.hasPermission(PERM_STATION_UPDATE))
+const canDeleteStation = computed(() => authStore.hasPermission(PERM_STATION_DELETE))
+
+const resolveCEndBaseUrl = () => {
+  const configuredBaseUrl = import.meta.env.VITE_C_END_BASE_URL?.trim()
+  if (configuredBaseUrl) {
+    return configuredBaseUrl
+  }
+
+  if (import.meta.env.DEV) {
+    return `${window.location.protocol}//${window.location.hostname}:5174`
+  }
+
+  return window.location.origin
+}
+
+const buildQuickStartUrl = (stationId: number) => {
+  const url = new URL('/quick', resolveCEndBaseUrl())
+  url.searchParams.set('source_station_id', String(stationId))
+  return url.toString()
+}
+
+const copyText = async (text: string) => {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text)
+    return
+  }
+
+  const textarea = document.createElement('textarea')
+  textarea.value = text
+  textarea.setAttribute('readonly', 'true')
+  textarea.style.position = 'fixed'
+  textarea.style.top = '-9999px'
+  document.body.appendChild(textarea)
+  textarea.select()
+  document.execCommand('copy')
+  document.body.removeChild(textarea)
 }
 
 // 方法
@@ -149,7 +229,8 @@ const fetchData = async () => {
   try {
     const res = await stationApi.getStations({
       page: pagination.page,
-      page_size: pagination.pageSize
+      page_size: pagination.pageSize,
+      keyword: searchForm.name || undefined
     })
     tableData.value = res.data.items
     pagination.total = res.data.total
@@ -207,6 +288,54 @@ const handleDelete = (row: Station) => {
       console.error(error)
     }
   })
+}
+
+const handleShowQrCode = async (row: Station) => {
+  qrDialogVisible.value = true
+  qrLoading.value = true
+  qrStationName.value = row.name
+  qrCodeDataUrl.value = ''
+  qrCodeUrl.value = buildQuickStartUrl(row.id)
+
+  try {
+    qrCodeDataUrl.value = await QRCode.toDataURL(qrCodeUrl.value, {
+      width: 320,
+      margin: 2,
+      errorCorrectionLevel: 'M',
+      color: {
+        dark: '#111827',
+        light: '#ffffff',
+      },
+    })
+  } catch (error) {
+    console.error(error)
+    ElMessage.error('二维码生成失败')
+  } finally {
+    qrLoading.value = false
+  }
+}
+
+const handleCopyQrLink = async () => {
+  if (!qrCodeUrl.value) return
+
+  try {
+    await copyText(qrCodeUrl.value)
+    ElMessage.success('链接已复制')
+  } catch (error) {
+    console.error(error)
+    ElMessage.error('复制失败，请手动复制')
+  }
+}
+
+const handleDownloadQrCode = () => {
+  if (!qrCodeDataUrl.value) return
+
+  const link = document.createElement('a')
+  link.href = qrCodeDataUrl.value
+  link.download = `station-${qrStationName.value || 'qrcode'}.png`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
 }
 
 const submitForm = async () => {
@@ -272,5 +401,38 @@ onMounted(() => {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
+}
+
+.qr-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.qr-station-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.qr-hint {
+  color: #6b7280;
+  line-height: 1.6;
+}
+
+.qr-preview-wrapper {
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.qr-preview {
+  width: 320px;
+  height: 320px;
+  object-fit: contain;
 }
 </style>

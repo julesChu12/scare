@@ -4,12 +4,10 @@ package service
 
 import (
 	"testing"
-	"time"
 
 	"community-elderly-care-platform/internal/dao/model"
 	"community-elderly-care-platform/internal/repository"
 	"community-elderly-care-platform/pkg/jwt"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -17,26 +15,10 @@ import (
 // 运行方式: go test -tags=integration ./...
 
 func setupAuthTestDB(t *testing.T) *gorm.DB {
-	tmpFile := t.TempDir() + "/test.db"
-	db, err := gorm.Open(sqlite.Open(tmpFile), &gorm.Config{
-		DisableForeignKeyConstraintWhenMigrating: true,
-		NowFunc: func() time.Time {
-			return time.Now().Local()
-		},
-	})
-	if err != nil {
-		t.Fatalf("failed to connect database: %v", err)
-	}
-
-	// 为 SQLite 设置 PRAGMA
-	sqlDB, _ := db.DB()
-	sqlDB.Exec("PRAGMA journal_mode=WAL")
-
-	err = db.AutoMigrate(&model.User{}, &model.UserIdentity{}, &model.CustomerProfile{})
-	if err != nil {
-		t.Fatalf("failed to migrate database: %v", err)
-	}
-
+	db := openServiceTestDB(t, "auth_service_integration_test.db")
+	createUsersTable(t, db)
+	createUserIdentitiesTable(t, db)
+	createCustomerProfilesTable(t, db)
 	return db
 }
 

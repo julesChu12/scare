@@ -63,6 +63,18 @@ type GenerateReportOutput struct {
 	FilePath string
 }
 
+type ReportPreviewData struct {
+	RequestCount          int64   `json:"request_count"`
+	CompletedRequestCount int64   `json:"completed_request_count"`
+	CompletionRate        float64 `json:"completion_rate"`
+	ServiceTypeCount      int     `json:"service_type_count"`
+	RankedStaffCount      int     `json:"ranked_staff_count"`
+	CompletedTaskCount    int64   `json:"completed_task_count"`
+	AvgRating             float64 `json:"avg_rating"`
+	TrendDays             int     `json:"trend_days"`
+	StationCount          int64   `json:"station_count"`
+}
+
 func (s *ReportService) GenerateReport(input GenerateReportInput) (*GenerateReportOutput, error) {
 	reportName := s.generateReportName(input.Type, input.StartDate, input.EndDate)
 	filePath := s.generateFilePath(input.Type, input.Format)
@@ -117,6 +129,58 @@ func (s *ReportService) GenerateReport(input GenerateReportInput) (*GenerateRepo
 
 func (s *ReportService) GetReport(id int64) (*model.Report, error) {
 	return s.reportRepo.GetByID(id)
+}
+
+func (s *ReportService) GetPreview(input GenerateReportInput) (*ReportPreviewData, error) {
+	isAdmin := input.StationID == 0
+	totalRequests, err := s.requestRepo.CountBetween(input.StationID, isAdmin, input.StartDate, input.EndDate)
+	if err != nil {
+		return nil, err
+	}
+	completedRequests, err := s.requestRepo.CountByStatusBetween(input.StationID, "completed", isAdmin, input.StartDate, input.EndDate)
+	if err != nil {
+		return nil, err
+	}
+
+	preview := &ReportPreviewData{
+		RequestCount:          totalRequests,
+		CompletedRequestCount: completedRequests,
+		CompletionRate:        calculateCompletionRate(totalRequests, completedRequests),
+		TrendDays:             int(input.EndDate.Sub(input.StartDate).Hours()/24) + 1,
+	}
+
+	switch input.Type {
+	case ReportTypeService:
+		typeCounts, err := s.requestRepo.CountByServiceTypeBetween(input.StationID, isAdmin, input.StartDate, input.EndDate)
+		if err != nil {
+			return nil, err
+		}
+		preview.ServiceTypeCount = len(typeCounts)
+	case ReportTypePerformance:
+		ranking, err := s.taskRepo.GetStaffRankingBetween(input.StationID, isAdmin, input.StartDate, input.EndDate, 50)
+		if err != nil {
+			return nil, err
+		}
+		preview.RankedStaffCount = len(ranking)
+		var totalCompleted int64
+		var weightedRating float64
+		for _, item := range ranking {
+			totalCompleted += item.CompletedCount
+			weightedRating += item.AvgRating * float64(item.CompletedCount)
+		}
+		preview.CompletedTaskCount = totalCompleted
+		if totalCompleted > 0 {
+			preview.AvgRating = weightedRating / float64(totalCompleted)
+		}
+	case ReportTypeStation:
+		stations, err := s.listReportStations(input)
+		if err != nil {
+			return nil, err
+		}
+		preview.StationCount = int64(len(stations))
+	}
+
+	return preview, nil
 }
 
 func (s *ReportService) ListReports(filter repository.ReportFilter, page, pageSize int) ([]*model.Report, int64, error) {
@@ -233,7 +297,12 @@ func (s *ReportService) generateCSV(input GenerateReportInput, filePath string) 
 	}
 	defer os.Remove(tmpXlsx)
 
-	rows, err := f.GetRows("Sheet1")
+	sheets := f.GetSheetList()
+	if len(sheets) == 0 {
+		return fmt.Errorf("no worksheet generated")
+	}
+
+	rows, err := f.GetRows(sheets[0])
 	if err != nil {
 		return err
 	}
@@ -270,14 +339,10 @@ func (s *ReportService) generateServiceReport(f *excelize.File, input GenerateRe
 	}
 
 	isAdmin := input.StationID == 0
-	totalRequests, _ := s.requestRepo.CountSince(input.StationID, isAdmin, input.StartDate)
-	completedRequests, _ := s.requestRepo.CountByStatusSince(input.StationID, "completed", isAdmin, input.StartDate)
-	pendingRequests, _ := s.requestRepo.CountByStatusSince(input.StationID, "pending", isAdmin, input.StartDate)
-
-	completionRate := float64(0)
-	if totalRequests > 0 {
-		completionRate = float64(completedRequests) * 100 / float64(totalRequests)
-	}
+	totalRequests, _ := s.requestRepo.CountBetween(input.StationID, isAdmin, input.StartDate, input.EndDate)
+	completedRequests, _ := s.requestRepo.CountByStatusBetween(input.StationID, "completed", isAdmin, input.StartDate, input.EndDate)
+	pendingRequests, _ := s.requestRepo.CountByStatusBetween(input.StationID, "pending", isAdmin, input.StartDate, input.EndDate)
+	completionRate := calculateCompletionRate(totalRequests, completedRequests)
 
 	data := [][]interface{}{
 		{"总需求数", totalRequests},
@@ -300,13 +365,10 @@ func (s *ReportService) generateServiceReport(f *excelize.File, input GenerateRe
 		f.SetCellValue("服务类型分布", cell, h)
 	}
 
-	typeCounts, _ := s.requestRepo.CountByServiceType(input.StationID, isAdmin, input.StartDate)
+	typeCounts, _ := s.requestRepo.CountByServiceTypeBetween(input.StationID, isAdmin, input.StartDate, input.EndDate)
 	row := 2
 	for serviceType, count := range typeCounts {
-		percentage := float64(0)
-		if totalRequests > 0 {
-			percentage = float64(count) * 100 / float64(totalRequests)
-		}
+		percentage := calculateCompletionRate(totalRequests, count)
 		f.SetCellValue("服务类型分布", fmt.Sprintf("A%d", row), serviceType)
 		f.SetCellValue("服务类型分布", fmt.Sprintf("B%d", row), count)
 		f.SetCellValue("服务类型分布", fmt.Sprintf("C%d", row), fmt.Sprintf("%.1f%%", percentage))
@@ -327,7 +389,7 @@ func (s *ReportService) generatePerformanceReport(f *excelize.File, input Genera
 	}
 
 	isAdmin := input.StationID == 0
-	ranking, _ := s.taskRepo.GetStaffRanking(input.StationID, isAdmin, input.StartDate, 50)
+	ranking, _ := s.taskRepo.GetStaffRankingBetween(input.StationID, isAdmin, input.StartDate, input.EndDate, 50)
 
 	for i, item := range ranking {
 		row := i + 2
@@ -351,8 +413,7 @@ func (s *ReportService) generateRequestReport(f *excelize.File, input GenerateRe
 	}
 
 	isAdmin := input.StationID == 0
-	days := int(input.EndDate.Sub(input.StartDate).Hours()/24) + 1
-	trend, _ := s.requestRepo.GetDailyTrend(input.StationID, isAdmin, days)
+	trend, _ := s.requestRepo.GetDailyTrendBetween(input.StationID, isAdmin, input.StartDate, input.EndDate)
 
 	for i, item := range trend {
 		row := i + 2
@@ -378,7 +439,7 @@ func (s *ReportService) generateRequestReport(f *excelize.File, input GenerateRe
 
 	row := 2
 	for _, status := range statuses {
-		count, _ := s.requestRepo.CountByStatusSince(input.StationID, status, isAdmin, input.StartDate)
+		count, _ := s.requestRepo.CountByStatusBetween(input.StationID, status, isAdmin, input.StartDate, input.EndDate)
 		f.SetCellValue("状态分布", fmt.Sprintf("A%d", row), statusNames[status])
 		f.SetCellValue("状态分布", fmt.Sprintf("B%d", row), count)
 		row++
@@ -397,17 +458,16 @@ func (s *ReportService) generateStationReport(f *excelize.File, input GenerateRe
 		f.SetCellValue(sheetName, cell, h)
 	}
 
-	stations, _, _ := s.stationRepo.List(0, 100)
+	stations, err := s.listReportStations(input)
+	if err != nil {
+		return err
+	}
 
 	row := 2
 	for _, station := range stations {
-		total, _ := s.requestRepo.CountSince(station.ID, false, input.StartDate)
-		completed, _ := s.requestRepo.CountByStatusSince(station.ID, "completed", false, input.StartDate)
-
-		completionRate := float64(0)
-		if total > 0 {
-			completionRate = float64(completed) * 100 / float64(total)
-		}
+		total, _ := s.requestRepo.CountBetween(station.ID, false, input.StartDate, input.EndDate)
+		completed, _ := s.requestRepo.CountByStatusBetween(station.ID, "completed", false, input.StartDate, input.EndDate)
+		completionRate := calculateCompletionRate(total, completed)
 
 		f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), station.Name)
 		f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), total)
@@ -417,4 +477,27 @@ func (s *ReportService) generateStationReport(f *excelize.File, input GenerateRe
 	}
 
 	return nil
+}
+
+func (s *ReportService) listReportStations(input GenerateReportInput) ([]*model.ServiceStation, error) {
+	if input.StationID > 0 {
+		station, err := s.stationRepo.GetByID(input.StationID)
+		if err != nil {
+			return nil, err
+		}
+		return []*model.ServiceStation{station}, nil
+	}
+
+	stations, _, err := s.stationRepo.List(0, 100, repository.StationListFilter{})
+	if err != nil {
+		return nil, err
+	}
+	return stations, nil
+}
+
+func calculateCompletionRate(total, completed int64) float64 {
+	if total == 0 {
+		return 0
+	}
+	return float64(completed) * 100 / float64(total)
 }

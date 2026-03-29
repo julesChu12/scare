@@ -11,6 +11,10 @@ type ZoneRepository struct {
 	q *query.Query
 }
 
+type ZoneListFilter struct {
+	StationID int64
+}
+
 func NewZoneRepository(db *gorm.DB) *ZoneRepository {
 	return &ZoneRepository{
 		q: query.Use(db),
@@ -37,25 +41,23 @@ func (r *ZoneRepository) ListActive() ([]*model.ServiceZone, error) {
 }
 
 // List 获取所有围栏（分页）
-func (r *ZoneRepository) List(offset, limit int) ([]*model.ServiceZone, int64, error) {
-	z := r.q.ServiceZone
-	
-	// 获取总数
-	total, err := z.Count()
-	if err != nil {
+func (r *ZoneRepository) List(offset, limit int, filter ZoneListFilter) ([]*model.ServiceZone, int64, error) {
+	db := r.q.ServiceZone.UnderlyingDB().Model(&model.ServiceZone{})
+
+	if filter.StationID > 0 {
+		db = db.Where("station_id = ?", filter.StationID)
+	}
+
+	var total int64
+	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-	
-	// 分页查询
-	zones, err := z.Order(z.ID.Desc()).
-		Offset(offset).
-		Limit(limit).
-		Find()
-	
-	if err != nil {
+
+	var zones []*model.ServiceZone
+	if err := db.Order("id DESC").Offset(offset).Limit(limit).Find(&zones).Error; err != nil {
 		return nil, 0, err
 	}
-	
+
 	return zones, total, nil
 }
 

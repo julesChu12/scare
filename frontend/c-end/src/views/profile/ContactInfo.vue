@@ -24,7 +24,7 @@
         </el-form-item>
 
         <el-divider content-position="left">
-          <span style="font-size: 18px; font-weight: 500;">🚨 紧急联系人</span>
+          <span style="font-size: calc(18px * var(--font-scale)); font-weight: 500;">🚨 紧急联系人</span>
         </el-divider>
 
         <el-form-item label="联系人姓名" prop="emergency_name">
@@ -180,7 +180,7 @@ onMounted(() => {
 }
 
 .header h1 {
-  font-size: 24px;
+  font-size: calc(24px * var(--font-scale));
   font-weight: bold;
 }
 
@@ -197,23 +197,23 @@ onMounted(() => {
 }
 
 :deep(.el-form-item__label) {
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   font-weight: 500;
   color: var(--text-color-primary, #303133);
   margin-bottom: 8px;
 }
 
 :deep(.el-input__inner) {
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   height: 48px;
 }
 
 :deep(.el-select .el-input__inner) {
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
 }
 
 .field-tip {
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: var(--text-color-secondary, #909399);
   margin-top: 4px;
 }
@@ -231,6 +231,6 @@ onMounted(() => {
 .form-actions .el-button {
   flex: 1;
   height: 48px;
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
 }
 </style>

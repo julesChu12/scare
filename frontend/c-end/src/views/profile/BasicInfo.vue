@@ -162,7 +162,7 @@ onMounted(() => {
 }
 
 .header h1 {
-  font-size: 24px;
+  font-size: calc(24px * var(--font-scale));
   font-weight: bold;
 }
 
@@ -179,14 +179,14 @@ onMounted(() => {
 }
 
 :deep(.el-form-item__label) {
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   font-weight: 500;
   color: var(--text-color-primary, #303133);
   margin-bottom: 8px;
 }
 
 :deep(.el-input__inner) {
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   height: 48px;
 }
 
@@ -197,7 +197,7 @@ onMounted(() => {
 :deep(.el-radio.is-bordered) {
   padding: 12px 24px;
   border-radius: 8px;
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   min-width: 100px;
   text-align: center;
 }
@@ -207,11 +207,11 @@ onMounted(() => {
 }
 
 :deep(.el-date-editor .el-input__inner) {
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
 }
 
 .field-tip {
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: var(--text-color-secondary, #909399);
   margin-top: 4px;
 }
@@ -225,6 +225,6 @@ onMounted(() => {
 .form-actions .el-button {
   flex: 1;
   height: 48px;
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
 }
 </style>

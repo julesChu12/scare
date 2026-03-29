@@ -25,7 +25,8 @@ func (r *CustomerRepository) GetByUserID(userID int64) (*model.CustomerProfile, 
 
 // Create 创建档案
 func (r *CustomerRepository) Create(profile *model.CustomerProfile) error {
-	return r.q.CustomerProfile.Create(profile)
+	c := r.q.CustomerProfile
+	return c.Select(c.UserID, c.Address, c.EmergencyContact, c.CreatedAt, c.UpdatedAt).Create(profile)
 }
 
 // Update 更新档案

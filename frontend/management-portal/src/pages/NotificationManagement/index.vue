@@ -182,14 +182,14 @@ const pagination = reactive({
 /**
  * 获取图标
  */
-function getTypeIcon(type: string) {
+function getTypeIcon(type?: string) {
   const map: Record<string, any> = {
     system: Bell,
     task: List,
     alert: Warning,
     message: Message
   }
-  return map[type] || Bell
+  return map[type || ''] || Bell
 }
 
 /**
@@ -246,7 +246,7 @@ async function loadNotifications() {
       page: pagination.page,
       page_size: pagination.pageSize,
       type: filterType.value || undefined
-    } as any)
+    })
     const { items, total } = response.data
     pagination.total = total
     notificationList.value = items
@@ -297,27 +297,27 @@ async function handleMarkReadAndClose() {
 /**
  * 获取类型文本
  */
-function getTypeText(type: string): string {
+function getTypeText(type?: string): string {
   const typeMap: Record<string, string> = {
     system: '系统通知',
     task: '任务通知',
     request: '需求通知',
     alert: '告警通知',
   }
-  return typeMap[type] || type
+  return typeMap[type || ''] || type || '系统通知'
 }
 
 /**
  * 获取类型标签颜色
  */
-function getTypeTag(type: string): string {
+function getTypeTag(type?: string): string {
   const tagMap: Record<string, string> = {
     system: 'info',
     task: 'primary',
     request: 'success',
     alert: 'danger',
   }
-  return tagMap[type] || ''
+  return tagMap[type || ''] || ''
 }
 
 /**

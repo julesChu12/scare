@@ -26,6 +26,10 @@ type ZoneInput struct {
 	Status    string      `json:"status"`     // 状态
 }
 
+type ZoneListFilter struct {
+	StationID int64 `json:"station_id"`
+}
+
 func NewZoneService(repo *repository.ZoneRepository, geofenceSvc *GeofenceService) *ZoneService {
 	return &ZoneService{repo: repo, geofenceSvc: geofenceSvc}
 }
@@ -83,6 +87,13 @@ func (s *ZoneService) Update(input ZoneInput) (*model.ServiceZone, error) {
 	return zone, nil
 }
 
+func (s *ZoneService) GetByID(id int64) (*model.ServiceZone, error) {
+	if id == 0 {
+		return nil, ErrInvalidZone
+	}
+	return s.repo.GetByID(id)
+}
+
 func (s *ZoneService) Delete(id int64) error {
 	if id == 0 {
 		return ErrInvalidZone
@@ -94,7 +105,9 @@ func (s *ZoneService) Delete(id int64) error {
 	return nil
 }
 
-func (s *ZoneService) List(page, pageSize int) ([]*model.ServiceZone, int64, error) {
+func (s *ZoneService) List(page, pageSize int, filter ZoneListFilter) ([]*model.ServiceZone, int64, error) {
 	offset := (page - 1) * pageSize
-	return s.repo.List(offset, pageSize)
+	return s.repo.List(offset, pageSize, repository.ZoneListFilter{
+		StationID: filter.StationID,
+	})
 }

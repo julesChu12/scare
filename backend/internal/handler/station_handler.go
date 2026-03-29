@@ -170,6 +170,15 @@ func (h *StationHandler) Get(c *gin.Context) {
 		RespondError(c, http.StatusBadRequest, "invalid id")
 		return
 	}
+
+	if !containsRole(GetUserIdentities(c), "admin") {
+		stationID, ok := GetStationID(c)
+		if !ok || stationID == 0 || stationID != id {
+			RespondError(c, http.StatusForbidden, "forbidden")
+			return
+		}
+	}
+
 	station, err := h.service.GetByID(id)
 	if err != nil {
 		RespondError(c, http.StatusNotFound, "station not found")
@@ -187,13 +196,35 @@ func (h *StationHandler) Get(c *gin.Context) {
 // @Security     Bearer
 // @Param        page query int false "页码" default(1)
 // @Param        page_size query int false "每页数量" default(10)
+// @Param        keyword query string false "关键词搜索(站点名称/编号/地址/电话)"
+// @Param        name query string false "站点名称(兼容旧参数，等同于 keyword)"
+// @Param        status query string false "状态筛选(active/inactive)"
 // @Success      200  {object} APIResponse "获取成功"
 // @Failure      401  {object} APIResponse "未认证"
 // @Failure      500  {object} APIResponse "服务器错误"
 // @Router       /b/stations [get]
 func (h *StationHandler) List(c *gin.Context) {
 	page, pageSize := GetPagination(c)
-	stations, total, err := h.service.List(page, pageSize)
+	keyword := c.Query("keyword")
+	if keyword == "" {
+		keyword = c.Query("name")
+	}
+
+	filter := service.StationListFilter{
+		Keyword: keyword,
+		Status:  c.Query("status"),
+	}
+
+	if !containsRole(GetUserIdentities(c), "admin") {
+		stationID, ok := GetStationID(c)
+		if !ok || stationID == 0 {
+			RespondError(c, http.StatusForbidden, "forbidden")
+			return
+		}
+		filter.StationID = stationID
+	}
+
+	stations, total, err := h.service.List(page, pageSize, filter)
 	if err != nil {
 		RespondError(c, http.StatusInternalServerError, "list stations failed")
 		return

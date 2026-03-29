@@ -26,6 +26,7 @@ type generateReportRequest struct {
 	StationID *int64 `json:"station_id"`
 	StartDate string `json:"start_date" binding:"required"`
 	EndDate   string `json:"end_date" binding:"required"`
+	Preview   bool   `json:"preview"`
 }
 
 // GenerateReport 生成并下载报表
@@ -84,6 +85,16 @@ func (h *ReportHandler) GenerateReport(c *gin.Context) {
 		StartDate: startDate,
 		EndDate:   endDate,
 		UserID:    userID,
+	}
+
+	if req.Preview {
+		preview, err := h.service.GetPreview(input)
+		if err != nil {
+			RespondError(c, http.StatusInternalServerError, "preview report failed: "+err.Error())
+			return
+		}
+		Respond(c, http.StatusOK, "ok", preview)
+		return
 	}
 
 	output, err := h.service.GenerateReport(input)

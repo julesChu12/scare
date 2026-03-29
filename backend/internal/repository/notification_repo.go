@@ -11,6 +11,11 @@ type NotificationRepository struct {
 	q *query.Query
 }
 
+type NotificationListFilter struct {
+	Type   string
+	IsRead *bool
+}
+
 func NewNotificationRepository(db *gorm.DB) *NotificationRepository {
 	return &NotificationRepository{
 		q: query.Use(db),
@@ -27,27 +32,45 @@ func (r *NotificationRepository) Create(notification *model.Notification) error 
 }
 
 // ListByUser 获取用户的通知列表（分页）
-func (r *NotificationRepository) ListByUser(userID int64, offset, limit int) ([]*model.Notification, int64, error) {
-	n := r.q.Notification
-	
-	// 获取总数
-	total, err := n.Where(n.UserID.Eq(userID)).Count()
-	if err != nil {
+func (r *NotificationRepository) ListByUser(userID int64, offset, limit int, filter NotificationListFilter) ([]*model.Notification, int64, error) {
+	db := r.q.Notification.UnderlyingDB().Model(&model.Notification{}).Where("user_id = ?", userID)
+
+	if filter.Type != "" {
+		db = applyNotificationTypeFilter(db, filter.Type)
+	}
+
+	if filter.IsRead != nil {
+		db = db.Where("is_read = ?", *filter.IsRead)
+	}
+
+	var total int64
+	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-	
-	// 分页查询
-	notifications, err := n.Where(n.UserID.Eq(userID)).
-		Order(n.ID.Desc()).
-		Offset(offset).
-		Limit(limit).
-		Find()
-	
-	if err != nil {
+
+	var notifications []*model.Notification
+	if err := db.Order("id DESC").Offset(offset).Limit(limit).Find(&notifications).Error; err != nil {
 		return nil, 0, err
 	}
-	
+
 	return notifications, total, nil
+}
+
+func applyNotificationTypeFilter(db *gorm.DB, notificationType string) *gorm.DB {
+	switch notificationType {
+	case "task":
+		return db.Where(
+			"type = ? OR ((type IS NULL OR type = '') AND (title LIKE ? OR title LIKE ?))",
+			"task", "%任务%", "%服务需求%",
+		)
+	case "system":
+		return db.Where(
+			"type = ? OR ((type IS NULL OR type = '') AND title NOT LIKE ? AND title NOT LIKE ?)",
+			"system", "%任务%", "%服务需求%",
+		)
+	default:
+		return db.Where("type = ?", notificationType)
+	}
 }
 
 // MarkRead 标记为已读

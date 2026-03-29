@@ -55,7 +55,7 @@ func TestNotificationRepository_ListByUser(t *testing.T) {
 	repo.Create(notification)
 
 	// 测试分页
-	notifications, total, err := repo.ListByUser(1, 0, 3)
+	notifications, total, err := repo.ListByUser(1, 0, 3, NotificationListFilter{})
 	if err != nil {
 		t.Fatalf("failed to list notifications: %v", err)
 	}
@@ -66,6 +66,84 @@ func TestNotificationRepository_ListByUser(t *testing.T) {
 
 	if len(notifications) != 3 {
 		t.Errorf("expected 3 notifications in page, got %d", len(notifications))
+	}
+}
+
+func TestNotificationRepository_ListByUser_FilterByType(t *testing.T) {
+	db := setupTestDB(t)
+	repo := NewNotificationRepository(db)
+
+	_ = repo.Create(&model.Notification{
+		UserID: 1,
+		Title:  "系统通知",
+		Body:   "内容",
+		Type:   "system",
+		IsRead: false,
+	})
+	_ = repo.Create(&model.Notification{
+		UserID: 1,
+		Title:  "任务通知",
+		Body:   "内容",
+		Type:   "task",
+		IsRead: false,
+	})
+
+	notifications, total, err := repo.ListByUser(1, 0, 10, NotificationListFilter{
+		Type: "task",
+	})
+	if err != nil {
+		t.Fatalf("failed to list notifications with type filter: %v", err)
+	}
+
+	if total != 1 {
+		t.Errorf("expected total 1, got %d", total)
+	}
+
+	if len(notifications) != 1 {
+		t.Fatalf("expected 1 notification, got %d", len(notifications))
+	}
+
+	if notifications[0].Type != "task" {
+		t.Errorf("expected task notification, got %s", notifications[0].Type)
+	}
+}
+
+func TestNotificationRepository_ListByUser_FilterLegacyTaskNotifications(t *testing.T) {
+	db := setupTestDB(t)
+	repo := NewNotificationRepository(db)
+
+	_ = repo.Create(&model.Notification{
+		UserID: 1,
+		Title:  "任务完成",
+		Body:   "您的服务请求已完成",
+		Type:   "",
+		IsRead: false,
+	})
+	_ = repo.Create(&model.Notification{
+		UserID: 1,
+		Title:  "系统公告",
+		Body:   "内容",
+		Type:   "",
+		IsRead: false,
+	})
+
+	notifications, total, err := repo.ListByUser(1, 0, 10, NotificationListFilter{
+		Type: "task",
+	})
+	if err != nil {
+		t.Fatalf("failed to list legacy task notifications: %v", err)
+	}
+
+	if total != 1 {
+		t.Errorf("expected total 1, got %d", total)
+	}
+
+	if len(notifications) != 1 {
+		t.Fatalf("expected 1 notification, got %d", len(notifications))
+	}
+
+	if notifications[0].Title != "任务完成" {
+		t.Errorf("expected legacy task notification, got %s", notifications[0].Title)
 	}
 }
 

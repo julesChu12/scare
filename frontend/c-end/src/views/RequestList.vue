@@ -223,19 +223,19 @@ onMounted(() => {
 }
 
 .empty-icon {
-  font-size: 64px;
+  font-size: calc(64px * var(--font-scale));
   color: #c0c4cc;
   margin-bottom: 16px;
 }
 
 .empty-text {
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   color: #909399;
   margin-bottom: 8px;
 }
 
 .empty-hint {
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: #c0c4cc;
   margin-bottom: 24px;
 }
@@ -394,7 +394,7 @@ onMounted(() => {
 }
 
 .nav-item .el-icon {
-  font-size: 24px;
+  font-size: calc(24px * var(--font-scale));
 }
 
 .nav-item.active {

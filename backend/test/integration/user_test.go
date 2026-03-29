@@ -16,7 +16,7 @@ func TestUser(t *testing.T) {
 
 	t.Run("Admin获取用户列表", func(t *testing.T) {
 		w := testutil.DoRequest(env.Engine, http.MethodGet, "/api/v1/b/users?page=1&page_size=10", testutil.AdminToken())
-		data := testutil.AssertPageResponse(t, w)
+		data := testutil.AssertOK(t, w)
 		items := data["items"].([]interface{})
 		assert.GreaterOrEqual(t, len(items), 1)
 		total := data["total"].(float64)

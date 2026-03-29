@@ -25,6 +25,8 @@ func NewNotificationHandler(service *service.NotificationService) *NotificationH
 // @Security     Bearer
 // @Param        page query int false "页码" default(1)
 // @Param        page_size query int false "每页数量"
+// @Param        type query string false "通知类型(system/task/alert/request)"
+// @Param        is_read query bool false "是否已读"
 // @Success      200  {object} APIResponse "获取成功"
 // @Failure      401  {object} APIResponse "未认证"
 // @Failure      500  {object} APIResponse "服务器错误"
@@ -37,7 +39,16 @@ func (h *NotificationHandler) List(c *gin.Context) {
 		return
 	}
 	page, pageSize := GetPagination(c)
-	notifications, total, err := h.service.List(userID, page, pageSize)
+	var isRead *bool
+	if raw := c.Query("is_read"); raw != "" {
+		value := raw == "true" || raw == "1"
+		isRead = &value
+	}
+
+	notifications, total, err := h.service.List(userID, page, pageSize, service.NotificationListFilter{
+		Type:   c.Query("type"),
+		IsRead: isRead,
+	})
 	if err != nil {
 		RespondError(c, http.StatusInternalServerError, "list notifications failed")
 		return

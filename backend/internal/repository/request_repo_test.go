@@ -247,6 +247,132 @@ func TestRequestRepository_CountByStatus(t *testing.T) {
 	}
 }
 
+func TestRequestRepository_CountBetween(t *testing.T) {
+	db := setupTestDB(t)
+	repo := NewRequestRepository(db)
+
+	requests := []*model.ServiceRequest{
+		{
+			RequestNo:   fmt.Sprintf("REQ-RANGE-%d-1", time.Now().UnixNano()),
+			UserID:      1,
+			ServiceType: consts.ServiceTypeMeal,
+			Status:      consts.RequestStatusPending,
+			StationID:   1,
+			Address:     "测试地址1",
+			CreatedAt:   time.Date(2026, 1, 3, 10, 0, 0, 0, time.Local),
+		},
+		{
+			RequestNo:   fmt.Sprintf("REQ-RANGE-%d-2", time.Now().UnixNano()),
+			UserID:      1,
+			ServiceType: consts.ServiceTypeMedical,
+			Status:      consts.RequestStatusCompleted,
+			StationID:   1,
+			Address:     "测试地址2",
+			CreatedAt:   time.Date(2026, 1, 20, 15, 0, 0, 0, time.Local),
+		},
+		{
+			RequestNo:   fmt.Sprintf("REQ-RANGE-%d-3", time.Now().UnixNano()),
+			UserID:      1,
+			ServiceType: consts.ServiceTypeMeal,
+			Status:      consts.RequestStatusCompleted,
+			StationID:   1,
+			Address:     "测试地址3",
+			CreatedAt:   time.Date(2026, 2, 2, 9, 0, 0, 0, time.Local),
+		},
+	}
+
+	for _, req := range requests {
+		if err := repo.Create(req); err != nil {
+			t.Fatalf("failed to create request: %v", err)
+		}
+	}
+
+	startDate := time.Date(2026, 1, 1, 0, 0, 0, 0, time.Local)
+	endDate := time.Date(2026, 1, 31, 0, 0, 0, 0, time.Local)
+
+	total, err := repo.CountBetween(1, false, startDate, endDate)
+	if err != nil {
+		t.Fatalf("failed to count requests between dates: %v", err)
+	}
+	if total != 2 {
+		t.Errorf("expected 2 requests in range, got %d", total)
+	}
+
+	completed, err := repo.CountByStatusBetween(1, consts.RequestStatusCompleted, false, startDate, endDate)
+	if err != nil {
+		t.Fatalf("failed to count completed requests between dates: %v", err)
+	}
+	if completed != 1 {
+		t.Errorf("expected 1 completed request in range, got %d", completed)
+	}
+
+	typeCounts, err := repo.CountByServiceTypeBetween(1, false, startDate, endDate)
+	if err != nil {
+		t.Fatalf("failed to count request types between dates: %v", err)
+	}
+	if typeCounts[consts.ServiceTypeMeal] != 1 || typeCounts[consts.ServiceTypeMedical] != 1 {
+		t.Errorf("unexpected type counts: %#v", typeCounts)
+	}
+}
+
+func TestRequestRepository_GetDailyTrendBetween(t *testing.T) {
+	db := setupTestDB(t)
+	repo := NewRequestRepository(db)
+
+	requests := []*model.ServiceRequest{
+		{
+			RequestNo:   fmt.Sprintf("REQ-TREND-%d-1", time.Now().UnixNano()),
+			UserID:      1,
+			ServiceType: consts.ServiceTypeMeal,
+			Status:      consts.RequestStatusPending,
+			StationID:   1,
+			Address:     "测试地址1",
+			CreatedAt:   time.Date(2026, 1, 2, 8, 0, 0, 0, time.Local),
+		},
+		{
+			RequestNo:   fmt.Sprintf("REQ-TREND-%d-2", time.Now().UnixNano()),
+			UserID:      1,
+			ServiceType: consts.ServiceTypeMeal,
+			Status:      consts.RequestStatusPending,
+			StationID:   1,
+			Address:     "测试地址2",
+			CreatedAt:   time.Date(2026, 1, 2, 18, 0, 0, 0, time.Local),
+		},
+		{
+			RequestNo:   fmt.Sprintf("REQ-TREND-%d-3", time.Now().UnixNano()),
+			UserID:      1,
+			ServiceType: consts.ServiceTypeMedical,
+			Status:      consts.RequestStatusCompleted,
+			StationID:   1,
+			Address:     "测试地址3",
+			CreatedAt:   time.Date(2026, 1, 4, 9, 0, 0, 0, time.Local),
+		},
+	}
+
+	for _, req := range requests {
+		if err := repo.Create(req); err != nil {
+			t.Fatalf("failed to create request: %v", err)
+		}
+	}
+
+	trend, err := repo.GetDailyTrendBetween(
+		1,
+		false,
+		time.Date(2026, 1, 1, 0, 0, 0, 0, time.Local),
+		time.Date(2026, 1, 3, 0, 0, 0, 0, time.Local),
+	)
+	if err != nil {
+		t.Fatalf("failed to get daily trend between dates: %v", err)
+	}
+
+	if len(trend) != 1 {
+		t.Fatalf("expected 1 trend point, got %d", len(trend))
+	}
+	if trend[0].Date != "2026-01-02" || trend[0].Count != 2 {
+		t.Errorf("unexpected trend item: %#v", trend[0])
+	}
+}
+
 func TestRequestRepository_WithTx(t *testing.T) {
 	db := setupTestDB(t)
 	repo := NewRequestRepository(db)

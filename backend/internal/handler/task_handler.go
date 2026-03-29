@@ -200,6 +200,9 @@ func containsRole(roles []string, role string) bool {
 // @Security     Bearer
 // @Param        page query int false "页码" default(1)
 // @Param        page_size query int false "每页数量" default(10)
+// @Param        status query string false "任务状态"
+// @Param        service_type query string false "服务类型"
+// @Param        request_no query string false "需求编号（模糊匹配）"
 // @Success      200  {object} APIResponse "获取成功"
 // @Failure      401  {object} APIResponse "未认证"
 // @Failure      500  {object} APIResponse "服务器错误"
@@ -211,7 +214,13 @@ func (h *TaskHandler) ListMy(c *gin.Context) {
 		return
 	}
 	page, pageSize := GetPagination(c)
-	tasks, total, err := h.service.ListByStaff(userID, page, pageSize)
+	filter := repository.TaskListFilter{
+		StaffID:     userID,
+		Status:      c.Query("status"),
+		ServiceType: c.Query("service_type"),
+		RequestNo:   c.Query("request_no"),
+	}
+	tasks, total, err := h.service.ListByStaffWithFilter(filter, page, pageSize)
 	if err != nil {
 		RespondError(c, http.StatusInternalServerError, "list tasks failed")
 		return
@@ -281,6 +290,10 @@ func (h *TaskHandler) Complete(c *gin.Context) {
 		RespondError(c, http.StatusUnauthorized, "missing user")
 		return
 	}
+	userStationID, _ := GetStationID(c)
+	roles := GetUserRoles(c)
+	isAdmin := containsRole(roles, "admin")
+	isStationManager := containsRole(roles, "station_manager")
 	id, err := parseInt64Param(c.Param("id"))
 	if err != nil {
 		RespondError(c, http.StatusBadRequest, "invalid id")
@@ -293,7 +306,25 @@ func (h *TaskHandler) Complete(c *gin.Context) {
 		return
 	}
 
-	task, _, err := h.service.Complete(id, userID, req.Images)
+	effectiveStaffID := userID
+	if isAdmin || isStationManager {
+		taskDetail, err := h.service.GetByID(id)
+		if err != nil {
+			RespondError(c, http.StatusBadRequest, "invalid task")
+			return
+		}
+
+		if isStationManager && !isAdmin && taskDetail.StationID != userStationID {
+			RespondError(c, http.StatusForbidden, "forbidden")
+			return
+		}
+
+		if taskDetail.StaffID > 0 {
+			effectiveStaffID = taskDetail.StaffID
+		}
+	}
+
+	task, _, err := h.service.Complete(id, effectiveStaffID, req.Images)
 	if err != nil {
 		switch err {
 		case service.ErrTaskInvalid:

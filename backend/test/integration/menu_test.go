@@ -42,7 +42,7 @@ func TestMenu(t *testing.T) {
 	})
 
 	t.Run("批量排序", func(t *testing.T) {
-		body := `[{"id":1,"sort":2},{"id":2,"sort":1}]`
+		body := `{"updates":[{"id":1,"sort":2},{"id":2,"sort":1}]}`
 		w := testutil.DoRequest(env.Engine, http.MethodPut, "/api/v1/b/menus/sort", testutil.AdminToken(), body)
 		assert.Equal(t, http.StatusOK, w.Code)
 	})

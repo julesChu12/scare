@@ -45,9 +45,9 @@ export const PERM_BANNER_DELETE = 'content:banner:delete'
 
 // ==================== 站点管理 ====================
 // 站点
-export const PERM_STATION_CREATE = 'station:create'
-export const PERM_STATION_UPDATE = 'station:update'
-export const PERM_STATION_DELETE = 'station:delete'
+export const PERM_STATION_CREATE = 'station:list:create'
+export const PERM_STATION_UPDATE = 'station:list:update'
+export const PERM_STATION_DELETE = 'station:list:delete'
 
 // 围栏
 export const PERM_ZONE_CREATE = 'station:zone:create'

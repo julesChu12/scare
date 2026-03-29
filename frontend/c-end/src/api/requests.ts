@@ -2,15 +2,14 @@ import client from './client'
 import type { ServiceTypeKey } from '@/config/serviceTypes'
 
 // 请求状态枚举
-export type RequestStatus = 'pending' | 'dispatched' | 'accepted' | 'in_progress' | 'processing' | 'completed' | 'cancelled' | 'rejected'
+export type RequestStatus = 'pending' | 'dispatched' | 'claimed' | 'processing' | 'completed' | 'cancelled' | 'rejected'
 
 // 请求状态映射
 export const REQUEST_STATUS_MAP: Record<string, { label: string; color: string }> = {
   pending: { label: '待处理', color: 'warning' },
   dispatched: { label: '已派单', color: 'primary' },
-  accepted: { label: '已接单', color: 'primary' },
-  in_progress: { label: '服务中', color: 'primary' },
-  processing: { label: '处理中', color: 'primary' },
+  claimed: { label: '已认领', color: 'primary' },
+  processing: { label: '服务中', color: 'primary' },
   completed: { label: '已完成', color: 'success' },
   cancelled: { label: '已取消', color: 'info' },
   rejected: { label: '已拒绝', color: 'danger' }

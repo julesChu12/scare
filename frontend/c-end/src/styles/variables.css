@@ -2,8 +2,12 @@
 :root {
   /* 字体大小变量 */
   --font-size-small: 14px;
-  --font-size-medium: 16px;
-  --font-size-large: 18px;
+  --font-size-medium: 18px;
+  --font-size-large: 22px;
+  --font-scale-small: 0.7777777778;
+  --font-scale-medium: 1;
+  --font-scale-large: 1.2222222222;
+  --font-scale: var(--font-scale-medium);
 
   /* 默认使用中等字体 */
   --font-size-base: var(--font-size-medium);
@@ -15,6 +19,14 @@
   /* 小字体 */
   --font-size-sm: calc(var(--font-size-base) - 2px);
   --font-size-xs: calc(var(--font-size-base) - 4px);
+
+  /* Element Plus 字体变量 */
+  --el-font-size-extra-large: var(--font-size-title);
+  --el-font-size-large: var(--font-size-subtitle);
+  --el-font-size-medium: var(--font-size-base);
+  --el-font-size-base: var(--font-size-base);
+  --el-font-size-small: var(--font-size-sm);
+  --el-font-size-extra-small: var(--font-size-xs);
 
   /* 主题色 */
   --color-primary: #409EFF;
@@ -48,15 +60,18 @@
 
 /* 小字体模式 */
 [data-font-size="small"] {
+  --font-scale: var(--font-scale-small);
   --font-size-base: var(--font-size-small);
 }
 
 /* 中等字体模式（默认） */
 [data-font-size="medium"] {
+  --font-scale: var(--font-scale-medium);
   --font-size-base: var(--font-size-medium);
 }
 
 /* 大字体模式 */
 [data-font-size="large"] {
+  --font-scale: var(--font-scale-large);
   --font-size-base: var(--font-size-large);
 }

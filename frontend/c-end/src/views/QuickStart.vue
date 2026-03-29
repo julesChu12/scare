@@ -43,7 +43,7 @@
             v-model="form.address"
             type="textarea"
             placeholder="请输入详细地址"
-            :rows="2"
+            :rows="1"
             size="large"
           />
           <div class="location-hint" v-if="hasLocation">
@@ -68,7 +68,7 @@
             v-model="form.description"
             type="textarea"
             placeholder="请简单描述您的需求（可选）"
-            :rows="3"
+            :rows="2"
             size="large"
           />
         </el-form-item>
@@ -94,7 +94,7 @@
             @click="handleSubmit"
             :loading="loading"
             size="large"
-            style="width: 100%"
+            style="width: 100%; margin-top: 8px;"
           >
             {{ isLoggedIn ? '提交申请' : '提交并开通服务' }}
           </el-button>
@@ -274,7 +274,10 @@ const handleSubmit = async () => {
           latitude: coordinates.value?.lat,
           longitude: coordinates.value?.lng,
           service_type: serviceType,
-          description: form.description || undefined
+          description: form.description || undefined,
+          images: uploadedUrls.value.length > 0 ? uploadedUrls.value : undefined,
+          contact_name: form.name,
+          contact_phone: form.phone
         })
 
         // 保存Token和用户信息
@@ -365,17 +368,21 @@ onMounted(async () => {
 
 <style scoped>
 .quick-start-container {
-  min-height: 100vh;
+  height: 100vh;
   background: var(--bg-color, #f5f5f5);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 20px;
+  padding: 14px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .header h1 {
@@ -400,33 +407,51 @@ onMounted(async () => {
 
 .service-type-display {
   background: white;
-  margin: 16px;
-  padding: 16px;
+  margin: 12px 16px;
+  padding: 10px 16px;
   border-radius: 12px;
   display: flex;
   align-items: center;
   gap: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0;
 }
 
 .service-type-display .service-icon {
-  font-size: 32px;
+  font-size: calc(28px * var(--font-scale));
 }
 
 .service-type-display .service-name {
-  font-size: var(--font-size-subtitle, 18px);
+  font-size: var(--font-size-base, 16px);
   font-weight: 500;
   color: var(--text-color-primary, #303133);
 }
 
 .form-container {
-  padding: 0 16px 32px;
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-container :deep(.el-form) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+:deep(.el-form-item) {
+  margin-bottom: 20px;
 }
 
 :deep(.el-form-item__label) {
-  font-size: var(--font-size-base, 16px);
+  font-size: var(--font-size-sm, 14px);
   color: var(--text-color-primary, #303133);
   font-weight: 500;
+  padding-bottom: 4px !important;
+  line-height: 1.2;
 }
 
 :deep(.el-input__inner) {
@@ -435,11 +460,12 @@ onMounted(async () => {
 
 :deep(.el-textarea__inner) {
   font-size: var(--font-size-base, 16px);
+  resize: none;
 }
 
 .code-input-group {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
 }
 
@@ -451,16 +477,18 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-top: 8px;
+  margin-top: 4px;
   color: var(--color-success, #67C23A);
   font-size: var(--font-size-sm, 14px);
 }
 
 .tips {
   text-align: center;
-  margin-top: 20px;
+  margin-top: auto;
+  padding-top: 16px;
+  padding-bottom: 8px;
   color: var(--text-color-secondary, #909399);
-  font-size: var(--font-size-base, 16px);
+  font-size: var(--font-size-sm, 14px);
 }
 
 .tips a {
@@ -471,6 +499,17 @@ onMounted(async () => {
 .upload-hint {
   color: var(--text-color-secondary, #909399);
   font-size: var(--font-size-sm, 14px);
-  margin-top: 8px;
+  margin-top: 4px;
+}
+
+:deep(.el-upload--picture-card) {
+  width: 60px;
+  height: 60px;
+  line-height: 60px;
+}
+
+:deep(.el-upload-list--picture-card .el-upload-list__item) {
+  width: 60px;
+  height: 60px;
 }
 </style>

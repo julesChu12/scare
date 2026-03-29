@@ -23,7 +23,13 @@
 
         <!-- 权限树 -->
         <div class="permission-tree" v-loading="loading">
-          <h4>权限配置</h4>
+          <div class="permission-tree-header">
+            <h4>权限配置</h4>
+            <div v-if="selectedRole !== 'admin'" class="tree-actions">
+              <el-button text @click="expandAllNodes">全部展开</el-button>
+              <el-button text @click="collapseAllNodes">全部折叠</el-button>
+            </div>
+          </div>
           <el-alert
             v-if="selectedRole === 'admin'"
             type="warning"
@@ -41,7 +47,7 @@
             :props="treeProps"
             show-checkbox
             node-key="id"
-            :default-expand-all="true"
+            :default-expand-all="false"
             :check-strictly="false"
           />
 
@@ -102,6 +108,30 @@ const treeProps = {
   children: 'children',
 }
 
+function toggleTreeNodes(expanded: boolean) {
+  const nodesMap = (treeRef.value as any)?.store?.nodesMap || {}
+
+  Object.values(nodesMap).forEach((node: any) => {
+    if (!node || node.level === 0 || !node.childNodes?.length) {
+      return
+    }
+
+    if (expanded) {
+      node.expand(null, false)
+    } else {
+      node.collapse()
+    }
+  })
+}
+
+function expandAllNodes() {
+  toggleTreeNodes(true)
+}
+
+function collapseAllNodes() {
+  toggleTreeNodes(false)
+}
+
 // 加载权限树
 async function loadPermissionTree() {
   loading.value = true
@@ -130,6 +160,7 @@ async function loadRolePermissions() {
       await nextTick()
       if (treeRef.value) {
         treeRef.value.setCheckedKeys(currentPermissions.value)
+        toggleTreeNodes(false)
       }
     }
   } catch (error) {
@@ -227,10 +258,22 @@ onMounted(async () => {
       border-left: 1px solid #ebeef5;
       padding-left: 24px;
 
-      h4 {
-        margin: 0 0 16px 0;
-        font-size: 14px;
-        color: #303133;
+      .permission-tree-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+
+        h4 {
+          margin: 0;
+          font-size: 14px;
+          color: #303133;
+        }
+
+        .tree-actions {
+          display: flex;
+          gap: 8px;
+        }
       }
 
       .action-buttons {

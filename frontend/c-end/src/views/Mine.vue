@@ -15,14 +15,6 @@
 
     <!-- 功能入口列表 -->
     <div class="menu-section">
-      <div class="menu-item" @click="goToRequests">
-        <div class="menu-left">
-          <span class="menu-icon">📋</span>
-          <span class="menu-text">我的服务</span>
-        </div>
-        <el-icon class="menu-arrow"><ArrowRight /></el-icon>
-      </div>
-
       <div class="menu-item" @click="goToNotifications">
         <div class="menu-left">
           <span class="menu-icon">🔔</span>
@@ -190,10 +182,6 @@ const goToServices = () => {
   router.push('/services')
 }
 
-const goToRequests = () => {
-  router.push('/requests')
-}
-
 const goToAddress = () => {
   router.push('/profile#address')
 }
@@ -269,7 +257,7 @@ const callService = () => {
 }
 
 .avatar-text {
-  font-size: 28px;
+  font-size: calc(28px * var(--font-scale));
   font-weight: bold;
   color: white;
 }
@@ -280,18 +268,18 @@ const callService = () => {
 }
 
 .user-name {
-  font-size: 20px;
+  font-size: calc(20px * var(--font-scale));
   font-weight: bold;
   margin-bottom: 4px;
 }
 
 .user-phone {
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   opacity: 0.9;
 }
 
 .arrow-icon {
-  font-size: 20px;
+  font-size: calc(20px * var(--font-scale));
   opacity: 0.8;
 }
 
@@ -326,17 +314,17 @@ const callService = () => {
 }
 
 .menu-icon {
-  font-size: 20px;
+  font-size: calc(20px * var(--font-scale));
 }
 
 .menu-text {
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   color: #303133;
 }
 
 .menu-arrow {
   color: #c0c4cc;
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
 }
 
 /* 底部占位 */
@@ -365,11 +353,11 @@ const callService = () => {
   gap: 4px;
   cursor: pointer;
   color: #909399;
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
 }
 
 .nav-item .el-icon {
-  font-size: 24px;
+  font-size: calc(24px * var(--font-scale));
 }
 
 .nav-item.active {
@@ -383,20 +371,20 @@ const callService = () => {
 }
 
 .service-tip {
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: #606266;
   margin-bottom: 12px;
 }
 
 .service-phone {
-  font-size: 28px;
+  font-size: calc(28px * var(--font-scale));
   font-weight: bold;
   color: #409EFF;
   margin-bottom: 8px;
 }
 
 .service-time {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: #909399;
 }
 
@@ -407,32 +395,32 @@ const callService = () => {
 }
 
 .app-logo {
-  font-size: 64px;
+  font-size: calc(64px * var(--font-scale));
   margin-bottom: 12px;
 }
 
 .app-name {
-  font-size: 20px;
+  font-size: calc(20px * var(--font-scale));
   font-weight: bold;
   color: #303133;
   margin-bottom: 8px;
 }
 
 .app-version {
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: #909399;
   margin-bottom: 16px;
 }
 
 .app-desc {
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: #606266;
   margin-bottom: 16px;
   line-height: 1.6;
 }
 
 .app-copyright {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: #c0c4cc;
 }
 </style>

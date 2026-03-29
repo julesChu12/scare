@@ -7,7 +7,7 @@ import (
 	"community-elderly-care-platform/cmd"
 )
 
-// @title sCare 社区养老服务平台 API
+// @title 霍营街道社区养老服务平台 API
 // @version 1.0
 // @description 昌平区霍营街道社区养老信息分发平台后端 API
 // @host localhost:8080

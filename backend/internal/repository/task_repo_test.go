@@ -1,7 +1,9 @@
 package repository
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"community-elderly-care-platform/internal/consts"
 	"community-elderly-care-platform/internal/dao/model"
@@ -189,6 +191,142 @@ func TestTaskRepository_CountByStaffAndStatus(t *testing.T) {
 
 	if count != 3 {
 		t.Errorf("expected 3 claimed tasks, got %d", count)
+	}
+}
+
+func TestTaskRepository_GetStaffRankingBetween(t *testing.T) {
+	db := setupTestDB(t)
+	repo := NewTaskRepository(db)
+
+	users := []model.User{
+		{ID: 10, Name: "张三", Phone: "13800000010"},
+		{ID: 20, Name: "李四", Phone: "13800000020"},
+	}
+	for _, user := range users {
+		if err := db.Create(&user).Error; err != nil {
+			t.Fatalf("failed to create user: %v", err)
+		}
+	}
+
+	requests := []model.ServiceRequest{
+		{
+			ID:          1,
+			RequestNo:   fmt.Sprintf("REQ-RANK-%d-1", time.Now().UnixNano()),
+			UserID:      1,
+			ServiceType: consts.ServiceTypeMeal,
+			Status:      consts.RequestStatusCompleted,
+			StationID:   1,
+			Address:     "测试地址1",
+			Rating:      5,
+		},
+		{
+			ID:          2,
+			RequestNo:   fmt.Sprintf("REQ-RANK-%d-2", time.Now().UnixNano()),
+			UserID:      1,
+			ServiceType: consts.ServiceTypeMeal,
+			Status:      consts.RequestStatusCompleted,
+			StationID:   1,
+			Address:     "测试地址2",
+			Rating:      4,
+		},
+		{
+			ID:          3,
+			RequestNo:   fmt.Sprintf("REQ-RANK-%d-3", time.Now().UnixNano()),
+			UserID:      1,
+			ServiceType: consts.ServiceTypeMeal,
+			Status:      consts.RequestStatusCompleted,
+			StationID:   1,
+			Address:     "测试地址3",
+			Rating:      3,
+		},
+		{
+			ID:          4,
+			RequestNo:   fmt.Sprintf("REQ-RANK-%d-4", time.Now().UnixNano()),
+			UserID:      1,
+			ServiceType: consts.ServiceTypeMeal,
+			Status:      consts.RequestStatusCompleted,
+			StationID:   1,
+			Address:     "测试地址4",
+			Rating:      0,
+		},
+	}
+	for _, req := range requests {
+		if err := db.Create(&req).Error; err != nil {
+			t.Fatalf("failed to create request: %v", err)
+		}
+	}
+
+	tasks := []*model.TaskAssignment{
+		{
+			RequestID:   1,
+			StationID:   1,
+			StaffID:     10,
+			Status:      consts.TaskStatusCompleted,
+			CompletedAt: time.Date(2026, 1, 5, 10, 0, 0, 0, time.Local),
+			CreatedAt:   time.Date(2026, 1, 5, 8, 0, 0, 0, time.Local),
+			ClaimedAt:   time.Date(2026, 1, 5, 9, 0, 0, 0, time.Local),
+		},
+		{
+			RequestID:   2,
+			StationID:   1,
+			StaffID:     10,
+			Status:      consts.TaskStatusCompleted,
+			CompletedAt: time.Date(2026, 2, 6, 10, 0, 0, 0, time.Local),
+			CreatedAt:   time.Date(2026, 2, 6, 8, 0, 0, 0, time.Local),
+			ClaimedAt:   time.Date(2026, 2, 6, 9, 0, 0, 0, time.Local),
+		},
+		{
+			RequestID:   3,
+			StationID:   1,
+			StaffID:     20,
+			Status:      consts.TaskStatusCompleted,
+			CompletedAt: time.Date(2026, 1, 10, 10, 0, 0, 0, time.Local),
+			CreatedAt:   time.Date(2026, 1, 10, 8, 0, 0, 0, time.Local),
+			ClaimedAt:   time.Date(2026, 1, 10, 9, 0, 0, 0, time.Local),
+		},
+		{
+			RequestID:   4,
+			StationID:   1,
+			StaffID:     20,
+			Status:      consts.TaskStatusCompleted,
+			CompletedAt: time.Date(2026, 1, 12, 10, 0, 0, 0, time.Local),
+			CreatedAt:   time.Date(2026, 1, 12, 8, 0, 0, 0, time.Local),
+			ClaimedAt:   time.Date(2026, 1, 12, 9, 0, 0, 0, time.Local),
+		},
+	}
+	for _, task := range tasks {
+		if err := db.Create(task).Error; err != nil {
+			t.Fatalf("failed to create task: %v", err)
+		}
+	}
+
+	ranking, err := repo.GetStaffRankingBetween(
+		1,
+		false,
+		time.Date(2026, 1, 1, 0, 0, 0, 0, time.Local),
+		time.Date(2026, 1, 31, 0, 0, 0, 0, time.Local),
+		10,
+	)
+	if err != nil {
+		t.Fatalf("failed to get staff ranking between dates: %v", err)
+	}
+
+	if len(ranking) != 2 {
+		t.Fatalf("expected 2 staff in ranking, got %d", len(ranking))
+	}
+
+	if ranking[0].ID != 20 || ranking[0].CompletedCount != 2 {
+		t.Errorf("unexpected first ranking item: %#v", ranking[0])
+	}
+	if ranking[0].AvgRating != 3 {
+		t.Errorf("expected first staff avg rating 3.0, got %#v", ranking[0].AvgRating)
+	}
+
+	if ranking[1].ID != 10 || ranking[1].CompletedCount != 1 {
+		t.Errorf("unexpected second ranking item: %#v", ranking[1])
+	}
+	if ranking[1].AvgRating != 5 {
+		t.Errorf("expected second staff avg rating 5.0, got %#v", ranking[1].AvgRating)
 	}
 }
 

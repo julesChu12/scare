@@ -268,7 +268,7 @@ onMounted(() => {
   }
 
   .news-title {
-    font-size: 20px;
+    font-size: calc(20px * var(--font-scale));
   }
 
   .news-images {

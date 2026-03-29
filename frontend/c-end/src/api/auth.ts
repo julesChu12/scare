@@ -18,6 +18,9 @@ export interface QuickStartRequest {
   longitude?: number
   service_type: string
   description?: string
+  images?: string[]
+  contact_name?: string
+  contact_phone?: string
 }
 
 export interface QuickStartResponse {
@@ -38,6 +41,9 @@ export interface QuickStartResponse {
     request_no: string
     service_type: string
     status: string
+    contact_name?: string
+    contact_phone?: string
+    images?: string
     created_at: string
   }
 }

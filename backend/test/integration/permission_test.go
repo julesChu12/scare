@@ -30,7 +30,7 @@ func TestPermission(t *testing.T) {
 	})
 
 	t.Run("更新角色权限", func(t *testing.T) {
-		body := `{"permissions":["service:request:list","service:task:pool"]}`
+		body := `{"permissions":["service:request:list","service:task:my"]}`
 		w := testutil.DoRequest(env.Engine, http.MethodPut, "/api/v1/b/roles/staff/permissions", testutil.AdminToken(), body)
 		assert.Equal(t, http.StatusOK, w.Code)
 	})
@@ -41,7 +41,7 @@ func TestPermission(t *testing.T) {
 	})
 
 	t.Run("更新用户身份", func(t *testing.T) {
-		body := `{"identities":[{"identity_type":"staff","station_id":1,"is_primary":true}]}`
+		body := `{"identities":["staff"],"station_id":1}`
 		w := testutil.DoRequest(env.Engine, http.MethodPut, "/api/v1/b/users/4/identities", testutil.AdminToken(), body)
 		assert.Equal(t, http.StatusOK, w.Code)
 	})

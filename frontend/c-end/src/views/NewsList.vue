@@ -208,7 +208,7 @@ onMounted(() => {
 }
 
 .header h1 {
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   font-weight: bold;
 }
 
@@ -224,7 +224,7 @@ onMounted(() => {
 .tab-item {
   padding: 6px 16px;
   border-radius: 16px;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: #606266;
   cursor: pointer;
   transition: all 0.2s;
@@ -308,13 +308,13 @@ onMounted(() => {
 }
 
 .empty-icon {
-  font-size: 64px;
+  font-size: calc(64px * var(--font-scale));
   color: #c0c4cc;
   margin-bottom: 16px;
 }
 
 .empty-text {
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   color: #909399;
 }
 
@@ -343,7 +343,7 @@ onMounted(() => {
 .news-tag {
   padding: 4px 8px;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   font-weight: 500;
   flex-shrink: 0;
 }
@@ -369,7 +369,7 @@ onMounted(() => {
 }
 
 .news-title {
-  font-size: 15px;
+  font-size: calc(15px * var(--font-scale));
   color: #303133;
   margin-bottom: 6px;
   line-height: 1.4;
@@ -380,7 +380,7 @@ onMounted(() => {
 }
 
 .news-summary {
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: #909399;
   margin-bottom: 6px;
   display: -webkit-box;
@@ -390,7 +390,7 @@ onMounted(() => {
 }
 
 .news-date {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: #c0c4cc;
 }
 
@@ -404,7 +404,7 @@ onMounted(() => {
 .load-more {
   text-align: center;
   padding: 16px;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: #909399;
 }
 
@@ -445,11 +445,11 @@ onMounted(() => {
   gap: 4px;
   cursor: pointer;
   color: #909399;
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
 }
 
 .nav-item .el-icon {
-  font-size: 24px;
+  font-size: calc(24px * var(--font-scale));
 }
 
 .nav-item.active {

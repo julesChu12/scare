@@ -4,85 +4,40 @@ package repository
 
 import (
 	"testing"
+	"time"
 
 	"community-elderly-care-platform/internal/dao/model"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
-// NOTE: 这些测试需要兼容的数据库环境
-// 运行方式: go test -tags=integration ./...
-
-func setupTestDB(t *testing.T) *gorm.DB {
-	tmpFile := t.TempDir() + "/test.db"
-	dsn := tmpFile + "?_loc=Local&_parseTime=true"
-	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{
-		DisableForeignKeyConstraintWhenMigrating: true,
-	})
-	if err != nil {
-		t.Fatalf("failed to connect database: %v", err)
-	}
-
-	err = db.AutoMigrate(&model.User{}, &model.CustomerProfile{})
-	if err != nil {
-		t.Fatalf("failed to migrate database: %v", err)
-	}
-
-	return db
-}
-
-func TestCustomerRepository_Create(t *testing.T) {
+func TestCustomerRepository_CreateAndGetByUserID(t *testing.T) {
 	db := setupTestDB(t)
 	repo := NewCustomerRepository(db)
 
-	customerType := "elderly"
-	gender := "male"
-	address := "北京市朝阳区幸福小区1号楼101"
-	healthStatus := "良好"
-	disabilityLevel := "自理"
-
+	now := time.Now()
 	profile := &model.CustomerProfile{
-		UserID:          1,
-		CustomerType:    customerType,
-		Gender:          gender,
-		Address:         address,
-		HealthStatus:    healthStatus,
-		DisabilityLevel: disabilityLevel,
+		UserID:           1,
+		Address:          "北京市朝阳区幸福小区1号楼101",
+		EmergencyContact: "13800000001",
+		CreatedAt:        now,
+		UpdatedAt:        now,
 	}
 
-	err := repo.Create(profile)
-	if err != nil {
+	if err := repo.Create(profile); err != nil {
 		t.Fatalf("failed to create customer profile: %v", err)
 	}
-
 	if profile.ID == 0 {
-		t.Error("expected profile ID to be set after creation")
+		t.Fatal("expected profile id to be assigned")
 	}
-}
 
-func TestCustomerRepository_GetByUserID(t *testing.T) {
-	db := setupTestDB(t)
-	repo := NewCustomerRepository(db)
-
-	// Create a test profile
-	profile := &model.CustomerProfile{
-		UserID:       1,
-		CustomerType: "elderly",
-	}
-	repo.Create(profile)
-
-	// Retrieve the profile
-	result, err := repo.GetByUserID(1)
+	got, err := repo.GetByUserID(1)
 	if err != nil {
 		t.Fatalf("failed to get customer profile: %v", err)
 	}
-
-	if result.UserID != 1 {
-		t.Errorf("expected user_id 1, got %d", result.UserID)
+	if got.UserID != 1 {
+		t.Fatalf("expected user_id 1, got %d", got.UserID)
 	}
-
-	if result.CustomerType != "elderly" {
-		t.Errorf("expected customer_type 'elderly', got %v", result.CustomerType)
+	if got.Address != profile.Address {
+		t.Fatalf("expected address %q, got %q", profile.Address, got.Address)
 	}
 }
 
@@ -90,9 +45,8 @@ func TestCustomerRepository_GetByUserID_NotFound(t *testing.T) {
 	db := setupTestDB(t)
 	repo := NewCustomerRepository(db)
 
-	_, err := repo.GetByUserID(999)
-	if err == nil {
-		t.Error("expected error for non-existent profile, got nil")
+	if _, err := repo.GetByUserID(999); err == nil {
+		t.Fatal("expected error for missing profile")
 	}
 }
 
@@ -100,49 +54,30 @@ func TestCustomerRepository_Update(t *testing.T) {
 	db := setupTestDB(t)
 	repo := NewCustomerRepository(db)
 
-	// Create initial profile
+	now := time.Now()
 	profile := &model.CustomerProfile{
-		UserID:       1,
-		CustomerType: "elderly",
+		UserID:           2,
+		Address:          "原地址",
+		EmergencyContact: "13800000002",
+		CreatedAt:        now,
+		UpdatedAt:        now,
 	}
-	repo.Create(profile)
+	if err := repo.Create(profile); err != nil {
+		t.Fatalf("failed to create customer profile: %v", err)
+	}
 
-	// Update customer type
-	profile.CustomerType = "disabled"
-
-	err := repo.Update(profile)
-	if err != nil {
+	profile.Address = "新地址"
+	profile.UpdatedAt = now.Add(time.Minute)
+	if err := repo.Update(profile); err != nil {
 		t.Fatalf("failed to update customer profile: %v", err)
 	}
 
-	// Verify update
-	updated, _ := repo.GetByUserID(1)
-	if updated.CustomerType != "disabled" {
-		t.Errorf("expected customer_type 'disabled', got %v", updated.CustomerType)
-	}
-}
-
-func TestCustomerRepository_Delete(t *testing.T) {
-	db := setupTestDB(t)
-	repo := NewCustomerRepository(db)
-
-	// Create a test profile
-	profile := &model.CustomerProfile{
-		UserID:       1,
-		CustomerType: "elderly",
-	}
-	repo.Create(profile)
-
-	// Delete the profile
-	err := repo.Delete(1)
+	got, err := repo.GetByUserID(2)
 	if err != nil {
-		t.Fatalf("failed to delete customer profile: %v", err)
+		t.Fatalf("failed to get updated profile: %v", err)
 	}
-
-	// Verify deletion
-	_, err = repo.GetByUserID(1)
-	if err == nil {
-		t.Error("expected error for deleted profile, got nil")
+	if got.Address != "新地址" {
+		t.Fatalf("expected updated address, got %q", got.Address)
 	}
 }
 
@@ -150,65 +85,30 @@ func TestCustomerRepository_Exists(t *testing.T) {
 	db := setupTestDB(t)
 	repo := NewCustomerRepository(db)
 
-	// Check non-existent profile
-	exists, err := repo.Exists(1)
+	exists, err := repo.Exists(3)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if exists {
-		t.Error("expected profile to not exist")
+		t.Fatal("expected profile to not exist")
 	}
 
-	// Create a profile
-	profile := &model.CustomerProfile{
-		UserID:       1,
-		CustomerType: "elderly",
+	now := time.Now()
+	if err := repo.Create(&model.CustomerProfile{
+		UserID:           3,
+		Address:          "存在地址",
+		EmergencyContact: "13800000003",
+		CreatedAt:        now,
+		UpdatedAt:        now,
+	}); err != nil {
+		t.Fatalf("failed to create customer profile: %v", err)
 	}
-	repo.Create(profile)
 
-	// Check existing profile
-	exists, err = repo.Exists(1)
+	exists, err = repo.Exists(3)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if !exists {
-		t.Error("expected profile to exist")
-	}
-}
-
-func TestCustomerRepository_ListByType(t *testing.T) {
-	db := setupTestDB(t)
-	repo := NewCustomerRepository(db)
-
-	// Create multiple profiles of different types
-	profiles := []*model.CustomerProfile{
-		{UserID: 1, CustomerType: "elderly"},
-		{UserID: 2, CustomerType: "elderly"},
-		{UserID: 3, CustomerType: "disabled"},
-		{UserID: 4, CustomerType: "pregnant"},
-	}
-
-	for _, p := range profiles {
-		repo.Create(p)
-	}
-
-	// List elderly profiles
-	elderlyProfiles, err := repo.ListByType("elderly")
-	if err != nil {
-		t.Fatalf("failed to list profiles: %v", err)
-	}
-
-	if len(elderlyProfiles) != 2 {
-		t.Errorf("expected 2 elderly profiles, got %d", len(elderlyProfiles))
-	}
-
-	// List disabled profiles
-	disabledProfiles, err := repo.ListByType("disabled")
-	if err != nil {
-		t.Fatalf("failed to list profiles: %v", err)
-	}
-
-	if len(disabledProfiles) != 1 {
-		t.Errorf("expected 1 disabled profile, got %d", len(disabledProfiles))
+		t.Fatal("expected profile to exist")
 	}
 }

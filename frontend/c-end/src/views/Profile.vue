@@ -1,7 +1,11 @@
 <template>
   <div class="profile-container">
     <div class="header">
+      <el-button text @click="goBack">
+        <el-icon><ArrowLeft /></el-icon>
+      </el-button>
       <h1>我的资料</h1>
+      <div style="width: 40px"></div>
     </div>
 
     <div class="content">
@@ -128,7 +132,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ArrowRight, User, Phone, HomeFilled, List } from '@element-plus/icons-vue'
+import { ArrowLeft, ArrowRight, User, Phone, HomeFilled, List } from '@element-plus/icons-vue'
 import { stationAPI, authAPI, type StationInfo } from '@/api'
 import { useUserStore } from '@/store'
 
@@ -209,6 +213,7 @@ const getHealthSummary = () => {
 }
 
 // 导航方法
+const goBack = () => router.back()
 const goToHome = () => router.push('/home')
 const goToServices = () => router.push('/services')
 const goToBasicInfo = () => router.push('/profile/basic')
@@ -261,7 +266,7 @@ onMounted(async () => {
   background: white;
   padding: 15px 20px;
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: sticky;
@@ -270,7 +275,7 @@ onMounted(async () => {
 }
 
 .header h1 {
-  font-size: 20px;
+  font-size: calc(20px * var(--font-scale));
   font-weight: bold;
 }
 
@@ -314,18 +319,18 @@ onMounted(async () => {
 }
 
 .avatar .el-icon {
-  font-size: 32px;
+  font-size: calc(32px * var(--font-scale));
 }
 
 .user-info h2 {
-  font-size: 20px;
+  font-size: calc(20px * var(--font-scale));
   font-weight: bold;
   margin-bottom: 4px;
   color: var(--text-color-primary, #303133);
 }
 
 .user-info p {
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   color: var(--text-color-secondary, #606266);
 }
 
@@ -342,11 +347,11 @@ onMounted(async () => {
 }
 
 .card-icon {
-  font-size: 24px;
+  font-size: calc(24px * var(--font-scale));
 }
 
 .card-title {
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   font-weight: 500;
   color: var(--text-color-primary, #303133);
 }
@@ -360,7 +365,7 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 8px;
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
 }
 
 .info-row:last-child {
@@ -389,7 +394,7 @@ onMounted(async () => {
   background: #409EFF;
   color: white;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   font-weight: 500;
   text-decoration: none;
   transition: background 0.2s;
@@ -417,7 +422,7 @@ onMounted(async () => {
 }
 
 .contact-main {
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   font-weight: 500;
   color: var(--text-color-primary, #303133);
   margin-bottom: 4px;
@@ -429,11 +434,11 @@ onMounted(async () => {
 
 .contact-relation {
   color: var(--text-color-secondary, #606266);
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
 }
 
 .contact-phone {
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   color: var(--text-color-secondary, #606266);
 }
 
@@ -450,18 +455,18 @@ onMounted(async () => {
 }
 
 .module-title {
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   font-weight: 500;
   color: var(--text-color-primary, #303133);
 }
 
 .arrow {
   color: var(--text-color-secondary, #909399);
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
 }
 
 .module-summary {
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   color: var(--text-color-secondary, #606266);
 }
 
@@ -486,11 +491,11 @@ onMounted(async () => {
   gap: 4px;
   cursor: pointer;
   color: var(--text-color-secondary, #909399);
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
 }
 
 .nav-item .el-icon {
-  font-size: 24px;
+  font-size: calc(24px * var(--font-scale));
 }
 
 .nav-item.active {

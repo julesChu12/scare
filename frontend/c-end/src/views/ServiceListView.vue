@@ -218,12 +218,12 @@ const loadMore = () => {
   fetchRequests()
 }
 
-// 状态文本映射
+// 状态文本映射（与后端 consts/status.go 保持一致）
 const statusTextMap: Record<string, string> = {
-  pending: '待处理',
-  accepted: '已接单',
-  assigned: '已派单',
-  in_progress: '服务中',
+  pending: '待受理',
+  dispatched: '已派发',
+  claimed: '已认领',
+  processing: '处理中',
   completed: '已完成',
   cancelled: '已取消',
   rejected: '已拒绝'
@@ -233,13 +233,13 @@ const getStatusText = (status: string) => {
   return statusTextMap[status] || status
 }
 
-// 状态样式映射
+// 状态样式映射（与后端枚举保持一致）
 const getStatusClass = (status: string) => {
   const classMap: Record<string, string> = {
     pending: 'status-pending',
-    accepted: 'status-accepted',
-    assigned: 'status-assigned',
-    in_progress: 'status-progress',
+    dispatched: 'status-dispatched',
+    claimed: 'status-claimed',
+    processing: 'status-processing',
     completed: 'status-completed',
     cancelled: 'status-cancelled',
     rejected: 'status-rejected'
@@ -356,12 +356,12 @@ watch(isLoggedIn, (newVal) => {
 }
 
 .category-icon {
-  font-size: 28px;
+  font-size: calc(28px * var(--font-scale));
   transition: transform 0.2s;
 }
 
 .category-name {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: #606266;
   text-align: center;
   line-height: 1.2;
@@ -390,13 +390,13 @@ watch(isLoggedIn, (newVal) => {
 }
 
 .prompt-icon {
-  font-size: 64px;
+  font-size: calc(64px * var(--font-scale));
   color: #c0c4cc;
   margin-bottom: 16px;
 }
 
 .prompt-text {
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   color: #909399;
   margin-bottom: 24px;
 }
@@ -409,7 +409,7 @@ watch(isLoggedIn, (newVal) => {
   gap: 8px;
   padding: 12px;
   color: #909399;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
 }
 
 /* 空状态 */
@@ -425,19 +425,19 @@ watch(isLoggedIn, (newVal) => {
 }
 
 .empty-icon {
-  font-size: 64px;
+  font-size: calc(64px * var(--font-scale));
   color: #c0c4cc;
   margin-bottom: 16px;
 }
 
 .empty-text {
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   color: #909399;
   margin-bottom: 8px;
 }
 
 .empty-hint {
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: #c0c4cc;
   margin-bottom: 24px;
 }
@@ -545,7 +545,7 @@ watch(isLoggedIn, (newVal) => {
   justify-content: center;
   background: #f5f7fa;
   border-radius: 12px;
-  font-size: 24px;
+  font-size: calc(24px * var(--font-scale));
   flex-shrink: 0;
 }
 
@@ -562,13 +562,13 @@ watch(isLoggedIn, (newVal) => {
 }
 
 .request-name {
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   font-weight: 500;
   color: #303133;
 }
 
 .request-status {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   padding: 2px 8px;
   border-radius: 10px;
   flex-shrink: 0;
@@ -579,13 +579,13 @@ watch(isLoggedIn, (newVal) => {
   color: #f56c6c;
 }
 
-.status-accepted,
-.status-assigned {
+.status-dispatched,
+.status-claimed {
   background: #fdf6ec;
   color: #e6a23c;
 }
 
-.status-progress {
+.status-processing {
   background: #ecf5ff;
   color: #409eff;
 }
@@ -605,7 +605,7 @@ watch(isLoggedIn, (newVal) => {
   display: flex;
   align-items: center;
   gap: 12px;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: #909399;
 }
 
@@ -628,7 +628,7 @@ watch(isLoggedIn, (newVal) => {
 .load-more {
   text-align: center;
   padding: 16px;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: #909399;
 }
 
@@ -669,11 +669,11 @@ watch(isLoggedIn, (newVal) => {
   gap: 4px;
   cursor: pointer;
   color: #909399;
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
 }
 
 .nav-item .el-icon {
-  font-size: 24px;
+  font-size: calc(24px * var(--font-scale));
 }
 
 .nav-item.active {

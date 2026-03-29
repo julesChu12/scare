@@ -20,6 +20,7 @@
     "echarts": "^5.4.3",
     "element-plus": "^2.5.2",
     "pinia": "^2.1.7",
+    "qrcode": "^1.5.4",
     "vue": "^3.4.15",
     "vue-echarts": "^6.6.8",
     "vue-router": "^4.2.5"

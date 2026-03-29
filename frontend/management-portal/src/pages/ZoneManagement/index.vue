@@ -2,7 +2,7 @@
   <div class="page-container">
     <div class="page-header">
       <h2>围栏管理</h2>
-      <el-button type="primary" @click="handleAdd">新增围栏</el-button>
+      <el-button v-if="canCreateZone" type="primary" @click="handleAdd">新增围栏</el-button>
     </div>
 
     <!-- 列表 -->
@@ -23,10 +23,10 @@
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="200" fixed="right">
+      <el-table-column v-if="showActions" label="操作" width="200" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
-          <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
+          <el-button v-if="canUpdateZone" link type="primary" @click="handleEdit(row)">编辑</el-button>
+          <el-button v-if="canDeleteZone" link type="danger" @click="handleDelete(row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -49,7 +49,7 @@
           <el-input v-model="formData.name" placeholder="请输入围栏名称" />
         </el-form-item>
         <el-form-item label="所属站点" prop="station_id">
-          <el-input-number v-model="formData.station_id" :min="1" />
+          <el-input-number v-model="formData.station_id" :min="1" :disabled="!isAdmin" />
         </el-form-item>
         <el-form-item label="优先级" prop="priority">
           <el-input-number v-model="formData.priority" :min="0" />
@@ -78,14 +78,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { computed, ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { zoneApi } from '@/api'
+import { PERM_ZONE_CREATE, PERM_ZONE_DELETE, PERM_ZONE_UPDATE } from '@/constants/permissions'
+import { useAuthStore } from '@/store/modules/auth'
 import type { Zone, ZonePoint } from '@/types/api'
 import MapPolygonEditor from '@/components/MapPolygonEditor.vue'
 
 // 数据
+const authStore = useAuthStore()
 const loading = ref(false)
 const tableData = ref<Zone[]>([])
 
@@ -107,6 +110,13 @@ const rules: FormRules = {
   name: [{ required: true, message: '请输入围栏名称', trigger: 'blur' }]
 }
 
+const canCreateZone = computed(() => authStore.hasPermission(PERM_ZONE_CREATE))
+const canUpdateZone = computed(() => authStore.hasPermission(PERM_ZONE_UPDATE))
+const canDeleteZone = computed(() => authStore.hasPermission(PERM_ZONE_DELETE))
+const showActions = computed(() => canUpdateZone.value || canDeleteZone.value)
+const isAdmin = computed(() => authStore.hasRole('admin'))
+const currentStationID = computed(() => authStore.user?.station_id ?? 0)
+
 // 方法
 const fetchData = async () => {
   loading.value = true
@@ -126,6 +136,7 @@ const handleAdd = () => {
   // Reset form
   formData.id = 0
   formData.name = ''
+  formData.station_id = currentStationID.value || 1
   formData.priority = 0
   formData.status = 'active'
   formData.points = []

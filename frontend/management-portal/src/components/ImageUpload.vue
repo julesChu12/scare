@@ -1,6 +1,7 @@
 <template>
   <div class="image-upload">
     <el-upload
+      v-if="!hideUpload"
       v-model:file-list="fileList"
       :action="uploadUrl"
       :headers="uploadHeaders"
@@ -14,6 +15,10 @@
     >
       <el-icon><Plus /></el-icon>
     </el-upload>
+    <!-- 单图模式已上传图片时只显示已上传的图片 -->
+    <div v-else class="single-image-preview">
+      <el-image :src="fileList[0]?.url" fit="cover" />
+    </div>
   </div>
 </template>
 
@@ -54,6 +59,9 @@ const uploadHeaders = computed(() => ({
 
 // 文件列表
 const fileList = ref<UploadUserFile[]>([])
+
+// 单图模式时隐藏上传按钮（已有图片且limit=1）
+const hideUpload = computed(() => props.limit === 1 && fileList.value.length > 0)
 
 // 监听 modelValue 变化，初始化文件列表
 watch(
@@ -148,6 +156,14 @@ function emitUrls() {
 
   :deep(.el-upload-list__item) {
     margin: 0;
+  }
+
+  .single-image-preview {
+    :deep(.el-image) {
+      width: 148px;
+      height: 148px;
+      border-radius: 8px;
+    }
   }
 }
 </style>

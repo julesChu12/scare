@@ -82,6 +82,8 @@ func setupRequestServiceForTest(t *testing.T) (*RequestService, *gorm.DB) {
 		t.Fatalf("failed to create task_assignments table: %v", err)
 	}
 
+	createServiceStationsTable(t, db)
+
 	reqRepo := repository.NewRequestRepository(db)
 	taskRepo := repository.NewTaskRepository(db)
 	stationRepo := repository.NewStationRepository(db)
@@ -159,6 +161,41 @@ func TestRequestService_ResolveCoordinates(t *testing.T) {
 	}
 	if addr != "input address" {
 		t.Fatalf("unexpected address: got %q", addr)
+	}
+}
+
+func TestRequestService_Create_FallsBackToHaversineNearest(t *testing.T) {
+	svc, db := setupRequestServiceForTest(t)
+	createTestStation(t, db, 75, 0)
+	expected := createTestStation(t, db, 80, 20)
+
+	lat := 80.0
+	lng := 0.0
+	req, created, err := svc.Create(RequestInput{
+		UserID:       1001,
+		ServiceType:  consts.ServiceTypeMeal,
+		Lat:          &lat,
+		Lng:          &lng,
+		ContactName:  "测试用户",
+		ContactPhone: "13800138000",
+		Address:      "测试地址",
+	})
+	if err != nil {
+		t.Fatalf("Create returned error: %v", err)
+	}
+	if !created {
+		t.Fatalf("expected request to be newly created")
+	}
+	if req.StationID != expected.ID {
+		t.Fatalf("expected request station %d, got %d", expected.ID, req.StationID)
+	}
+
+	var task model.TaskAssignment
+	if err := db.Where("request_id = ?", req.ID).First(&task).Error; err != nil {
+		t.Fatalf("failed to load task: %v", err)
+	}
+	if task.StationID != expected.ID {
+		t.Fatalf("expected task station %d, got %d", expected.ID, task.StationID)
 	}
 }
 

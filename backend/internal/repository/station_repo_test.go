@@ -77,7 +77,7 @@ func TestStationRepository_List(t *testing.T) {
 	}
 
 	// 测试分页
-	stations, total, err := repo.List(0, 3)
+	stations, total, err := repo.List(0, 3, StationListFilter{})
 	if err != nil {
 		t.Fatalf("failed to list stations: %v", err)
 	}
@@ -206,9 +206,4 @@ func TestStationRepository_GetByName_NotFound(t *testing.T) {
 	if err == nil {
 		t.Error("expected error for non-existent station name, got nil")
 	}
-}
-
-func TestStationRepository_FindNearest(t *testing.T) {
-	// 跳过此测试：SQLite 不支持 POW 函数，此功能需要在集成测试中使用 MySQL 测试
-	t.Skip("SQLite does not support POW function, use MySQL for integration testing")
 }

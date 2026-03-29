@@ -60,8 +60,8 @@
 
       <!-- 任务视图切换 -->
       <el-tabs v-model="activeTab" class="task-tabs">
-        <el-tab-pane label="任务池" name="pool" v-if="hasPermission('service:task:pool')" />
-        <el-tab-pane label="我的任务" name="my" v-if="hasPermission('service:task:my')" />
+        <el-tab-pane label="任务池" name="pool" v-if="canViewTaskPool" />
+        <el-tab-pane label="我的任务" name="my" v-if="canViewMyTasks" />
       </el-tabs>
 
       <!-- 任务列表 -->
@@ -117,18 +117,18 @@
           </template>
         </el-table-column>
         
-        <!-- 服务人员 -->
-         <el-table-column label="服务人员" width="120">
-          <template #default="{ row }">
-             <span v-if="row.staff_id">{{ row.staff_name || '已指派' }}</span>
-             <span v-else class="text-gray">-</span>
-          </template>
-        </el-table-column>
+        <!-- 服务人员（仅任务池需要显示） -->
+         <el-table-column v-if="activeTab !== 'my'" label="服务人员" width="120">
+           <template #default="{ row }">
+              <span v-if="row.staff_id">{{ row.staff_name || '已指派' }}</span>
+              <span v-else class="text-gray">-</span>
+           </template>
+         </el-table-column>
 
         <!-- 创建/更新时间 -->
         <el-table-column label="更新时间" width="160">
           <template #default="{ row }">
-            {{ formatDateTime(row.UpdatedAt) }}
+            {{ formatDateTime(row.updated_at) }}
           </template>
         </el-table-column>
 
@@ -211,16 +211,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, reactive, computed, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
-import { taskApi, requestApi, stationApi, userApi } from '@/api'
+import { taskApi, stationApi, userApi } from '@/api'
 import { useAuthStore } from '@/store/modules/auth'
 import type { Task, ServiceRequest, Station, User } from '@/types/api'
 import dayjs from 'dayjs'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 
 // 判断是否为系统管理员
@@ -231,6 +232,11 @@ const isSystemAdmin = computed(() => {
 // 判断是否为站点管理员
 const isStationManager = computed(() => {
   return authStore.user?.roles?.includes('station_manager') || false
+})
+
+// 判断是否为普通员工
+const isRegularStaff = computed(() => {
+  return authStore.user?.roles?.includes('staff') && !isSystemAdmin.value && !isStationManager.value
 })
 
 // 加载状态
@@ -259,14 +265,42 @@ const pagination = reactive({
   total: 0,
 })
 
-// 标签页状态
-const activeTab = ref('pool')
-
 // 权限检查辅助函数
 const hasPermission = (permission: string) => authStore.hasPermission(permission)
+const canViewTaskPool = computed(() => hasPermission('service:task:pool'))
+const canViewMyTasks = computed(() => hasPermission('service:task:my'))
+
+function isAllowedTab(tab?: string | null): tab is 'pool' | 'my' {
+  if (tab === 'pool') return canViewTaskPool.value
+  if (tab === 'my') return canViewMyTasks.value
+  return false
+}
+
+function resolveDefaultTab(): 'pool' | 'my' {
+  const queryTab = typeof route.query.tab === 'string' ? route.query.tab : undefined
+  if (isAllowedTab(queryTab)) {
+    return queryTab
+  }
+
+  if (isRegularStaff.value && canViewMyTasks.value) {
+    return 'my'
+  }
+
+  if (canViewTaskPool.value) {
+    return 'pool'
+  }
+
+  if (canViewMyTasks.value) {
+    return 'my'
+  }
+
+  return 'pool'
+}
+
+// 标签页状态
+const activeTab = ref<'pool' | 'my'>(resolveDefaultTab())
 
 // 监听标签页变化，重新加载数据
-import { watch } from 'vue'
 watch(activeTab, () => {
   pagination.page = 1
   loadTasks()
@@ -377,27 +411,8 @@ async function loadTasks() {
     const { items, total } = response.data
     pagination.total = total
 
-    // 加载每个任务对应的服务需求详情
-    const tasksWithRequests = await Promise.all(
-      items.map(async (task) => {
-        if (task.request) return task // 如果已有 request 数据
-        
-        try {
-          if(!task.request_id) return task;
-          
-          const requestResponse = await requestApi.getRequest(task.request_id)
-          return {
-            ...task,
-            request: requestResponse.data,
-          }
-        } catch (error) {
-          console.error(`Failed to load request ${task.request_id}:`, error)
-          return task
-        }
-      })
-    )
-
-    taskList.value = tasksWithRequests
+    // 后端已返回 TaskWithRequest，包含 request 数据，直接使用
+    taskList.value = items
   } catch (error) {
     console.error('Failed to load tasks:', error)
   } finally {
@@ -428,7 +443,13 @@ function resetFilter() {
  * 查看任务详情
  */
 function handleViewDetail(task: TaskWithRequest) {
-  router.push(`/services/tasks/${task.id}`)
+  router.push({
+    path: `/services/tasks/${task.id}`,
+    query: {
+      from: 'task-management',
+      tab: activeTab.value,
+    },
+  })
 }
 
 /**

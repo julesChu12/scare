@@ -152,38 +152,61 @@
           <span>服务人员排行</span>
         </div>
       </template>
-      <el-table :data="staffRanking" stripe style="width: 100%">
-        <el-table-column label="排名" width="80">
-          <template #default="{ $index }">
-            <el-tag v-if="$index < 3" :type="getRankType($index)" effect="dark" round>
-              {{ $index + 1 }}
-            </el-tag>
-            <span v-else>{{ $index + 1 }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="name" label="姓名" width="120" />
-        <el-table-column prop="completed_count" label="完成数" width="100" />
-        <el-table-column prop="avg_rating" label="平均分" width="100">
-          <template #default="{ row }">
-            <span class="rating">{{ row.avg_rating || '-' }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="状态" width="100">
-          <template #default="{ row }">
-            <el-tag :type="row.is_online ? 'success' : 'info'" size="small">
-              {{ row.is_online ? '在线' : '离线' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-      </el-table>
+      <div v-if="staffRanking.length" class="ranking-list">
+        <div
+          v-for="(staff, index) in staffRanking"
+          :key="staff.id"
+          :class="['ranking-item', `rank-${Math.min(index + 1, 4)}`]"
+        >
+          <div class="ranking-badge">
+            <span class="ranking-number">{{ index + 1 }}</span>
+            <span class="ranking-label">{{ getRankLabel(index) }}</span>
+          </div>
+
+          <div class="ranking-main">
+            <div class="ranking-topline">
+              <div class="ranking-person">
+                <span class="person-name">{{ staff.name }}</span>
+                <el-tag
+                  :type="staff.is_online ? 'success' : 'info'"
+                  size="small"
+                  effect="plain"
+                >
+                  {{ staff.is_online ? '在线' : '离线' }}
+                </el-tag>
+              </div>
+              <div class="ranking-score">
+                <span class="score-value">{{ staff.completed_count }}</span>
+                <span class="score-unit">单</span>
+              </div>
+            </div>
+
+            <div class="ranking-progress">
+              <div
+                class="ranking-progress-fill"
+                :style="{ width: `${getRankProgress(staff.completed_count)}%` }"
+              />
+            </div>
+
+            <div class="ranking-metrics">
+              <span class="metric-pill">完成量 {{ staff.completed_count }}</span>
+              <span class="metric-pill rating-pill">
+                <el-icon><StarFilled /></el-icon>
+                {{ formatRating(staff.avg_rating) }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <el-empty v-else description="暂无服务人员排行数据" />
     </el-card>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { computed, ref, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Document, Clock, CircleCheck, Loading } from '@element-plus/icons-vue'
+import { Document, Clock, CircleCheck, Loading, StarFilled } from '@element-plus/icons-vue'
 import { statisticsApi } from '@/api'
 import type {
   OverviewStatsData,
@@ -212,6 +235,9 @@ const efficiencyStats = ref<EfficiencyStatsData>({
 })
 
 const staffRanking = ref<StaffRankingItemData[]>([])
+const topCompletedCount = computed(() => {
+  return Math.max(...staffRanking.value.map(item => item.completed_count), 0)
+})
 
 async function loadStatistics() {
   const days = parseInt(timeRange.value)
@@ -292,9 +318,19 @@ function getProgressColor(type: string): string {
   return serviceTypeColorMap[type] || '#409eff'
 }
 
-function getRankType(index: number): string {
-  const types = ['warning', 'info', 'success']
-  return types[index] || ''
+function getRankLabel(index: number): string {
+  const labels = ['TOP 1', 'TOP 2', 'TOP 3']
+  return labels[index] || `NO. ${index + 1}`
+}
+
+function getRankProgress(completedCount: number): number {
+  if (!topCompletedCount.value) return 0
+  return Math.max((completedCount / topCompletedCount.value) * 100, 8)
+}
+
+function formatRating(rating: number): string {
+  if (!rating) return '暂无评分'
+  return `${rating.toFixed(1)} 分`
 }
 
 watch(timeRange, () => {
@@ -469,9 +505,209 @@ onMounted(() => {
   }
 
   .ranking-card {
-    .rating {
-      color: #e6a23c;
-      font-weight: 500;
+    .ranking-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .ranking-item {
+      display: flex;
+      align-items: stretch;
+      gap: 16px;
+      padding: 16px 18px;
+      border-radius: 16px;
+      border: 1px solid #ebeef5;
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+      }
+
+      &.rank-1 {
+        border-color: #f7d26a;
+        background: linear-gradient(135deg, #fff8de 0%, #fffef8 100%);
+
+        .ranking-badge {
+          background: linear-gradient(180deg, #f6c54f 0%, #d9a31a 100%);
+        }
+
+        .ranking-progress-fill {
+          background: linear-gradient(90deg, #f6c54f 0%, #e19a1f 100%);
+        }
+      }
+
+      &.rank-2 {
+        .ranking-badge {
+          background: linear-gradient(180deg, #b9c3d0 0%, #8995a6 100%);
+        }
+
+        .ranking-progress-fill {
+          background: linear-gradient(90deg, #9aa8ba 0%, #74839a 100%);
+        }
+      }
+
+      &.rank-3 {
+        .ranking-badge {
+          background: linear-gradient(180deg, #d59b72 0%, #b97445 100%);
+        }
+
+        .ranking-progress-fill {
+          background: linear-gradient(90deg, #d59b72 0%, #c57c4d 100%);
+        }
+      }
+
+      &.rank-4 {
+        .ranking-badge {
+          background: linear-gradient(180deg, #7c94b5 0%, #5f7494 100%);
+        }
+
+        .ranking-progress-fill {
+          background: linear-gradient(90deg, #4f87ff 0%, #57b3ff 100%);
+        }
+      }
+    }
+
+    .ranking-badge {
+      width: 76px;
+      min-width: 76px;
+      border-radius: 14px;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 8px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    }
+
+    .ranking-number {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .ranking-label {
+      margin-top: 6px;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      opacity: 0.92;
+    }
+
+    .ranking-main {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .ranking-topline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .ranking-person {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .person-name {
+      font-size: 17px;
+      font-weight: 600;
+      color: #1f2937;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ranking-score {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      color: #111827;
+      flex-shrink: 0;
+    }
+
+    .score-value {
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .score-unit {
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .ranking-progress {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: #edf2f7;
+      overflow: hidden;
+    }
+
+    .ranking-progress-fill {
+      height: 100%;
+      border-radius: inherit;
+      transition: width 0.3s ease;
+    }
+
+    .ranking-metrics {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .metric-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #f3f6fb;
+      color: #475569;
+      font-size: 13px;
+      line-height: 1;
+    }
+
+    .rating-pill {
+      color: #b7791f;
+      background: #fff7e6;
+    }
+
+    @media (max-width: 768px) {
+      .ranking-item {
+        padding: 14px;
+        gap: 12px;
+      }
+
+      .ranking-badge {
+        width: 64px;
+        min-width: 64px;
+      }
+
+      .ranking-number {
+        font-size: 24px;
+      }
+
+      .person-name {
+        font-size: 15px;
+      }
+
+      .score-value {
+        font-size: 20px;
+      }
+
+      .ranking-topline {
+        align-items: flex-start;
+      }
     }
   }
 }

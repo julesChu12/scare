@@ -13,6 +13,7 @@ import type {
   UpdateServiceRequest,
   CompleteTaskRequest,
   Station,
+  StationListParams,
   StationRequest,
   Zone,
   ZoneRequest,
@@ -22,6 +23,7 @@ import type {
   UpdateRolePermissionsRequest,
   PermissionNode,
   Notification,
+  NotificationListParams,
   Menu,
   MenuRequest,
   BatchUpdateSortRequest,
@@ -42,12 +44,88 @@ import type {
   StaffRankingItemData,
   GenerateReportRequest,
   ReportData,
+  ReportListParams,
+  ReportPreviewData,
   ElderlyProfile,
   ElderlyCreateRequest,
   ElderlyUpdateRequest,
   ElderlyListParams,
   ElderlyServiceRecord,
 } from '@/types/api'
+
+function normalizeNullableDateTime(value?: string | null): string | null {
+  if (!value) return null
+
+  const trimmed = value.trim()
+  if (!trimmed || trimmed.startsWith('0001-01-01') || trimmed.startsWith('0000-00-00')) {
+    return null
+  }
+
+  return trimmed
+}
+
+function normalizeStringArray(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === 'string' && item.length > 0)
+  }
+
+  if (typeof value !== 'string') {
+    return []
+  }
+
+  const trimmed = value.trim()
+  if (!trimmed) {
+    return []
+  }
+
+  try {
+    const parsed = JSON.parse(trimmed)
+    if (Array.isArray(parsed)) {
+      return parsed.filter((item): item is string => typeof item === 'string' && item.length > 0)
+    }
+  } catch {
+    // Ignore invalid JSON and fall back to treating the string as a single path.
+  }
+
+  return [trimmed]
+}
+
+function normalizeServiceRequest(data: ServiceRequest): ServiceRequest {
+  return {
+    ...data,
+    urgency: data.urgency || data.priority || 'normal',
+    priority: data.priority || data.urgency || 'normal',
+    appointment_time: normalizeNullableDateTime(data.appointment_time || data.scheduled_at),
+    scheduled_at: normalizeNullableDateTime(data.scheduled_at || data.appointment_time),
+  }
+}
+
+function normalizeTask(data: Task): Task {
+  return {
+    ...data,
+    claimed_at: normalizeNullableDateTime(data.claimed_at),
+    completed_at: normalizeNullableDateTime(data.completed_at),
+    images: normalizeStringArray(data.images),
+    request: data.request ? normalizeServiceRequest(data.request) : data.request,
+  }
+}
+
+function normalizeNotification(data: Notification): Notification {
+  return {
+    ...data,
+    content: data.content || data.body || '',
+    body: data.body || data.content || '',
+    type: data.type || 'system',
+    read_at: normalizeNullableDateTime(data.read_at),
+  }
+}
+
+function normalizePageItems<T>(data: PaginationData<T>, normalizeItem: (item: T) => T): PaginationData<T> {
+  return {
+    ...data,
+    items: data.items.map(normalizeItem),
+  }
+}
 
 /**
  * B端认证相关 API
@@ -90,49 +168,70 @@ export const taskApi = {
    * 获取所有任务列表（管理端通用，复用 pool 接口）
    */
   getTasks(params?: TaskListParams): Promise<ApiResponse<PaginationData<Task>>> {
-    return request.get('/b/tasks/pool', { params }).then((res) => res.data)
+    return request.get('/b/tasks/pool', { params }).then((res) => ({
+      ...res.data,
+      data: normalizePageItems(res.data.data, normalizeTask),
+    }))
   },
 
   /**
    * 获取任务池列表（待认领任务）
    */
   getTaskPool(params?: PaginationParams): Promise<ApiResponse<PaginationData<Task>>> {
-    return request.get('/b/tasks/pool', { params: { ...params, status: 'dispatched' } }).then((res) => res.data)
+    return request.get('/b/tasks/pool', { params: { ...params, status: 'dispatched' } }).then((res) => ({
+      ...res.data,
+      data: normalizePageItems(res.data.data, normalizeTask),
+    }))
   },
 
   /**
    * 获取我的任务列表
    */
   getMyTasks(params?: TaskListParams): Promise<ApiResponse<PaginationData<Task>>> {
-    return request.get('/b/tasks/my', { params }).then((res) => res.data)
+    return request.get('/b/tasks/my', { params }).then((res) => ({
+      ...res.data,
+      data: normalizePageItems(res.data.data, normalizeTask),
+    }))
   },
 
   /**
    * 获取任务详情
    */
   getTask(taskId: number): Promise<ApiResponse<Task>> {
-    return request.get(`/b/tasks/${taskId}`).then((res) => res.data)
+    return request.get(`/b/tasks/${taskId}`).then((res) => ({
+      ...res.data,
+      data: normalizeTask(res.data.data),
+    }))
   },
 
   /**
    * 认领任务
    */
   claimTask(taskId: number): Promise<ApiResponse<Task>> {
-    return request.post(`/b/tasks/${taskId}/claim`).then((res) => res.data)
+    return request.post(`/b/tasks/${taskId}/claim`).then((res) => ({
+      ...res.data,
+      data: normalizeTask(res.data.data),
+    }))
   },
 
   /**
    * 完成任务
    */
   completeTask(taskId: number, data: CompleteTaskRequest): Promise<ApiResponse<Task>> {
-    return request.post(`/b/tasks/${taskId}/complete`, data).then((res) => res.data)
+    return request.post(`/b/tasks/${taskId}/complete`, data).then((res) => ({
+      ...res.data,
+      data: normalizeTask(res.data.data),
+    }))
   },
 
   /**
    * 转派/指派任务
    */
   transferTask(taskId: number, staffId: number): Promise<ApiResponse<Task>> {
-    return request.post(`/b/tasks/${taskId}/transfer`, { staff_id: staffId }).then((res) => res.data)
+    return request.post(`/b/tasks/${taskId}/transfer`, { staff_id: staffId }).then((res) => ({
+      ...res.data,
+      data: normalizeTask(res.data.data),
+    }))
   },
 }
 
@@ -144,28 +243,43 @@ export const requestApi = {
    * 获取服务需求详情
    */
   getRequest(requestId: number): Promise<ApiResponse<ServiceRequest>> {
-    return request.get(`/b/requests/${requestId}`).then((res) => res.data)
+    return request.get(`/b/requests/${requestId}`).then((res) => ({
+      ...res.data,
+      data: normalizeServiceRequest(res.data.data),
+    }))
   },
 
   /**
    * 获取服务需求列表
    */
   getRequests(params?: PaginationParams): Promise<ApiResponse<PaginationData<ServiceRequest>>> {
-    return request.get('/b/requests', { params }).then((res) => res.data)
+    return request.get('/b/requests', { params }).then((res) => ({
+      ...res.data,
+      data: normalizePageItems(res.data.data, normalizeServiceRequest),
+    }))
   },
 
   /**
    * 更新服务需求
    */
   updateRequest(requestId: number, data: UpdateServiceRequest): Promise<ApiResponse<ServiceRequest>> {
-    return request.put(`/b/requests/${requestId}`, data).then((res) => res.data)
+    return request.put(`/b/requests/${requestId}`, {
+      ...data,
+      urgency: data.urgency || data.priority,
+    }).then((res) => ({
+      ...res.data,
+      data: normalizeServiceRequest(res.data.data),
+    }))
   },
 
   /**
    * B端取消服务请求
    */
   cancelRequest(requestId: number): Promise<ApiResponse<ServiceRequest>> {
-    return request.post(`/b/requests/${requestId}/cancel`).then((res) => res.data)
+    return request.post(`/b/requests/${requestId}/cancel`).then((res) => ({
+      ...res.data,
+      data: normalizeServiceRequest(res.data.data),
+    }))
   },
 }
 
@@ -176,7 +290,7 @@ export const stationApi = {
   /**
    * 获取站点列表
    */
-  getStations(params?: PaginationParams): Promise<ApiResponse<PaginationData<Station>>> {
+  getStations(params?: StationListParams): Promise<ApiResponse<PaginationData<Station>>> {
     return request.get('/b/stations', { params }).then((res) => res.data)
   },
 
@@ -315,8 +429,11 @@ export const notificationApi = {
   /**
    * 获取通知列表
    */
-  getNotifications(params?: PaginationParams): Promise<ApiResponse<PaginationData<Notification>>> {
-    return request.get('/b/notifications', { params }).then((res) => res.data)
+  getNotifications(params?: NotificationListParams): Promise<ApiResponse<PaginationData<Notification>>> {
+    return request.get('/b/notifications', { params }).then((res) => ({
+      ...res.data,
+      data: normalizePageItems(res.data.data, normalizeNotification),
+    }))
   },
 
   /**
@@ -478,7 +595,11 @@ export const reportApi = {
     return request.post('/b/reports/generate', data, { responseType: 'blob' }).then((res) => res.data)
   },
 
-  getReports(params?: { page?: number; page_size?: number; type?: string }): Promise<ApiResponse<PaginationData<ReportData>>> {
+  previewReport(data: GenerateReportRequest): Promise<ApiResponse<ReportPreviewData>> {
+    return request.post('/b/reports/generate', { ...data, preview: true }).then((res) => res.data)
+  },
+
+  getReports(params?: ReportListParams): Promise<ApiResponse<PaginationData<ReportData>>> {
     return request.get('/b/reports', { params }).then((res) => res.data)
   },
 

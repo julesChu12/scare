@@ -14,6 +14,12 @@ export interface PaginationParams {
   page_size?: number
 }
 
+export interface StationListParams extends PaginationParams {
+  keyword?: string
+  name?: string
+  status?: string
+}
+
 /**
  * 任务列表查询参数
  */
@@ -142,14 +148,16 @@ export interface ServiceRequest {
   user_id: number
   service_type: string
   status: string
-  priority: string
+  priority?: string
+  urgency?: string
   description: string
   submit_location_lat: number
   submit_location_lng: number
   contact_name: string
   contact_phone: string
   address: string
-  scheduled_at: string | null
+  scheduled_at?: string | null
+  appointment_time?: string | null
   station_id: number | null
   station_name?: string
 }
@@ -161,7 +169,9 @@ export interface UpdateServiceRequest {
   contact_phone?: string
   address?: string
   priority?: string
+  urgency?: string
   scheduled_at?: string
+  appointment_time?: string
   station_id?: number
   status?: string
 }
@@ -273,10 +283,16 @@ export interface Notification {
   updated_at: string
   user_id: number
   title: string
-  content: string
-  type: string
+  content?: string
+  body?: string
+  type?: string
   is_read: boolean
   read_at: string | null
+}
+
+export interface NotificationListParams extends PaginationParams {
+  type?: string
+  is_read?: boolean
 }
 
 export interface Menu {
@@ -485,6 +501,11 @@ export interface GenerateReportRequest {
   station_id?: number | null
   start_date: string
   end_date: string
+  preview?: boolean
+}
+
+export interface ReportListParams extends PaginationParams {
+  type?: string
 }
 
 export interface ReportData {
@@ -498,6 +519,18 @@ export interface ReportData {
   start_date: string
   end_date: string
   created_by: number
+}
+
+export interface ReportPreviewData {
+  request_count: number
+  completed_request_count: number
+  completion_rate: number
+  service_type_count: number
+  ranked_staff_count: number
+  completed_task_count: number
+  avg_rating: number
+  trend_days: number
+  station_count: number
 }
 
 /**

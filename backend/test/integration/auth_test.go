@@ -35,8 +35,10 @@ func TestAuth(t *testing.T) {
 	t.Run("B端获取当前用户信息", func(t *testing.T) {
 		w := testutil.DoRequest(env.Engine, http.MethodGet, "/api/v1/b/auth/me", testutil.AdminToken())
 		data := testutil.AssertOK(t, w)
-		assert.NotNil(t, data["id"])
-		assert.Equal(t, "13800000001", data["phone"])
+		user, ok := data["user"].(map[string]interface{})
+		assert.True(t, ok)
+		assert.NotNil(t, user["id"])
+		assert.Equal(t, "13800000001", user["phone"])
 	})
 
 	t.Run("B端登出", func(t *testing.T) {

@@ -101,9 +101,10 @@ func (r *UserRepository) Update(user *model.User) error {
 //
 // 注意：由于涉及日期函数，此方法使用原生 GORM
 func (r *UserRepository) CountTodayNew() (int64, error) {
+	start, end := todayRange()
 	var count int64
 	err := r.db.Model(&model.User{}).
-		Where("DATE(created_at) = CURDATE()").
+		Where("created_at >= ? AND created_at < ?", start, end).
 		Where("deleted_at IS NULL").
 		Count(&count).Error
 	return count, err

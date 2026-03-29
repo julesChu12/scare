@@ -411,6 +411,7 @@ const identityMap: Record<string, string> = {
   user: "普通用户",
   child: "幼儿",
   elderly: "长者",
+  family: "家属",
   disabled: "残障人士",
   pregnant: "孕妇",
 };

@@ -1169,6 +1169,18 @@ const docTemplate = `{
                         "description": "每页数量",
                         "name": "page_size",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "通知类型(system/task/alert/request)",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否已读",
+                        "name": "is_read",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -2080,6 +2092,24 @@ const docTemplate = `{
                         "description": "每页数量",
                         "name": "page_size",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "关键词搜索(站点名称/编号/地址/电话)",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "站点名称(兼容旧参数，等同于 keyword)",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "状态筛选(active/inactive)",
+                        "name": "status",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -2898,6 +2928,24 @@ const docTemplate = `{
                         "default": 10,
                         "description": "每页数量",
                         "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "任务状态",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "服务类型",
+                        "name": "service_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "需求编号（模糊匹配）",
+                        "name": "request_no",
                         "in": "query"
                     }
                 ],
@@ -4134,8 +4182,20 @@ const docTemplate = `{
                                 "code": {
                                     "type": "string"
                                 },
+                                "contact_name": {
+                                    "type": "string"
+                                },
+                                "contact_phone": {
+                                    "type": "string"
+                                },
                                 "description": {
                                     "type": "string"
+                                },
+                                "images": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
                                 },
                                 "latitude": {
                                     "type": "number",
@@ -4461,6 +4521,18 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "每页数量",
                         "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "通知类型(system/task/alert/request)",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "是否已读",
+                        "name": "is_read",
                         "in": "query"
                     }
                 ],
@@ -5595,6 +5667,9 @@ const docTemplate = `{
                         "csv"
                     ]
                 },
+                "preview": {
+                    "type": "boolean"
+                },
                 "start_date": {
                     "type": "string"
                 },
@@ -5889,7 +5964,7 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:8080",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
-	Title:            "sCare 社区养老服务平台 API",
+	Title:            "霍营街道社区养老服务平台 API",
 	Description:      "昌平区霍营街道社区养老信息分发平台后端 API",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,

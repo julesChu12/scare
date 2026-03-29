@@ -39,7 +39,7 @@
           <div class="dot" v-if="!item.is_read"></div>
           <div class="notification-body">
             <h4 class="notification-title">{{ item.title }}</h4>
-            <p class="notification-desc">{{ item.content }}</p>
+            <p class="notification-desc">{{ item.body }}</p>
             <p class="notification-time">{{ formatTime(item.created_at) }}</p>
           </div>
         </div>
@@ -240,7 +240,7 @@ onMounted(() => {
 }
 
 .empty-icon {
-  font-size: 64px;
+  font-size: calc(64px * var(--font-scale));
   color: #c0c4cc;
   margin-bottom: 16px;
 }
@@ -314,7 +314,7 @@ onMounted(() => {
 }
 
 .notification-time {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: #c0c4cc;
 }
 
