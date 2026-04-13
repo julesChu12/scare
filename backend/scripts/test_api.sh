@@ -114,6 +114,24 @@ c_login() {
     echo "$response" | jq -r '.data.token // empty'
 }
 
+# 使用候选手机号按顺序尝试 C 端登录，返回 "phone|token"
+c_login_first_available() {
+    local password="$1"
+    shift
+
+    for phone in "$@"; do
+        local token
+        token=$(c_login "$phone" "$password")
+        if [ -n "$token" ]; then
+            echo "$phone|$token"
+            return 0
+        fi
+    done
+
+    echo "|"
+    return 1
+}
+
 echo "=========================================="
 echo "sCare Backend API 测试"
 echo "Base URL: $BASE_URL"
@@ -280,7 +298,13 @@ test_api "Admin - 创建用户(staff)" "POST" "/b/users" "$ADMIN_TOKEN" "{\"phon
 
 # --- 请求详情与状态更新 ---
 test_api "Admin - 服务请求详情(ID=1)" "GET" "/b/requests/1" "$ADMIN_TOKEN" "" ""
-test_api "Admin - 任务详情(ID=1)" "GET" "/b/tasks/1" "$ADMIN_TOKEN" "" ""
+TASK_DETAIL_LIST=$(api_call "GET" "/b/tasks?page_size=1" "$ADMIN_TOKEN" "")
+TASK_DETAIL_ID=$(echo "$TASK_DETAIL_LIST" | jq -r '.data.items[0].id // empty')
+if [ -n "$TASK_DETAIL_ID" ] && [ "$TASK_DETAIL_ID" != "null" ]; then
+    test_api "Admin - 任务详情(动态ID)" "GET" "/b/tasks/$TASK_DETAIL_ID" "$ADMIN_TOKEN" "" ""
+else
+    echo -e "${YELLOW}⚠${NC} 未找到可用任务，跳过任务详情测试"
+fi
 
 # --- 统计接口补全 ---
 test_api "Admin - 统计概览" "GET" "/b/statistics/overview" "$ADMIN_TOKEN" "" "ok"
@@ -435,12 +459,30 @@ fi
 # Family 角色测试（C端家属）
 # =====================================================
 echo -e "\n${YELLOW}--- Family 角色测试 ---${NC}"
-FAMILY_TOKEN=$(c_login "13800000011" "Test@123")
+FAMILY_LOGIN_RESULT=$(c_login_first_available "Test@123" "13800000011" "13800000012")
+FAMILY_PHONE="${FAMILY_LOGIN_RESULT%%|*}"
+FAMILY_TOKEN="${FAMILY_LOGIN_RESULT#*|}"
+
+case "$FAMILY_PHONE" in
+    "13800000011")
+        FAMILY_NAME="张小华"
+        FAMILY_ADDRESS="北京市昌平区霍营街道华龙苑北里小区2号楼"
+        ;;
+    "13800000012")
+        FAMILY_NAME="李小勇"
+        FAMILY_ADDRESS="北京市昌平区霍营街道龙锦苑东一区3号楼"
+        ;;
+    *)
+        FAMILY_NAME="家属测试用户"
+        FAMILY_ADDRESS="北京市昌平区霍营街道测试地址"
+        ;;
+esac
+
 if [ -z "$FAMILY_TOKEN" ]; then
-    echo -e "${RED}✗${NC} Family(张小华) 登录失败"
+    echo -e "${RED}✗${NC} Family 登录失败（未找到可用家属测试账号）"
     FAILED=$((FAILED + 1))
 else
-    echo -e "${GREEN}✓${NC} Family(张小华) 登录成功"
+    echo -e "${GREEN}✓${NC} Family($FAMILY_NAME, $FAMILY_PHONE) 登录成功"
     PASSED=$((PASSED + 1))
 fi
 TOTAL=$((TOTAL + 1))
@@ -449,7 +491,7 @@ if [ -n "$FAMILY_TOKEN" ]; then
     test_api "Family - 获取当前用户" "GET" "/c/auth/me" "$FAMILY_TOKEN" "" "ok"
     test_api "Family - Token检查" "GET" "/c/auth/check" "$FAMILY_TOKEN" "" ""
     test_api "Family Token - 访问B端拒绝" "GET" "/b/auth/me" "$FAMILY_TOKEN" "" "token end type mismatch" "403"
-    test_api "Family - 更新个人资料" "PUT" "/c/profile" "$FAMILY_TOKEN" '{"name":"张小华","address":"北京市昌平区霍营街道华龙苑北里小区2号楼"}' "ok"
+    test_api "Family - 更新个人资料" "PUT" "/c/profile" "$FAMILY_TOKEN" "{\"name\":\"$FAMILY_NAME\",\"address\":\"$FAMILY_ADDRESS\"}" "ok"
     test_api "Family - 通知列表" "GET" "/c/notifications" "$FAMILY_TOKEN" "" "ok"
 
     # 公开接口（无需 token 也能访问，但 family 访问也应正常）
@@ -457,7 +499,7 @@ if [ -n "$FAMILY_TOKEN" ]; then
     test_api "Family - Banner列表" "GET" "/c/banners" "$FAMILY_TOKEN" "" "ok"
 
     # Family 创建服务请求（家属代老人提交）
-    FAMILY_REQ_RESP=$(api_call "POST" "/c/requests" "$FAMILY_TOKEN" '{"service_type":"meal","contact_name":"张小华","contact_phone":"13800000011","address":"北京市昌平区霍营街道华龙苑北里小区2号楼","description":"代父亲张大爷申请送餐","lat":40.07,"lng":116.37}')
+    FAMILY_REQ_RESP=$(api_call "POST" "/c/requests" "$FAMILY_TOKEN" "{\"service_type\":\"meal\",\"contact_name\":\"$FAMILY_NAME\",\"contact_phone\":\"$FAMILY_PHONE\",\"address\":\"$FAMILY_ADDRESS\",\"description\":\"家属代提交送餐请求\",\"lat\":40.07,\"lng\":116.37}")
     FAMILY_REQUEST_ID=$(echo "$FAMILY_REQ_RESP" | jq -r '.data.id // empty')
     FAMILY_REQUEST_MSG=$(echo "$FAMILY_REQ_RESP" | jq -r '.msg // empty')
     if [ -n "$FAMILY_REQUEST_ID" ] && [ "$FAMILY_REQUEST_ID" != "null" ]; then
@@ -477,7 +519,7 @@ if [ -n "$FAMILY_TOKEN" ]; then
     fi
 
     # Family 创建请求 → Staff 完成 → Family 评价（完整流程）
-    FAMILY_FLOW_RESP=$(api_call "POST" "/c/requests" "$FAMILY_TOKEN" '{"service_type":"cleaning","contact_name":"张小华","contact_phone":"13800000011","address":"北京市昌平区霍营街道华龙苑北里小区2号楼","lat":40.07,"lng":116.37}')
+    FAMILY_FLOW_RESP=$(api_call "POST" "/c/requests" "$FAMILY_TOKEN" "{\"service_type\":\"cleaning\",\"contact_name\":\"$FAMILY_NAME\",\"contact_phone\":\"$FAMILY_PHONE\",\"address\":\"$FAMILY_ADDRESS\",\"lat\":40.07,\"lng\":116.37}")
     FAMILY_FLOW_ID=$(echo "$FAMILY_FLOW_RESP" | jq -r '.data.id // empty')
     if [ -n "$FAMILY_FLOW_ID" ] && [ "$FAMILY_FLOW_ID" != "null" ]; then
         # 查找对应任务
@@ -487,7 +529,7 @@ if [ -n "$FAMILY_TOKEN" ]; then
         if [ -n "$FAMILY_TASK_ID" ] && [ "$FAMILY_TASK_ID" != "null" ]; then
             test_api "Staff - 认领Family请求任务" "POST" "/b/tasks/$FAMILY_TASK_ID/claim" "$STAFF_TOKEN" "" "ok"
             test_api "Staff - 完成Family请求任务" "POST" "/b/tasks/$FAMILY_TASK_ID/complete" "$STAFF_TOKEN" '{"images":[]}' "ok"
-            test_api "Family - 评价服务" "POST" "/c/requests/$FAMILY_FLOW_ID/rate" "$FAMILY_TOKEN" '{"rating":4,"feedback":"家属评价：服务态度好"}' "ok"
+            test_api "Family - 评价服务" "POST" "/c/requests/$FAMILY_FLOW_ID/rate" "$FAMILY_TOKEN" "{\"rating\":4,\"feedback\":\"$FAMILY_NAME：服务态度好\"}" "ok"
         else
             echo -e "${YELLOW}⚠${NC} 未找到Family请求对应任务，跳过认领/完成/评价"
         fi

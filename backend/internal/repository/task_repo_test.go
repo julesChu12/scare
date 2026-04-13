@@ -117,6 +117,82 @@ func TestTaskRepository_ListPool(t *testing.T) {
 	}
 }
 
+func TestTaskRepository_ListPoolAndGetByIDWithRequest_LoadRequestStationNames(t *testing.T) {
+	db := setupTestDB(t)
+	repo := NewTaskRepository(db)
+
+	assignedStation := &model.ServiceStation{
+		ID:      2,
+		Name:    "龙泽园养老服务站",
+		Code:    "ST002",
+		Address: "龙泽园",
+		Status:  "active",
+	}
+	sourceStation := &model.ServiceStation{
+		ID:      3,
+		Name:    "回龙观养老服务站",
+		Code:    "ST003",
+		Address: "回龙观",
+		Status:  "active",
+	}
+	if err := db.Create(assignedStation).Error; err != nil {
+		t.Fatalf("failed to create assigned station: %v", err)
+	}
+	if err := db.Create(sourceStation).Error; err != nil {
+		t.Fatalf("failed to create source station: %v", err)
+	}
+
+	req := &model.ServiceRequest{
+		RequestNo:       fmt.Sprintf("REQ-TASK-LIST-%d", time.Now().UnixNano()),
+		UserID:          1,
+		ServiceType:     consts.ServiceTypeMedical,
+		Status:          consts.RequestStatusDispatched,
+		Address:         "北京市昌平区回南家园",
+		StationID:       assignedStation.ID,
+		SourceStationID: sourceStation.ID,
+	}
+	if err := db.Create(req).Error; err != nil {
+		t.Fatalf("failed to create request: %v", err)
+	}
+
+	task := &model.TaskAssignment{
+		RequestID: req.ID,
+		StationID: assignedStation.ID,
+		Status:    consts.TaskStatusDispatched,
+	}
+	if err := db.Create(task).Error; err != nil {
+		t.Fatalf("failed to create task: %v", err)
+	}
+
+	tasks, total, err := repo.ListPool(TaskPoolFilter{StationID: 0}, 0, 10)
+	if err != nil {
+		t.Fatalf("failed to list task pool with request join: %v", err)
+	}
+	if total != 1 || len(tasks) != 1 {
+		t.Fatalf("expected one task, total=%d len=%d", total, len(tasks))
+	}
+	if tasks[0].Request == nil {
+		t.Fatal("expected request to be loaded for task pool item")
+	}
+	if tasks[0].Request.StationName != assignedStation.Name {
+		t.Fatalf("expected assigned station name %q, got %q", assignedStation.Name, tasks[0].Request.StationName)
+	}
+	if tasks[0].Request.SourceStationName != sourceStation.Name {
+		t.Fatalf("expected source station name %q, got %q", sourceStation.Name, tasks[0].Request.SourceStationName)
+	}
+
+	detail, err := repo.GetByIDWithRequest(task.ID)
+	if err != nil {
+		t.Fatalf("failed to get task detail with request: %v", err)
+	}
+	if detail.Request == nil {
+		t.Fatal("expected request to be loaded for task detail")
+	}
+	if detail.Request.StationName != assignedStation.Name || detail.Request.SourceStationName != sourceStation.Name {
+		t.Fatalf("unexpected station names in task detail: assigned=%q source=%q", detail.Request.StationName, detail.Request.SourceStationName)
+	}
+}
+
 func TestTaskRepository_CountByStatus(t *testing.T) {
 	db := setupTestDB(t)
 	repo := NewTaskRepository(db)

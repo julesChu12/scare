@@ -52,8 +52,8 @@ func (r *TaskRepository) ListByStaff(staffID int64, offset, limit int) ([]*TaskW
 		requestIDs = append(requestIDs, t.RequestID)
 	}
 
-	var requests []*model.ServiceRequest
-	if err := db.Session(&gorm.Session{}).Table("service_requests").Where("id IN ?", requestIDs).Find(&requests).Error; err != nil {
+	requests, err := r.loadRequestsByIDs(db, requestIDs)
+	if err != nil {
 		return nil, 0, err
 	}
 	requestMap := make(map[int64]*model.ServiceRequest)
@@ -128,8 +128,8 @@ func (r *TaskRepository) ListPool(filter TaskPoolFilter, offset, limit int) ([]*
 	}
 
 	// 查询服务请求
-	var requests []*model.ServiceRequest
-	if err := db.Session(&gorm.Session{}).Table("service_requests").Where("id IN ?", requestIDs).Find(&requests).Error; err != nil {
+	requests, err := r.loadRequestsByIDs(db, requestIDs)
+	if err != nil {
 		return nil, 0, err
 	}
 	requestMap := make(map[int64]*model.ServiceRequest)
@@ -287,8 +287,8 @@ func (r *TaskRepository) ListWithRequest(filter TaskListFilter, offset, limit in
 	}
 
 	// 查询服务请求 - 使用新的 DB 会话
-	var requests []*model.ServiceRequest
-	if err := db.Session(&gorm.Session{}).Table("service_requests").Where("id IN ?", requestIDs).Find(&requests).Error; err != nil {
+	requests, err := r.loadRequestsByIDs(db, requestIDs)
+	if err != nil {
 		return nil, 0, err
 	}
 	requestMap := make(map[int64]*model.ServiceRequest)
@@ -334,11 +334,10 @@ func (r *TaskRepository) GetByIDWithRequest(id int64) (*TaskWithRequest, error) 
 	db := t.UnderlyingDB()
 
 	// 查询关联的服务请求 - 使用新的 DB 会话
-	var request model.ServiceRequest
-	if err := db.Session(&gorm.Session{}).Table("service_requests").Where("id = ?", task.RequestID).First(&request).Error; err == nil {
+	if request, err := r.loadRequestByID(db, task.RequestID); err == nil {
 		result := &TaskWithRequest{
 			TaskAssignment: *task,
-			Request:        &request,
+			Request:        request,
 		}
 
 		// 查询工作人员姓名
@@ -352,6 +351,43 @@ func (r *TaskRepository) GetByIDWithRequest(id int64) (*TaskWithRequest, error) 
 	}
 
 	return &TaskWithRequest{TaskAssignment: *task}, nil
+}
+
+func (r *TaskRepository) loadRequestsByIDs(db *gorm.DB, requestIDs []int64) ([]*model.ServiceRequest, error) {
+	var requests []*model.ServiceRequest
+	err := db.Session(&gorm.Session{}).
+		Table("service_requests").
+		Select(`
+			service_requests.*,
+			assigned_station.name AS station_name,
+			source_station.name AS source_station_name
+		`).
+		Joins("LEFT JOIN service_stations AS assigned_station ON service_requests.station_id = assigned_station.id").
+		Joins("LEFT JOIN service_stations AS source_station ON service_requests.source_station_id = source_station.id").
+		Where("service_requests.id IN ?", requestIDs).
+		Where("service_requests.deleted_at IS NULL").
+		Find(&requests).Error
+	return requests, err
+}
+
+func (r *TaskRepository) loadRequestByID(db *gorm.DB, requestID int64) (*model.ServiceRequest, error) {
+	var request model.ServiceRequest
+	err := db.Session(&gorm.Session{}).
+		Table("service_requests").
+		Select(`
+			service_requests.*,
+			assigned_station.name AS station_name,
+			source_station.name AS source_station_name
+		`).
+		Joins("LEFT JOIN service_stations AS assigned_station ON service_requests.station_id = assigned_station.id").
+		Joins("LEFT JOIN service_stations AS source_station ON service_requests.source_station_id = source_station.id").
+		Where("service_requests.id = ?", requestID).
+		Where("service_requests.deleted_at IS NULL").
+		First(&request).Error
+	if err != nil {
+		return nil, err
+	}
+	return &request, nil
 }
 
 func (r *TaskRepository) GetAvgResponseTime(stationID int64, isAdmin bool, since time.Time) (int64, error) {
