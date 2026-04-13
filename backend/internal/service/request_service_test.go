@@ -3,7 +3,6 @@ package service
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -43,12 +42,17 @@ func setupRequestServiceForTest(t *testing.T) (*RequestService, *gorm.DB) {
 			description TEXT,
 			submit_location_lat REAL,
 			submit_location_lng REAL,
+			service_location_lat REAL,
+			service_location_lng REAL,
 			contact_name TEXT,
 			contact_phone TEXT,
 			address TEXT,
 			appointment_time DATETIME,
 			urgency TEXT,
+			source_station_id INTEGER,
 			station_id INTEGER,
+			dispatch_basis TEXT,
+			needs_manual_verify INTEGER DEFAULT 0,
 			reject_reason TEXT,
 			images TEXT,
 			created_at DATETIME,
@@ -120,47 +124,54 @@ func createRequestWithTask(t *testing.T, db *gorm.DB, reqStatus string, userID i
 	return req, task
 }
 
-func TestRequestService_ResolveCoordinates(t *testing.T) {
-	svc, _ := setupRequestServiceForTest(t)
-
+func TestResolveDispatch(t *testing.T) {
+	_, db := setupRequestServiceForTest(t)
+	stationRepo := repository.NewStationRepository(db)
 	lat := 31.22
 	lng := 121.48
-	_, _, _, err := svc.resolveCoordinates(RequestInput{
-		Lat: &lat,
-	})
+	_, err := resolveDispatch(DispatchInput{
+		SubmitLatitude: &lat,
+	}, stationRepo, &GeofenceService{}, nil)
 	if !errors.Is(err, ErrInvalidRequest) {
 		t.Fatalf("expected ErrInvalidRequest for partial coordinates, got %v", err)
 	}
 
 	badLat := 91.0
-	_, _, _, err = svc.resolveCoordinates(RequestInput{
-		Lat: &badLat,
-		Lng: &lng,
-	})
+	_, err = resolveDispatch(DispatchInput{
+		ServiceLatitude:  &badLat,
+		ServiceLongitude: &lng,
+	}, stationRepo, &GeofenceService{}, nil)
 	if !errors.Is(err, ErrInvalidRequest) {
 		t.Fatalf("expected ErrInvalidRequest for out-of-range coordinates, got %v", err)
 	}
 
-	_, _, _, err = svc.resolveCoordinates(RequestInput{
+	_, err = resolveDispatch(DispatchInput{
 		Address: "test address",
-	})
-	if err == nil || !strings.Contains(err.Error(), "geocode service not configured") {
-		t.Fatalf("expected geocode service not configured error, got %v", err)
+	}, stationRepo, &GeofenceService{}, nil)
+	if !errors.Is(err, ErrServiceLocationRequired) {
+		t.Fatalf("expected ErrServiceLocationRequired, got %v", err)
 	}
 
-	gotLat, gotLng, addr, err := svc.resolveCoordinates(RequestInput{
-		Lat:     &lat,
-		Lng:     &lng,
-		Address: "input address",
-	})
+	// 插入一个站点，供 resolveDispatch 在有服务坐标时进行站点匹配
+	createTestStation(t, db, lat, lng)
+	decision, err := resolveDispatch(DispatchInput{
+		SubmitLatitude:   &lat,
+		SubmitLongitude:  &lng,
+		ServiceLatitude:  &lat,
+		ServiceLongitude: &lng,
+		Address:          "input address",
+	}, stationRepo, &GeofenceService{}, nil)
 	if err != nil {
-		t.Fatalf("resolveCoordinates failed: %v", err)
+		t.Fatalf("resolveDispatch failed: %v", err)
 	}
-	if gotLat != lat || gotLng != lng {
-		t.Fatalf("unexpected coordinates: got (%v, %v), want (%v, %v)", gotLat, gotLng, lat, lng)
+	if decision.SubmitLatitude != lat || decision.SubmitLongitude != lng {
+		t.Fatalf("unexpected submit coordinates: got (%v, %v), want (%v, %v)", decision.SubmitLatitude, decision.SubmitLongitude, lat, lng)
 	}
-	if addr != "input address" {
-		t.Fatalf("unexpected address: got %q", addr)
+	if decision.ServiceLatitude != lat || decision.ServiceLongitude != lng {
+		t.Fatalf("unexpected service coordinates: got (%v, %v), want (%v, %v)", decision.ServiceLatitude, decision.ServiceLongitude, lat, lng)
+	}
+	if decision.ResolvedAddress != "input address" {
+		t.Fatalf("unexpected address: got %q", decision.ResolvedAddress)
 	}
 }
 
@@ -170,12 +181,12 @@ func TestRequestService_Create_FallsBackToHaversineNearest(t *testing.T) {
 	expected := createTestStation(t, db, 80, 20)
 
 	lat := 80.0
-	lng := 0.0
+	lng := 20.0
 	req, created, err := svc.Create(RequestInput{
 		UserID:       1001,
 		ServiceType:  consts.ServiceTypeMeal,
-		Lat:          &lat,
-		Lng:          &lng,
+		ServiceLat:   &lat,
+		ServiceLng:   &lng,
 		ContactName:  "测试用户",
 		ContactPhone: "13800138000",
 		Address:      "测试地址",

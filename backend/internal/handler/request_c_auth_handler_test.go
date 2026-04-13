@@ -136,7 +136,22 @@ func TestTaskHandler_ListPool_NonAdminUsesOwnStationScope(t *testing.T) {
 }
 
 func TestCAuthHandler_QuickStart_RequiresAddressOrLocation(t *testing.T) {
-	handler := NewCAuthHandler(nil, nil, nil, nil)
+	db := openHandlerTestDB(t, "c_auth_quickstart_addr.db")
+	createHandlerTables(t, db)
+
+	smsSvc := service.NewSMSService(nil, "development")
+	authSvc := service.NewAuthService(
+		repository.NewUserRepository(db),
+		repository.NewUserIdentityRepository(db),
+		repository.NewCustomerRepository(db),
+		jwt.NewManager("test-secret", 1, 2),
+		smsSvc,
+		db,
+	)
+	authSvc.SetStationRepo(repository.NewStationRepository(db))
+	authSvc.SetGeofenceService(&service.GeofenceService{})
+
+	handler := NewCAuthHandler(authSvc, repository.NewUserRepository(db), repository.NewCustomerRepository(db), smsSvc)
 	c, w := newJSONTestContext(t, http.MethodPost, "/c/auth/quick-start", map[string]any{
 		"phone":        "13800138000",
 		"code":         "000000",
@@ -150,7 +165,7 @@ func TestCAuthHandler_QuickStart_RequiresAddressOrLocation(t *testing.T) {
 		t.Fatalf("expected 400, got %d", w.Code)
 	}
 	resp := decodeResponseMap(t, w)
-	if resp["msg"] != "address or location required" {
+	if resp["msg"] != "无法确定服务地点，请完善服务地址或确认当前位置" {
 		t.Fatalf("unexpected message: %v", resp["msg"])
 	}
 }

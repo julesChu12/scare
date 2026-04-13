@@ -139,19 +139,26 @@ func createHandlerTables(t *testing.T, db *gorm.DB) {
 			description TEXT,
 			submit_location_lat REAL,
 			submit_location_lng REAL,
+			service_location_lat REAL,
+			service_location_lng REAL,
 			contact_name TEXT,
 			contact_phone TEXT,
 			address TEXT,
 			appointment_time DATETIME,
 			urgency TEXT,
+			source_station_id INTEGER DEFAULT 0,
 			station_id INTEGER DEFAULT 0,
+			dispatch_basis TEXT,
+			needs_manual_verify INTEGER DEFAULT 0,
 			reject_reason TEXT,
 			images TEXT,
 			created_at DATETIME,
 			updated_at DATETIME,
 			deleted_at DATETIME,
 			rating INTEGER DEFAULT 0,
-			feedback TEXT
+			feedback TEXT,
+			station_name TEXT,
+			source_station_name TEXT
 		);
 		`,
 		`
