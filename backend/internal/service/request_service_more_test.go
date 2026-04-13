@@ -26,8 +26,8 @@ func TestRequestService_Create_InvalidAndIdempotentBranches(t *testing.T) {
 		UserID:       1,
 		RequestNo:    "REQ-IDEMPOTENT-1",
 		ServiceType:  consts.ServiceTypeMeal,
-		Lat:          &lat,
-		Lng:          &lng,
+		ServiceLat:   &lat,
+		ServiceLng:   &lng,
 		ContactName:  "测试人",
 		ContactPhone: "13800138002",
 		Address:      "测试地址",
@@ -43,8 +43,8 @@ func TestRequestService_Create_InvalidAndIdempotentBranches(t *testing.T) {
 		UserID:       1,
 		RequestNo:    "REQ-IDEMPOTENT-1",
 		ServiceType:  consts.ServiceTypeMeal,
-		Lat:          &lat,
-		Lng:          &lng,
+		ServiceLat:   &lat,
+		ServiceLng:   &lng,
 		ContactName:  "测试人",
 		ContactPhone: "13800138002",
 		Address:      "测试地址",
@@ -63,8 +63,8 @@ func TestRequestService_Create_InvalidAndIdempotentBranches(t *testing.T) {
 		UserID:       2,
 		RequestNo:    "REQ-IDEMPOTENT-1",
 		ServiceType:  consts.ServiceTypeMeal,
-		Lat:          &lat,
-		Lng:          &lng,
+		ServiceLat:   &lat,
+		ServiceLng:   &lng,
 		ContactName:  "冲突用户",
 		ContactPhone: "13800138003",
 		Address:      "测试地址",
@@ -95,8 +95,8 @@ func TestRequestService_Create_UsesGeocodeAddressWhenCoordinatesMissing(t *testi
 	if req.StationID != expected.ID {
 		t.Fatalf("expected station %d, got %d", expected.ID, req.StationID)
 	}
-	if req.SubmitLocationLat != 39.908823 || req.SubmitLocationLng != 116.397470 {
-		t.Fatalf("unexpected coordinates: (%f, %f)", req.SubmitLocationLat, req.SubmitLocationLng)
+	if req.ServiceLocationLat != 39.908823 || req.ServiceLocationLng != 116.397470 {
+		t.Fatalf("unexpected service coordinates: (%f, %f)", req.ServiceLocationLat, req.ServiceLocationLng)
 	}
 }
 

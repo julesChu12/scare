@@ -174,17 +174,17 @@ func TestAuthService_QuickStart_CreatesUserProfileRequestByNearestStation(t *tes
 	lng := 1.0
 	description := "需要送餐上门"
 	result, err := authSvc.QuickStart(QuickStartInput{
-		Phone:        "13820000004",
-		Code:         "000000",
-		Name:         "快速用户",
-		Address:      "高纬地址",
-		Latitude:     &lat,
-		Longitude:    &lng,
-		ServiceType:  consts.ServiceTypeMeal,
-		Description:  &description,
-		Images:       []string{"a.png"},
-		ContactName:  "联系人",
-		ContactPhone: "13800138000",
+		Phone:            "13820000004",
+		Code:             "000000",
+		Name:             "快速用户",
+		Address:          "高纬地址",
+		ServiceLatitude:  &lat,
+		ServiceLongitude: &lng,
+		ServiceType:      consts.ServiceTypeMeal,
+		Description:      &description,
+		Images:           []string{"a.png"},
+		ContactName:      "联系人",
+		ContactPhone:     "13800138000",
 	})
 	if err != nil {
 		t.Fatalf("QuickStart returned error: %v", err)
@@ -216,7 +216,7 @@ func TestAuthService_QuickStart_CreatesUserProfileRequestByNearestStation(t *tes
 	}
 }
 
-func TestAuthService_QuickStart_UpdatesExistingUserAndUsesFirstActiveStationWithoutCoords(t *testing.T) {
+func TestAuthService_QuickStart_UpdatesExistingUserAndFallsBackToSourceStationWithoutCoords(t *testing.T) {
 	authSvc, db, _ := setupAuthUnitService(t)
 	expected := createTestStation(t, db, 30, 120)
 	createTestStation(t, db, 31, 121)
@@ -224,15 +224,17 @@ func TestAuthService_QuickStart_UpdatesExistingUserAndUsesFirstActiveStationWith
 	user := seedAuthUnitUser(t, db, "13820000005", "Test@123", "active", 0)
 	seedAuthUnitProfile(t, db, user.ID, "旧地址")
 	seedAuthUnitIdentity(t, db, user.ID, consts.IdentityElderly, true, 0)
+	sourceStationID := expected.ID
 
 	result, err := authSvc.QuickStart(QuickStartInput{
-		Phone:        "13820000005",
-		Code:         "000000",
-		Name:         "新姓名",
-		Address:      "新地址",
-		ServiceType:  consts.ServiceTypeMedical,
-		ContactName:  "新联系人",
-		ContactPhone: "13800138001",
+		Phone:           "13820000005",
+		Code:            "000000",
+		Name:            "新姓名",
+		Address:         "新地址",
+		SourceStationID: &sourceStationID,
+		ServiceType:     consts.ServiceTypeMedical,
+		ContactName:     "新联系人",
+		ContactPhone:    "13800138001",
 	})
 	if err != nil {
 		t.Fatalf("QuickStart returned error: %v", err)
@@ -245,11 +247,14 @@ func TestAuthService_QuickStart_UpdatesExistingUserAndUsesFirstActiveStationWith
 		t.Fatalf("expected profile address updated, got %q", result.Profile.Address)
 	}
 	if result.Request.StationID != expected.ID {
-		t.Fatalf("expected first active station %d, got %d", expected.ID, result.Request.StationID)
+		t.Fatalf("expected source station fallback %d, got %d", expected.ID, result.Request.StationID)
+	}
+	if !result.Request.NeedsManualVerify {
+		t.Fatalf("expected manual verification flag to be set")
 	}
 }
 
-func TestAuthService_QuickStart_ReturnsNoStationWhenNoneAvailable(t *testing.T) {
+func TestAuthService_QuickStart_RequiresServiceLocationWhenNoFallbackAvailable(t *testing.T) {
 	authSvc, _, _ := setupAuthUnitService(t)
 
 	_, err := authSvc.QuickStart(QuickStartInput{
@@ -259,7 +264,7 @@ func TestAuthService_QuickStart_ReturnsNoStationWhenNoneAvailable(t *testing.T) 
 		Address:     "未知地址",
 		ServiceType: consts.ServiceTypeMeal,
 	})
-	if !errors.Is(err, ErrNoStation) {
-		t.Fatalf("expected ErrNoStation, got %v", err)
+	if !errors.Is(err, ErrServiceLocationRequired) {
+		t.Fatalf("expected ErrServiceLocationRequired, got %v", err)
 	}
 }
