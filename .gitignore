@@ -142,9 +142,6 @@ coverage/
 .serena/
 *.claude
 
-# 上传文件存储
-backend/storage/
-
 # 测试产物
 frontend/management-portal/test-results/
 
