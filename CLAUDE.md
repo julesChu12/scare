@@ -204,7 +204,7 @@ Handler (参数校验/响应格式化)
 ### 前端技术栈
 
 **B 端管理门户**：
-- Vue 3.4 + TypeScript 5.3 + Vite 6.0
+- Vue 3.4.15 + TypeScript 5.3.3 + Vite 6.0
 - Element Plus 2.5 + Pinia 2.1 + Vue Router 4.2
 - ECharts 5.4 + vue-echarts 6.6（图表）
 - Axios 1.6（HTTP 客户端）
@@ -213,7 +213,7 @@ Handler (参数校验/响应格式化)
 - Playwright 1.58（E2E 测试）
 
 **C 端用户端**：
-- Vue 3.4 + TypeScript 5.4 + Vite 5.0
+- Vue 3.4.0 + TypeScript ~5.4.0 + Vite 5.0
 - Element Plus 2.5 + Pinia 2.1 + Vue Router 4.2
 - Axios 1.6 + @vueuse/core 10.7
 - vite-plugin-pwa 0.17（PWA + Workbox NetworkFirst 缓存策略）
@@ -304,6 +304,7 @@ pkg/geo/bbox.go      # BoundingBox 快速排除
 **C 端 PWA 特性**：
 - `vite-plugin-pwa` 实现，支持离线使用和安装到桌面
 - Workbox 对 API 请求使用 NetworkFirst 缓存策略（1 小时过期）
+- PWA 配置位于 `vite.config.ts`（PWA 插件配置 + Workbox NetworkFirst 策略）
 
 **C 端适老化特性**：
 - CSS 变量系统支持三档字体大小调节
