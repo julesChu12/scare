@@ -17,6 +17,14 @@ export type StationInfo = Station
 
 export const stationAPI = {
     /**
+     * 获取公开站点信息
+     * GET /api/v1/c/stations/:id
+     */
+    getStationById: (id: number) => {
+        return client.get<any, Station>(`/c/stations/${id}`)
+    },
+
+    /**
      * 匹配最近的服务站点
      * POST /api/v1/c/stations/match
      * 返回值经 Axios 拦截器解包后直接是 Station 对象

@@ -16,6 +16,11 @@ export interface QuickStartRequest {
   address: string
   latitude?: number
   longitude?: number
+  submit_lat?: number
+  submit_lng?: number
+  service_lat?: number
+  service_lng?: number
+  source_station_id?: number
   service_type: string
   description?: string
   images?: string[]
@@ -41,6 +46,12 @@ export interface QuickStartResponse {
     request_no: string
     service_type: string
     status: string
+    station_id?: number
+    station_name?: string
+    source_station_id?: number
+    source_station_name?: string
+    dispatch_basis?: string
+    needs_manual_verify?: boolean
     contact_name?: string
     contact_phone?: string
     images?: string

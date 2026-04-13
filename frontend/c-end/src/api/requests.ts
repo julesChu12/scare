@@ -21,6 +21,11 @@ export interface CreateRequestRequest {
   address?: string
   lat?: number
   lng?: number
+  submit_lat?: number
+  submit_lng?: number
+  service_lat?: number
+  service_lng?: number
+  source_station_id?: number
   contact_name?: string
   contact_phone?: string
   images?: string[]
@@ -32,6 +37,12 @@ export interface CreateRequestResponse {
   request_no: string
   service_type: string
   status: string
+  station_id?: number
+  station_name?: string
+  source_station_id?: number
+  source_station_name?: string
+  dispatch_basis?: string
+  needs_manual_verify?: boolean
   created_at: string
 }
 
@@ -48,6 +59,10 @@ export interface ServiceRequest {
   address: string
   station_id?: number
   station_name?: string
+  source_station_id?: number
+  source_station_name?: string
+  dispatch_basis?: string
+  needs_manual_verify?: boolean
   appointment_time?: string
   urgency?: string
   reject_reason?: string

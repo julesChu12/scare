@@ -13,6 +13,15 @@
       <span class="service-name">{{ selectedServiceName }}</span>
     </div>
 
+    <div v-if="sourceStation" class="source-station-card">
+      <div class="source-station-title">扫码来源站点</div>
+      <div class="source-station-name">{{ sourceStation.name }}</div>
+      <div class="source-station-meta">
+        <span v-if="sourceStation.address">{{ sourceStation.address }}</span>
+        <span v-if="sourceStation.phone">联系电话：{{ sourceStation.phone }}</span>
+      </div>
+    </div>
+
     <div class="form-container">
       <el-form :model="form" :rules="rules" ref="formRef" label-position="top">
         <el-form-item label="手机号" prop="phone">
@@ -42,13 +51,23 @@
           <el-input
             v-model="form.address"
             type="textarea"
-            placeholder="请输入详细地址"
+            placeholder="请输入老人实际需要上门服务的详细地址"
             :rows="1"
             size="large"
           />
           <div class="location-hint" v-if="hasLocation">
             <el-icon><Location /></el-icon>
-            <span>已获取您的位置</span>
+            <span>已获取您的当前位置，仅用于辅助校验与回填</span>
+          </div>
+        </el-form-item>
+
+        <el-form-item label="服务地点判定">
+          <div class="location-mode">
+            <el-switch v-model="useCurrentLocationAsServiceLocation" :disabled="!hasLocation" />
+            <span class="location-mode-text">服务地点与当前位置一致</span>
+          </div>
+          <div class="location-mode-hint">
+            开启后，系统将按当前位置判断受理站点；未开启时，优先按您填写的服务地址判断。
           </div>
         </el-form-item>
 
@@ -102,7 +121,7 @@
       </el-form>
 
       <div class="tips" v-if="!isLoggedIn">
-        <p>已有账号？<router-link to="/login">使用密码登录</router-link></p>
+        <p>已有账号？<router-link :to="loginLink">使用密码登录</router-link></p>
       </div>
     </div>
   </div>
@@ -111,10 +130,11 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowLeft, Location, Plus } from '@element-plus/icons-vue'
 import type { FormInstance, UploadFile, UploadRequestOptions } from 'element-plus'
-import { authAPI, requestsAPI, uploadAPI } from '@/api'
+import { authAPI, geocodeAPI, requestsAPI, stationAPI, uploadAPI } from '@/api'
+import type { Station } from '@/api'
 import { useTokenStore, useUserStore } from '@/store'
 import { allServiceTypes, getServiceTypeName, getServiceTypeIcon } from '@/config/serviceTypes'
 import { getCurrentPosition } from '@/utils/coordTransform'
@@ -132,6 +152,9 @@ const countdown = ref(0)
 const loading = ref(false)
 const hasLocation = ref(false)
 const coordinates = ref<{ lng: number; lat: number } | null>(null)
+const useCurrentLocationAsServiceLocation = ref(false)
+const sourceStation = ref<Station | null>(null)
+const sourceStationId = ref<number | null>(null)
 
 // 上传相关
 const fileList = ref<UploadFile[]>([])
@@ -168,6 +191,10 @@ const handleExceed = () => {
 
 // 是否已登录
 const isLoggedIn = computed(() => tokenStore.isLoggedIn)
+const loginLink = computed(() => ({
+  path: '/login',
+  query: { redirect: route.fullPath }
+}))
 
 // 从 URL 获取的服务类型
 const selectedServiceType = computed(() => route.query.type as string || '')
@@ -210,6 +237,115 @@ const goBack = () => {
   router.back()
 }
 
+const parseSourceStationId = () => {
+  const raw = route.query.source_station_id
+  const parsed = parseInt(Array.isArray(raw) ? raw[0] : raw || '', 10)
+  sourceStationId.value = Number.isFinite(parsed) && parsed > 0 ? parsed : null
+}
+
+const loadSourceStation = async () => {
+  parseSourceStationId()
+  if (!sourceStationId.value) {
+    sourceStation.value = null
+    return
+  }
+
+  try {
+    sourceStation.value = await stationAPI.getStationById(sourceStationId.value)
+  } catch (error) {
+    sourceStation.value = null
+    sourceStationId.value = null
+    ElMessage.warning('二维码来源站点无效，已按普通入口处理')
+  }
+}
+
+const matchStation = async (lat: number, lng: number) => {
+  return stationAPI.matchStation({ latitude: lat, longitude: lng })
+}
+
+const confirmDispatchIfNeeded = async (assignedStation: Station, submitStation: Station | null, usedSourceFallback: boolean) => {
+  if (usedSourceFallback && sourceStation.value) {
+    await ElMessageBox.confirm(
+      `未能识别服务地址，系统将暂按来源站点“${sourceStation.value.name}”受理，工作人员可能联系您确认。是否继续？`,
+      '确认受理方式',
+      {
+        confirmButtonText: '继续提交',
+        cancelButtonText: '返回修改',
+        type: 'warning'
+      }
+    )
+    return
+  }
+
+  if (!useCurrentLocationAsServiceLocation.value && submitStation && submitStation.id !== assignedStation.id) {
+    await ElMessageBox.confirm(
+      `检测到您当前位置与服务地址匹配到的站点不一致，本次服务将由“${assignedStation.name}”受理。请确认服务地址填写无误。`,
+      '确认受理站点',
+      {
+        confirmButtonText: '确认提交',
+        cancelButtonText: '返回修改',
+        type: 'warning'
+      }
+    )
+    return
+  }
+
+  if (sourceStation.value && sourceStation.value.id !== assignedStation.id) {
+    ElMessage.info(`您从“${sourceStation.value.name}”入口进入，本次服务将由“${assignedStation.name}”受理`)
+  }
+}
+
+const resolveDispatchPreview = async () => {
+  const submitLat = coordinates.value?.lat
+  const submitLng = coordinates.value?.lng
+  const submitStation = submitLat !== undefined && submitLng !== undefined
+    ? await matchStation(submitLat, submitLng).catch(() => null)
+    : null
+
+  if (useCurrentLocationAsServiceLocation.value) {
+    if (submitLat === undefined || submitLng === undefined) {
+      throw new Error('current-location-required')
+    }
+
+    const assignedStation = submitStation || await matchStation(submitLat, submitLng)
+    return {
+      assignedStation,
+      submitStation,
+      serviceLat: submitLat,
+      serviceLng: submitLng,
+      resolvedAddress: form.address,
+      usedSourceFallback: false
+    }
+  }
+
+  try {
+    const geocodeResult = await geocodeAPI.geocode({ address: form.address })
+    const assignedStation = await matchStation(geocodeResult.latitude, geocodeResult.longitude)
+
+    return {
+      assignedStation,
+      submitStation,
+      serviceLat: geocodeResult.latitude,
+      serviceLng: geocodeResult.longitude,
+      resolvedAddress: geocodeResult.formatted_address || form.address,
+      usedSourceFallback: false
+    }
+  } catch (error) {
+    if (sourceStation.value) {
+      return {
+        assignedStation: sourceStation.value,
+        submitStation,
+        serviceLat: undefined,
+        serviceLng: undefined,
+        resolvedAddress: form.address,
+        usedSourceFallback: true
+      }
+    }
+
+    throw error
+  }
+}
+
 // 发送验证码
 const sendCode = async () => {
   if (!form.phone) {
@@ -249,17 +385,25 @@ const handleSubmit = async () => {
     loading.value = true
     try {
       const serviceType = selectedServiceType.value || form.service_type
+      const preview = await resolveDispatchPreview()
+      await confirmDispatchIfNeeded(preview.assignedStation, preview.submitStation, preview.usedSourceFallback)
+      const requestPayload = {
+        address: preview.resolvedAddress,
+        submit_lat: coordinates.value?.lat,
+        submit_lng: coordinates.value?.lng,
+        service_lat: preview.serviceLat,
+        service_lng: preview.serviceLng,
+        source_station_id: sourceStationId.value || undefined,
+        contact_name: form.name,
+        contact_phone: form.phone,
+        images: uploadedUrls.value.length > 0 ? uploadedUrls.value : undefined
+      }
 
       if (isLoggedIn.value) {
         // 已登录用户：直接创建服务请求
         const result = await requestsAPI.createRequest({
           service_type: serviceType,
-          address: form.address,
-          contact_name: form.name,
-          contact_phone: form.phone,
-          lat: coordinates.value?.lat,
-          lng: coordinates.value?.lng,
-          images: uploadedUrls.value.length > 0 ? uploadedUrls.value : undefined
+          ...requestPayload
         })
 
         ElMessage.success('服务申请已提交！')
@@ -270,9 +414,12 @@ const handleSubmit = async () => {
           phone: form.phone,
           code: form.code,
           name: form.name,
-          address: form.address,
-          latitude: coordinates.value?.lat,
-          longitude: coordinates.value?.lng,
+          address: preview.resolvedAddress,
+          submit_lat: coordinates.value?.lat,
+          submit_lng: coordinates.value?.lng,
+          service_lat: preview.serviceLat,
+          service_lng: preview.serviceLng,
+          source_station_id: sourceStationId.value || undefined,
           service_type: serviceType,
           description: form.description || undefined,
           images: uploadedUrls.value.length > 0 ? uploadedUrls.value : undefined,
@@ -290,6 +437,13 @@ const handleSubmit = async () => {
         router.push(`/requests/${result.request.id}`)
       }
     } catch (error) {
+      if (error instanceof Error && error.message === 'current-location-required') {
+        ElMessage.warning('请先获取当前位置，或关闭“服务地点与当前位置一致”')
+        return
+      }
+      if (error === 'cancel' || error === 'close') {
+        return
+      }
       console.error('提交失败:', error)
     } finally {
       loading.value = false
@@ -318,12 +472,10 @@ const fetchLocation = async () => {
     hasLocation.value = true
     sessionStorage.setItem('user_location', JSON.stringify(coords))
   } catch (error) {
-    console.warn('获取位置失败，使用默认位置:', error)
-    // 回退到默认位置（霍营街道）
-    const fallback = { lat: 40.0579, lng: 116.3698 }
-    coordinates.value = fallback
-    hasLocation.value = true
-    sessionStorage.setItem('user_location', JSON.stringify(fallback))
+    console.warn('获取位置失败:', error)
+    coordinates.value = null
+    hasLocation.value = false
+    sessionStorage.removeItem('user_location')
   }
 }
 
@@ -344,8 +496,10 @@ const prefillUserInfo = () => {
 
 // 页面加载
 onMounted(async () => {
+  await loadSourceStation()
+
   // 获取地理位置
-  fetchLocation()
+  await fetchLocation()
 
   // 如果已登录，预填充用户信息
   if (isLoggedIn.value) {
@@ -427,6 +581,37 @@ onMounted(async () => {
   color: var(--text-color-primary, #303133);
 }
 
+.source-station-card {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  margin: 0 16px 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.source-station-title {
+  font-size: var(--font-size-sm, 14px);
+  color: #9a3412;
+}
+
+.source-station-name {
+  font-size: var(--font-size-base, 16px);
+  font-weight: 600;
+  color: #7c2d12;
+}
+
+.source-station-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #9a3412;
+  font-size: var(--font-size-sm, 14px);
+}
+
 .form-container {
   flex: 1;
   overflow-y: auto;
@@ -480,6 +665,24 @@ onMounted(async () => {
   margin-top: 4px;
   color: var(--color-success, #67C23A);
   font-size: var(--font-size-sm, 14px);
+}
+
+.location-mode {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.location-mode-text {
+  font-size: var(--font-size-base, 16px);
+  color: var(--text-color-primary, #303133);
+}
+
+.location-mode-hint {
+  margin-top: 8px;
+  color: var(--text-color-secondary, #909399);
+  font-size: var(--font-size-sm, 14px);
+  line-height: 1.5;
 }
 
 .tips {

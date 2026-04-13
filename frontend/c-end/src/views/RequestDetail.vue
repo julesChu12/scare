@@ -61,13 +61,21 @@
           </div>
         </div>
 
-        <!-- 服务站点 -->
-        <div class="info-section" v-if="request.station_name">
-          <div class="section-title">服务站点</div>
+        <!-- 受理信息 -->
+        <div class="info-section" v-if="request.station_name || request.source_station_name || request.needs_manual_verify">
+          <div class="section-title">受理信息</div>
           <div class="info-list">
-            <div class="info-row">
-              <span class="info-label">站点名称</span>
+            <div class="info-row" v-if="request.station_name">
+              <span class="info-label">受理站点</span>
               <span class="info-value">{{ request.station_name }}</span>
+            </div>
+            <div class="info-row" v-if="request.source_station_name">
+              <span class="info-label">来源站点</span>
+              <span class="info-value">{{ request.source_station_name }}</span>
+            </div>
+            <div class="info-row" v-if="request.needs_manual_verify">
+              <span class="info-label">处理提示</span>
+              <span class="info-value highlight">服务地址待人工复核</span>
             </div>
           </div>
         </div>
