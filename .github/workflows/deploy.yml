@@ -33,9 +33,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-          cache-dependency-path: |
-            frontend/c-end/package-lock.json
-            frontend/management-portal/package-lock.json
+          cache-dependency-path: 'frontend/**/package-lock.json'
 
       # C 端构建
       - name: 安装 C 端依赖
@@ -124,6 +122,7 @@ jobs:
             --exclude='.env' \
             --exclude='deployment/.env' \
             --exclude='paper/' \
+            --exclude='database/' \
             -e "ssh $SSH_OPTS" \
             ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.DEPLOY_DIR }}/
 
