@@ -35,15 +35,18 @@ type RequestService struct {
 
 // RequestInput 创建服务请求的输入参数
 type RequestInput struct {
-	UserID       int64    `json:"user_id"`       // 用户ID
-	RequestNo    string   `json:"request_no"`    // 请求编号（可选，用于幂等）
-	ServiceType  string   `json:"service_type"`  // 服务类型
-	Lat          *float64 `json:"lat"`           // 纬度（可选）
-	Lng          *float64 `json:"lng"`           // 经度（可选）
-	ContactName  string   `json:"contact_name"`  // 联系人姓名
-	ContactPhone string   `json:"contact_phone"` // 联系人电话
-	Address      string   `json:"address"`       // 地址
-	Images       []string `json:"images"`        // 图片列表
+	UserID          int64    `json:"user_id"`           // 用户ID
+	RequestNo       string   `json:"request_no"`        // 请求编号（可选，用于幂等）
+	ServiceType     string   `json:"service_type"`      // 服务类型
+	SubmitLat       *float64 `json:"submit_lat"`        // 提交位置纬度（可选）
+	SubmitLng       *float64 `json:"submit_lng"`        // 提交位置经度（可选）
+	ServiceLat      *float64 `json:"service_lat"`       // 服务位置纬度（可选）
+	ServiceLng      *float64 `json:"service_lng"`       // 服务位置经度（可选）
+	SourceStationID *int64   `json:"source_station_id"` // 来源站点ID（可选）
+	ContactName     string   `json:"contact_name"`      // 联系人姓名
+	ContactPhone    string   `json:"contact_phone"`     // 联系人电话
+	Address         string   `json:"address"`           // 地址
+	Images          []string `json:"images"`            // 图片列表
 }
 
 func NewRequestService(db *gorm.DB, repo *repository.RequestRepository, taskRepo *repository.TaskRepository, stationRepo *repository.StationRepository, geofenceSvc *GeofenceService, geocodeSvc *GeocodeService, notifySvc *NotificationService, userIdentityRepo *repository.UserIdentityRepository) *RequestService {
@@ -87,7 +90,14 @@ func (s *RequestService) Create(input RequestInput) (*model.ServiceRequest, bool
 		return nil, false, ErrInvalidRequest
 	}
 
-	lat, lng, resolvedAddress, err := s.resolveCoordinates(input)
+	decision, err := resolveDispatch(DispatchInput{
+		Address:          input.Address,
+		SubmitLatitude:   input.SubmitLat,
+		SubmitLongitude:  input.SubmitLng,
+		ServiceLatitude:  input.ServiceLat,
+		ServiceLongitude: input.ServiceLng,
+		SourceStationID:  input.SourceStationID,
+	}, s.stationRepo, s.geofenceSvc, s.geocodeSvc)
 	if err != nil {
 		return nil, false, err
 	}
@@ -110,32 +120,28 @@ func (s *RequestService) Create(input RequestInput) (*model.ServiceRequest, bool
 		requestNo = generateRequestNo()
 	}
 
-	stationID, matched := s.geofenceSvc.Match(lat, lng)
-	if !matched {
-		nearest, err := s.findNearestStation(lat, lng)
-		if err != nil {
-			return nil, false, err
-		}
-		stationID = nearest
-	}
-
 	images, err := json.Marshal(input.Images)
 	if err != nil {
 		return nil, false, err
 	}
 
 	request := &model.ServiceRequest{
-		RequestNo:         requestNo,
-		UserID:            input.UserID,
-		ServiceType:       input.ServiceType,
-		Status:            consts.RequestStatusDispatched,
-		SubmitLocationLat: lat,
-		SubmitLocationLng: lng,
-		ContactName:       input.ContactName,
-		ContactPhone:      input.ContactPhone,
-		Address:           resolvedAddress,
-		StationID:         stationID,
-		Images:            string(images),
+		RequestNo:          requestNo,
+		UserID:             input.UserID,
+		ServiceType:        input.ServiceType,
+		Status:             consts.RequestStatusDispatched,
+		SubmitLocationLat:  decision.SubmitLatitude,
+		SubmitLocationLng:  decision.SubmitLongitude,
+		ServiceLocationLat: decision.ServiceLatitude,
+		ServiceLocationLng: decision.ServiceLongitude,
+		ContactName:        input.ContactName,
+		ContactPhone:       input.ContactPhone,
+		Address:            decision.ResolvedAddress,
+		SourceStationID:    decision.SourceStationID,
+		StationID:          decision.AssignedStationID,
+		DispatchBasis:      decision.DispatchBasis,
+		NeedsManualVerify:  decision.NeedsManualVerify,
+		Images:             string(images),
 	}
 
 	err = s.db.Transaction(func(tx *gorm.DB) error {
@@ -146,7 +152,7 @@ func (s *RequestService) Create(input RequestInput) (*model.ServiceRequest, bool
 		}
 		task := &model.TaskAssignment{
 			RequestID: request.ID,
-			StationID: stationID,
+			StationID: decision.AssignedStationID,
 			Status:    consts.TaskStatusDispatched,
 		}
 		if err := taskRepo.Create(task); err != nil {
@@ -159,53 +165,8 @@ func (s *RequestService) Create(input RequestInput) (*model.ServiceRequest, bool
 	}
 
 	// 异步通知站点管理员
-	s.sendRequestNotification(stationID, "新服务需求", fmt.Sprintf("收到新的%s服务需求，请及时处理。", consts.GetServiceTypeName(input.ServiceType)))
+	s.sendRequestNotification(decision.AssignedStationID, "新服务需求", fmt.Sprintf("收到新的%s服务需求，请及时处理。", consts.GetServiceTypeName(input.ServiceType)))
 	return request, true, nil
-}
-
-// resolveCoordinates 解析坐标
-//
-// 坐标解析优先级：
-// 1. 优先使用显式传入的经纬度（如果提供）
-// 2. 如果没有经纬度，通过地址进行反向地理编码
-//
-// 返回值：纬度、经度、解析后的地址、错误
-func (s *RequestService) resolveCoordinates(input RequestInput) (float64, float64, string, error) {
-	// Priority 1: explicit lat/lng provided
-	if input.Lat != nil || input.Lng != nil {
-		if input.Lat == nil || input.Lng == nil {
-			return 0, 0, "", ErrInvalidRequest
-		}
-		lat := *input.Lat
-		lng := *input.Lng
-		if !validCoordinate(lat, lng) {
-			return 0, 0, "", ErrInvalidRequest
-		}
-		return lat, lng, input.Address, nil
-	}
-
-	// Priority 2: resolve by address
-	if input.Address == "" {
-		return 0, 0, "", ErrInvalidRequest
-	}
-	if s.geocodeSvc == nil {
-		return 0, 0, "", errors.New("geocode service not configured")
-	}
-	geo, err := s.geocodeSvc.Geocode(input.Address)
-	if err != nil {
-		if errors.Is(err, ErrGeocodeNotFound) {
-			return 0, 0, "", ErrInvalidRequest
-		}
-		return 0, 0, "", err
-	}
-	if !validCoordinate(geo.Latitude, geo.Longitude) {
-		return 0, 0, "", ErrInvalidRequest
-	}
-	addr := input.Address
-	if geo.FormattedAddress != "" {
-		addr = geo.FormattedAddress
-	}
-	return geo.Latitude, geo.Longitude, addr, nil
 }
 
 func (s *RequestService) ListByUser(userID int64, status string, page, pageSize int) ([]*model.ServiceRequest, int64, error) {

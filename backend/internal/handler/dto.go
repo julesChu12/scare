@@ -48,25 +48,29 @@ type UserListResponse struct {
 
 // RequestResponse 服务请求响应
 type RequestResponse struct {
-	ID              int64     `json:"id" example:"1"`
-	RequestNo       string    `json:"request_no" example:"REQ20260209001"`
-	UserID          int64     `json:"user_id" example:"8"`
-	ServiceType     string    `json:"service_type" example:"meal"`
-	Status          string    `json:"status" example:"dispatched"`
-	Description     string    `json:"description" example:"需要午餐送餐"`
-	ContactName     string    `json:"contact_name" example:"张大爷"`
-	ContactPhone    string    `json:"contact_phone" example:"13800000008"`
-	Address         string    `json:"address" example:"北京市朝阳区幸福小区1号楼"`
-	StationID       int64     `json:"station_id" example:"1"`
-	StationName     string    `json:"station_name" example:"朝阳区幸福街道服务站"`
-	AppointmentTime time.Time `json:"appointment_time"`
-	Urgency         string    `json:"urgency" example:"normal"`
-	RejectReason    string    `json:"reject_reason"`
-	Images          string    `json:"images"`
-	Rating          int64     `json:"rating" example:"5"`
-	Feedback        string    `json:"feedback"`
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
+	ID                int64     `json:"id" example:"1"`
+	RequestNo         string    `json:"request_no" example:"REQ20260209001"`
+	UserID            int64     `json:"user_id" example:"8"`
+	ServiceType       string    `json:"service_type" example:"meal"`
+	Status            string    `json:"status" example:"dispatched"`
+	Description       string    `json:"description" example:"需要午餐送餐"`
+	ContactName       string    `json:"contact_name" example:"张大爷"`
+	ContactPhone      string    `json:"contact_phone" example:"13800000008"`
+	Address           string    `json:"address" example:"北京市朝阳区幸福小区1号楼"`
+	SourceStationID   int64     `json:"source_station_id" example:"2"`
+	StationID         int64     `json:"station_id" example:"1"`
+	StationName       string    `json:"station_name" example:"朝阳区幸福街道服务站"`
+	SourceStationName string    `json:"source_station_name" example:"霍营街道第一服务站"`
+	DispatchBasis     string    `json:"dispatch_basis" example:"service_geofence"`
+	NeedsManualVerify bool      `json:"needs_manual_verify" example:"false"`
+	AppointmentTime   time.Time `json:"appointment_time"`
+	Urgency           string    `json:"urgency" example:"normal"`
+	RejectReason      string    `json:"reject_reason"`
+	Images            string    `json:"images"`
+	Rating            int64     `json:"rating" example:"5"`
+	Feedback          string    `json:"feedback"`
+	CreatedAt         time.Time `json:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
 }
 
 // RequestListResponse 服务请求列表响应

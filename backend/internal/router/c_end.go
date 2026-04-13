@@ -24,6 +24,7 @@ func RegisterCEndRoutes(api *gin.RouterGroup, secured *gin.RouterGroup, deps *De
 		public.POST("/geocode", deps.CProfileHandler.Geocode)
 		public.GET("/geocode/reverse", deps.CProfileHandler.ReverseGeocode)
 		public.POST("/geocode/reverse", deps.CProfileHandler.ReverseGeocode)
+		public.GET("/stations/:id", deps.StationHandler.GetPublic)
 		public.GET("/stations/match", deps.StationHandler.MatchStation)
 		public.POST("/stations/match", deps.StationHandler.MatchStation)
 		public.GET("/news", deps.NewsHandler.List)

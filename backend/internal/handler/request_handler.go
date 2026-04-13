@@ -17,14 +17,19 @@ func NewRequestHandler(service *service.RequestService) *RequestHandler {
 }
 
 type requestCreate struct {
-	RequestNo    string   `json:"request_no"`
-	ServiceType  string   `json:"service_type" binding:"required"`
-	Lat          *float64 `json:"lat"`
-	Lng          *float64 `json:"lng"`
-	ContactName  string   `json:"contact_name"`
-	ContactPhone string   `json:"contact_phone"`
-	Address      string   `json:"address"`
-	Images       []string `json:"images"`
+	RequestNo       string   `json:"request_no"`
+	ServiceType     string   `json:"service_type" binding:"required"`
+	Lat             *float64 `json:"lat"` // 兼容旧字段，等同 submit_lat
+	Lng             *float64 `json:"lng"` // 兼容旧字段，等同 submit_lng
+	SubmitLat       *float64 `json:"submit_lat"`
+	SubmitLng       *float64 `json:"submit_lng"`
+	ServiceLat      *float64 `json:"service_lat"`
+	ServiceLng      *float64 `json:"service_lng"`
+	SourceStationID *int64   `json:"source_station_id"`
+	ContactName     string   `json:"contact_name"`
+	ContactPhone    string   `json:"contact_phone"`
+	Address         string   `json:"address"`
+	Images          []string `json:"images"`
 }
 
 // Create 创建服务需求
@@ -54,21 +59,39 @@ func (h *RequestHandler) Create(c *gin.Context) {
 		return
 	}
 
+	submitLat := req.SubmitLat
+	submitLng := req.SubmitLng
+	if submitLat == nil && submitLng == nil {
+		submitLat = req.Lat
+		submitLng = req.Lng
+	}
+	serviceLat := req.ServiceLat
+	serviceLng := req.ServiceLng
+	if serviceLat == nil && serviceLng == nil && req.Lat != nil && req.Lng != nil {
+		serviceLat = req.Lat
+		serviceLng = req.Lng
+	}
+
 	request, created, err := h.service.Create(service.RequestInput{
-		UserID:       userID,
-		RequestNo:    req.RequestNo,
-		ServiceType:  req.ServiceType,
-		Lat:          req.Lat,
-		Lng:          req.Lng,
-		ContactName:  req.ContactName,
-		ContactPhone: req.ContactPhone,
-		Address:      req.Address,
-		Images:       req.Images,
+		UserID:          userID,
+		RequestNo:       req.RequestNo,
+		ServiceType:     req.ServiceType,
+		SubmitLat:       submitLat,
+		SubmitLng:       submitLng,
+		ServiceLat:      serviceLat,
+		ServiceLng:      serviceLng,
+		SourceStationID: req.SourceStationID,
+		ContactName:     req.ContactName,
+		ContactPhone:    req.ContactPhone,
+		Address:         req.Address,
+		Images:          req.Images,
 	})
 	if err != nil {
 		switch err {
 		case service.ErrInvalidRequest:
 			RespondError(c, http.StatusBadRequest, "invalid request")
+		case service.ErrServiceLocationRequired:
+			RespondError(c, http.StatusBadRequest, "service location required")
 		case service.ErrRequestConflict:
 			RespondError(c, http.StatusConflict, "request conflict")
 		case service.ErrNoStation:

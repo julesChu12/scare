@@ -33,6 +33,7 @@ type AuthService struct {
 	jwtManager   *jwt.Manager
 	smsService   *SMSService
 	geofenceSvc  *GeofenceService
+	geocodeSvc   *GeocodeService
 	db           *gorm.DB
 }
 
@@ -55,6 +56,11 @@ func NewAuthService(userRepo *repository.UserRepository, identityRepo *repositor
 // SetGeofenceService sets the geofence service (optional dependency)
 func (s *AuthService) SetGeofenceService(geofenceSvc *GeofenceService) {
 	s.geofenceSvc = geofenceSvc
+}
+
+// SetGeocodeService sets the geocode service (optional dependency)
+func (s *AuthService) SetGeocodeService(geocodeSvc *GeocodeService) {
+	s.geocodeSvc = geocodeSvc
 }
 
 // SetStationRepo sets the station repository (optional dependency)
@@ -243,17 +249,20 @@ func (s *AuthService) Refresh(refreshToken string) (*Tokens, error) {
 
 // QuickStartInput 快速开通的输入参数
 type QuickStartInput struct {
-	Phone        string
-	Code         string
-	Name         string
-	Address      string
-	Latitude     *float64
-	Longitude    *float64
-	ServiceType  string
-	Description  *string
-	Images       []string // 图片 URL 列表
-	ContactName  string   // 联系人姓名（用于服务请求）
-	ContactPhone string   // 联系人电话（用于服务请求）
+	Phone            string
+	Code             string
+	Name             string
+	Address          string
+	SubmitLatitude   *float64
+	SubmitLongitude  *float64
+	ServiceLatitude  *float64
+	ServiceLongitude *float64
+	SourceStationID  *int64
+	ServiceType      string
+	Description      *string
+	Images           []string // 图片 URL 列表
+	ContactName      string   // 联系人姓名（用于服务请求）
+	ContactPhone     string   // 联系人电话（用于服务请求）
 }
 
 // QuickStartResult 快速开通的返回结果
@@ -276,39 +285,16 @@ func (s *AuthService) QuickStart(input QuickStartInput) (*QuickStartResult, erro
 		return nil, err
 	}
 
-	lat := 0.0
-	lng := 0.0
-	if input.Latitude != nil {
-		lat = *input.Latitude
-	}
-	if input.Longitude != nil {
-		lng = *input.Longitude
-	}
-
-	var stationID int64
-	if lat != 0 && lng != 0 && s.geofenceSvc != nil {
-		if matchedID, matched := s.geofenceSvc.Match(lat, lng); matched {
-			stationID = matchedID
-		} else if s.stationRepo != nil {
-			nearestID, err := s.findNearestStation(lat, lng)
-			if err != nil {
-				return nil, err
-			}
-			stationID = nearestID
-		}
-	} else if s.stationRepo != nil {
-		stations, err := s.stationRepo.ListActive()
-		if err != nil {
-			return nil, err
-		}
-		if len(stations) == 0 {
-			return nil, ErrNoStation
-		}
-		stationID = stations[0].ID
-	}
-
-	if stationID == 0 {
-		return nil, ErrNoStation
+	decision, err := resolveDispatch(DispatchInput{
+		Address:          input.Address,
+		SubmitLatitude:   input.SubmitLatitude,
+		SubmitLongitude:  input.SubmitLongitude,
+		ServiceLatitude:  input.ServiceLatitude,
+		ServiceLongitude: input.ServiceLongitude,
+		SourceStationID:  input.SourceStationID,
+	}, s.stationRepo, s.geofenceSvc, s.geocodeSvc)
+	if err != nil {
+		return nil, err
 	}
 
 	var user *model.User
@@ -360,7 +346,7 @@ func (s *AuthService) QuickStart(input QuickStartInput) (*QuickStartResult, erro
 		if existingProfile == nil {
 			newProfile := &model.CustomerProfile{
 				UserID:           user.ID,
-				Address:          input.Address,
+				Address:          decision.ResolvedAddress,
 				EmergencyContact: `{}`, // JSON 列不能为空字符串，用空对象替代
 			}
 			if err := customerRepoTx.Create(newProfile); err != nil {
@@ -368,8 +354,8 @@ func (s *AuthService) QuickStart(input QuickStartInput) (*QuickStartResult, erro
 			}
 			profile = newProfile
 		} else {
-			if input.Address != "" {
-				existingProfile.Address = input.Address
+			if decision.ResolvedAddress != "" {
+				existingProfile.Address = decision.ResolvedAddress
 			}
 			if err := customerRepoTx.Update(existingProfile); err != nil {
 				return err
@@ -383,16 +369,21 @@ func (s *AuthService) QuickStart(input QuickStartInput) (*QuickStartResult, erro
 		requestNo := fmt.Sprintf("REQ%d%04d", time.Now().Unix(), rand.Intn(10000))
 
 		newRequest := &model.ServiceRequest{
-			RequestNo:         requestNo,
-			UserID:            user.ID,
-			ServiceType:       input.ServiceType,
-			Status:            consts.RequestStatusDispatched,
-			SubmitLocationLat: lat,
-			SubmitLocationLng: lng,
-			Address:           input.Address,
-			StationID:         stationID,
-			ContactName:       input.ContactName,
-			ContactPhone:      input.ContactPhone,
+			RequestNo:          requestNo,
+			UserID:             user.ID,
+			ServiceType:        input.ServiceType,
+			Status:             consts.RequestStatusDispatched,
+			SubmitLocationLat:  decision.SubmitLatitude,
+			SubmitLocationLng:  decision.SubmitLongitude,
+			ServiceLocationLat: decision.ServiceLatitude,
+			ServiceLocationLng: decision.ServiceLongitude,
+			Address:            decision.ResolvedAddress,
+			SourceStationID:    decision.SourceStationID,
+			StationID:          decision.AssignedStationID,
+			DispatchBasis:      decision.DispatchBasis,
+			NeedsManualVerify:  decision.NeedsManualVerify,
+			ContactName:        input.ContactName,
+			ContactPhone:       input.ContactPhone,
 		}
 
 		if input.Description != nil {
@@ -412,7 +403,7 @@ func (s *AuthService) QuickStart(input QuickStartInput) (*QuickStartResult, erro
 
 		task := &model.TaskAssignment{
 			RequestID: newRequest.ID,
-			StationID: stationID,
+			StationID: decision.AssignedStationID,
 			Status:    consts.TaskStatusDispatched,
 		}
 		if err := taskRepo.Create(task); err != nil {

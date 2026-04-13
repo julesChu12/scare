@@ -22,12 +22,17 @@ type ServiceRequest struct {
 	Description       string         `gorm:"column:description;type:text" json:"description"`
 	SubmitLocationLat float64        `gorm:"column:submit_location_lat;type:decimal(10,7)" json:"submit_location_lat"`
 	SubmitLocationLng float64        `gorm:"column:submit_location_lng;type:decimal(10,7)" json:"submit_location_lng"`
+	ServiceLocationLat float64       `gorm:"column:service_location_lat;type:decimal(10,7)" json:"service_location_lat"`
+	ServiceLocationLng float64       `gorm:"column:service_location_lng;type:decimal(10,7)" json:"service_location_lng"`
 	ContactName       string         `gorm:"column:contact_name;type:varchar(50)" json:"contact_name"`
 	ContactPhone      string         `gorm:"column:contact_phone;type:varchar(20)" json:"contact_phone"`
 	Address           string         `gorm:"column:address;type:varchar(200)" json:"address"`
 	AppointmentTime   time.Time      `gorm:"column:appointment_time;type:datetime" json:"appointment_time"`
 	Urgency           string         `gorm:"column:urgency;type:varchar(20);default:normal" json:"urgency"`
+	SourceStationID   int64          `gorm:"column:source_station_id;type:bigint;index:idx_service_requests_source_station_id,priority:1" json:"source_station_id"`
 	StationID         int64          `gorm:"column:station_id;type:bigint;index:idx_service_requests_station_id,priority:1;index:idx_station_id,priority:1" json:"station_id"`
+	DispatchBasis     string         `gorm:"column:dispatch_basis;type:varchar(50)" json:"dispatch_basis"`
+	NeedsManualVerify bool           `gorm:"column:needs_manual_verify;type:tinyint(1);default:0" json:"needs_manual_verify"`
 	RejectReason      string         `gorm:"column:reject_reason;type:text" json:"reject_reason"`
 	Images            string         `gorm:"column:images;type:json" json:"images"`
 	CreatedAt         time.Time      `gorm:"column:created_at;type:datetime(3)" json:"created_at"`
@@ -35,6 +40,8 @@ type ServiceRequest struct {
 	DeletedAt         gorm.DeletedAt `gorm:"column:deleted_at;type:datetime(3);index:idx_deleted_at,priority:1;index:idx_service_requests_deleted_at,priority:1" json:"deleted_at"`
 	Rating            int64          `gorm:"column:rating;type:bigint" json:"rating"`
 	Feedback          string         `gorm:"column:feedback;type:text" json:"feedback"`
+	StationName       string         `gorm:"->;column:station_name" json:"station_name,omitempty"`
+	SourceStationName string         `gorm:"->;column:source_station_name" json:"source_station_name,omitempty"`
 }
 
 // TableName ServiceRequest's table name

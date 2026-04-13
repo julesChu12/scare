@@ -187,6 +187,45 @@ func (h *StationHandler) Get(c *gin.Context) {
 	Respond(c, http.StatusOK, "ok", station)
 }
 
+// GetPublic 获取公开服务站点详情
+// @Summary      获取公开服务站点详情
+// @Description  获取指定服务站点的公开信息，仅返回启用中的站点
+// @Tags         public
+// @Accept       json
+// @Produce      json
+// @Param        id path int true "站点ID"
+// @Success      200  {object} APIResponse "获取成功"
+// @Failure      400  {object} APIResponse "请求参数错误"
+// @Failure      404  {object} APIResponse "站点不存在"
+// @Router       /c/stations/{id} [get]
+func (h *StationHandler) GetPublic(c *gin.Context) {
+	id, err := parseInt64Param(c.Param("id"))
+	if err != nil {
+		RespondError(c, http.StatusBadRequest, "invalid id")
+		return
+	}
+
+	station, err := h.service.GetByID(id)
+	if err != nil || station.Status != "active" {
+		RespondError(c, http.StatusNotFound, "station not found")
+		return
+	}
+
+	resp := matchStationResponse{
+		ID:          station.ID,
+		Name:        station.Name,
+		Code:        station.Code,
+		Address:     station.Address,
+		Phone:       station.Phone,
+		Latitude:    station.Latitude,
+		Longitude:   station.Longitude,
+		ServiceArea: station.ServiceArea,
+		WorkHours:   station.WorkHours,
+	}
+
+	Respond(c, http.StatusOK, "ok", resp)
+}
+
 // List 获取服务站点列表
 // @Summary      获取服务站点列表
 // @Description  分页获取服务站点列表

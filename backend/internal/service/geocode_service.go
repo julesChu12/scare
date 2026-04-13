@@ -15,9 +15,17 @@ var (
 	ErrReverseGeocodeNotFound = errors.New("location not found")
 )
 
+const (
+	defaultGeocodeURL        = "https://restapi.amap.com/v3/geocode/geo"
+	defaultReverseGeocodeURL = "https://restapi.amap.com/v3/geocode/regeo"
+)
+
 // GeocodeService 地址解析服务（高德地图API）
 type GeocodeService struct {
-	apiKey string // 高德地图 API Key
+	apiKey            string // 高德地图 API Key
+	client            *http.Client
+	geocodeURL        string
+	reverseGeocodeURL string
 }
 
 // GeocodeResult 地址解析结果
@@ -28,7 +36,12 @@ type GeocodeResult struct {
 }
 
 func NewGeocodeService(apiKey string) *GeocodeService {
-	return &GeocodeService{apiKey: apiKey}
+	return &GeocodeService{
+		apiKey:            apiKey,
+		client:            http.DefaultClient,
+		geocodeURL:        defaultGeocodeURL,
+		reverseGeocodeURL: defaultReverseGeocodeURL,
+	}
 }
 
 // Geocode 将地址字符串转换为经纬度
@@ -44,14 +57,14 @@ func (s *GeocodeService) Geocode(address string) (*GeocodeResult, error) {
 	}
 
 	// 调用高德地图地理编码 API
-	baseURL := "https://restapi.amap.com/v3/geocode/geo"
+	baseURL := s.getGeocodeURL()
 	params := url.Values{}
 	params.Add("key", s.apiKey)
 	params.Add("address", address)
 
 	requestURL := fmt.Sprintf("%s?%s", baseURL, params.Encode())
 
-	resp, err := http.Get(requestURL)
+	resp, err := s.getHTTPClient().Get(requestURL)
 	if err != nil {
 		return nil, err
 	}
@@ -120,14 +133,14 @@ func (s *GeocodeService) ReverseGeocode(lat, lng float64) (*ReverseGeocodeResult
 	}
 
 	// 调用高德地图逆地理编码 API
-	baseURL := "https://restapi.amap.com/v3/geocode/regeo"
+	baseURL := s.getReverseGeocodeURL()
 	params := url.Values{}
 	params.Add("key", s.apiKey)
 	params.Add("location", fmt.Sprintf("%f,%f", lng, lat)) // 高德格式：经度,纬度
 
 	requestURL := fmt.Sprintf("%s?%s", baseURL, params.Encode())
 
-	resp, err := http.Get(requestURL)
+	resp, err := s.getHTTPClient().Get(requestURL)
 	if err != nil {
 		return nil, fmt.Errorf("http request failed: %w", err)
 	}
@@ -149,7 +162,7 @@ func (s *GeocodeService) ReverseGeocode(lat, lng float64) (*ReverseGeocodeResult
 			FormattedAddress string `json:"formatted_address"`
 			AddressComponent struct {
 				Province string      `json:"province"`
-				City     interface{} `json:"city"`     // 可能是字符串或空数组
+				City     interface{} `json:"city"` // 可能是字符串或空数组
 				District string      `json:"district"`
 			} `json:"addressComponent"`
 		} `json:"regeocode"`
@@ -183,4 +196,25 @@ func (s *GeocodeService) ReverseGeocode(lat, lng float64) (*ReverseGeocodeResult
 		District:         result.Regeocode.AddressComponent.District,
 		FormattedAddress: result.Regeocode.FormattedAddress,
 	}, nil
+}
+
+func (s *GeocodeService) getHTTPClient() *http.Client {
+	if s.client != nil {
+		return s.client
+	}
+	return http.DefaultClient
+}
+
+func (s *GeocodeService) getGeocodeURL() string {
+	if s.geocodeURL != "" {
+		return s.geocodeURL
+	}
+	return defaultGeocodeURL
+}
+
+func (s *GeocodeService) getReverseGeocodeURL() string {
+	if s.reverseGeocodeURL != "" {
+		return s.reverseGeocodeURL
+	}
+	return defaultReverseGeocodeURL
 }

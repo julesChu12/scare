@@ -26,8 +26,23 @@ func (r *RequestRepository) Create(req *model.ServiceRequest) error {
 
 // GetByID 根据ID获取需求
 func (r *RequestRepository) GetByID(id int64) (*model.ServiceRequest, error) {
-	s := r.q.ServiceRequest
-	return s.Where(s.ID.Eq(id)).First()
+	var req model.ServiceRequest
+	err := r.q.ServiceRequest.UnderlyingDB().
+		Table("service_requests").
+		Select(`
+			service_requests.*,
+			assigned_station.name as station_name,
+			source_station.name as source_station_name
+		`).
+		Joins("LEFT JOIN service_stations AS assigned_station ON service_requests.station_id = assigned_station.id").
+		Joins("LEFT JOIN service_stations AS source_station ON service_requests.source_station_id = source_station.id").
+		Where("service_requests.id = ?", id).
+		Where("service_requests.deleted_at IS NULL").
+		First(&req).Error
+	if err != nil {
+		return nil, err
+	}
+	return &req, nil
 }
 
 // GetByRequestNo 根据需求编号获取需求
@@ -41,10 +56,20 @@ func (r *RequestRepository) ListByUser(userID int64, status string, offset, limi
 	s := r.q.ServiceRequest
 
 	// 使用原生 DB 处理条件查询
-	db := s.UnderlyingDB().Model(&model.ServiceRequest{}).Where("user_id = ?", userID)
+	db := s.UnderlyingDB().
+		Table("service_requests").
+		Select(`
+			service_requests.*,
+			assigned_station.name as station_name,
+			source_station.name as source_station_name
+		`).
+		Joins("LEFT JOIN service_stations AS assigned_station ON service_requests.station_id = assigned_station.id").
+		Joins("LEFT JOIN service_stations AS source_station ON service_requests.source_station_id = source_station.id").
+		Where("service_requests.user_id = ?", userID).
+		Where("service_requests.deleted_at IS NULL")
 
 	if status != "" {
-		db = db.Where("status = ?", status)
+		db = db.Where("service_requests.status = ?", status)
 	}
 
 	// 获取总数
@@ -55,7 +80,7 @@ func (r *RequestRepository) ListByUser(userID int64, status string, offset, limi
 
 	// 分页查询
 	var reqs []*model.ServiceRequest
-	if err := db.Order("id desc").Offset(offset).Limit(limit).Find(&reqs).Error; err != nil {
+	if err := db.Order("service_requests.id desc").Offset(offset).Limit(limit).Find(&reqs).Error; err != nil {
 		return nil, 0, err
 	}
 
@@ -80,15 +105,19 @@ func (r *RequestRepository) WithTx(tx *gorm.DB) *RequestRepository {
 // RequestWithStation 带站点信息的服务请求
 type RequestWithStation struct {
 	model.ServiceRequest
-	StationName string `json:"station_name"`
 }
 
 // ListAll B端查询所有需求（支持站点筛选，返回站点信息）
 func (r *RequestRepository) ListAll(stationID int64, status string, offset, limit int) ([]*RequestWithStation, int64, error) {
 	s := r.q.ServiceRequest
 	db := s.UnderlyingDB().Table("service_requests").
-		Select("service_requests.*, service_stations.name as station_name").
-		Joins("LEFT JOIN service_stations ON service_requests.station_id = service_stations.id")
+		Select(`
+			service_requests.*,
+			assigned_station.name as station_name,
+			source_station.name as source_station_name
+		`).
+		Joins("LEFT JOIN service_stations AS assigned_station ON service_requests.station_id = assigned_station.id").
+		Joins("LEFT JOIN service_stations AS source_station ON service_requests.source_station_id = source_station.id")
 
 	if stationID > 0 {
 		db = db.Where("service_requests.station_id = ?", stationID)

@@ -135,6 +135,7 @@ func NewDeps(db *database.DB, rdb *redis.Client, cfg *config.Config) (*Deps, err
 	// 初始化 AuthService
 	d.AuthService = service.NewAuthService(d.UserRepo, d.UserIdentityRepo, d.CustomerRepo, d.JWTManager, d.SMSService, db.DB)
 	d.AuthService.SetGeofenceService(d.GeofenceService)
+	d.AuthService.SetGeocodeService(d.GeocodeService)
 	d.AuthService.SetStationRepo(d.StationRepo)
 
 	// 初始化邮件发送器
