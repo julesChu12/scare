@@ -28,12 +28,16 @@ else
     echo -e "\033[0;31m[ERROR]\033[0m 未设置 MySQL root 密码，请设置 MYSQL_ROOT_PASSWORD 或 DB_ROOT_PASSWORD 环境变量"
     exit 1
 fi
-MYSQL_CMD_DB="docker exec scare_mysql mysql -u root -p\"$_MYSQL_ROOT_PASS\" $MYSQL_DB --default-character-set=utf8mb4"
-
-# 检查是否在容器内运行（跳过 docker exec）
-if [ -f /.dockerenv ] || grep -q docker /proc/1/cgroup 2>/dev/null; then
-    MYSQL_CMD_DB="mysql -u root -p\"$_MYSQL_ROOT_PASS\" $MYSQL_DB --default-character-set=utf8mb4"
-fi
+# 执行 MySQL 命令的函数
+run_mysql() {
+    if [ -f /.dockerenv ] || grep -q docker /proc/1/cgroup 2>/dev/null; then
+        # 容器内
+        mysql -u root -p"$_MYSQL_ROOT_PASS" "$MYSQL_DB" --default-character-set=utf8mb4 "$@"
+    else
+        # 容器外，通过 docker exec
+        docker exec scare_mysql mysql -u root -p"$_MYSQL_ROOT_PASS" "$MYSQL_DB" --default-character-set=utf8mb4 "$@"
+    fi
+}
 
 # 颜色
 RED='\033[0;31m'
@@ -59,15 +63,15 @@ fi
 
 # 测试连接
 log_info "测试数据库连接..."
-if ! $MYSQL_CMD_DB -e "SELECT 1" >/dev/null 2>&1; then
+if ! run_mysql -e "SELECT 1" >/dev/null 2>&1; then
     log_error "无法连接数据库，请确认 MYSQL_ROOT_PASSWORD 环境变量正确"
-    log_error "错误信息: $($MYSQL_CMD_DB -e "SELECT 1" 2>&1 | grep -v "Enter password" | head -3)"
+    log_error "错误信息: $(run_mysql -e "SELECT 1" 2>&1 | grep -v "Enter password" | head -3)"
     exit 1
 fi
 
 # 创建迁移记录表
 log_info "初始化迁移记录表..."
-$MYSQL_CMD_DB -e "
+run_mysql -e "
 CREATE TABLE IF NOT EXISTS \`_migrations\` (
     \`id\` INT AUTO_INCREMENT PRIMARY KEY,
     \`name\` VARCHAR(255) NOT NULL UNIQUE,
@@ -81,7 +85,7 @@ CREATE TABLE IF NOT EXISTS \`_migrations\` (
 }
 
 # 获取已执行的迁移
-EXECUTED=$($MYSQL_CMD_DB -N -e "SELECT name FROM \`_migrations\`;" 2>/dev/null | sort)
+EXECUTED=$(run_mysql -N -e "SELECT name FROM \`_migrations\`;" 2>/dev/null | sort)
 
 # 遍历迁移文件
 MIGRATED=0
@@ -103,9 +107,9 @@ for file in $(ls "$MIGRATIONS_DIR"/*.sql 2>/dev/null | sort); do
     echo "-------------------------------------------"
 
     # 执行迁移
-    if $MYSQL_CMD_DB < "$file"; then
+    if run_mysql < "$file"; then
         # 记录迁移
-        $MYSQL_CMD_DB -e "INSERT INTO \`_migrations\` (\`name\`) VALUES ('$filename');" 2>/dev/null || true
+        run_mysql -e "INSERT INTO \`_migrations\` (\`name\`) VALUES ('$filename');" 2>/dev/null || true
         log_info "✓ $filename 执行成功"
         ((MIGRATED++))
     else
