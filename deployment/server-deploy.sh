@@ -58,10 +58,12 @@ if [ -d "$PROJECT_ROOT/backend/database" ]; then
 fi
 
 # ============================================
-# 步骤 1: 停止旧服务
+# 步骤 1: 停止旧服务（强制删除残留容器）
 # ============================================
 log "[1/5] 停止旧服务..."
 docker_compose down --remove-orphans 2>/dev/null || true
+# 强制删除同名残留容器（可能由旧版 deploy 脚本遗留）
+docker rm -f scare_mysql scare_redis scare_backend scare_nginx 2>/dev/null || true
 
 # ============================================
 # 步骤 2: 启动 MySQL 和 Redis（不启动 backend，等待迁移完成）
