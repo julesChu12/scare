@@ -7,9 +7,6 @@
 set -euo pipefail
 
 # 配置
-MYSQL_HOST="${DB_HOST:-localhost}"
-MYSQL_PORT="${DB_PORT:-3306}"
-MYSQL_ROOT_PASS="${DB_ROOT_PASSWORD:-}"
 MYSQL_DB="${DB_NAME:-scare_db}"
 
 # 脚本位于 /scripts/migrate.sh，迁移文件位于 /backend/database/migrations/
@@ -20,8 +17,14 @@ if [ -d "$SCRIPT_DIR/../backend/database/migrations" ]; then
 else
     MIGRATIONS_DIR="$SCRIPT_DIR/database/migrations"
 fi
-MYSQL_CMD_ROOT="docker exec scare_mysql mysql -u root -p${MYSQL_ROOT_PASS} --default-character-set=utf8mb4"
-MYSQL_CMD_DB="docker exec scare_mysql mysql -u root -p${MYSQL_ROOT_PASS} $MYSQL_DB --default-character-set=utf8mb4"
+
+# 在 Docker 容器内执行，使用容器内置的 MYSQL_ROOT_PASSWORD 环境变量
+MYSQL_CMD_DB="docker exec scare_mysql mysql -u root -p\"${MYSQL_ROOT_PASSWORD}\" $MYSQL_DB --default-character-set=utf8mb4"
+
+# 检查是否在容器内运行（跳过 docker exec）
+if [ -f /.dockerenv ] || grep -q docker /proc/1/cgroup 2>/dev/null; then
+    MYSQL_CMD_DB="mysql -u root -p\"${MYSQL_ROOT_PASSWORD}\" $MYSQL_DB --default-character-set=utf8mb4"
+fi
 
 # 颜色
 RED='\033[0;31m'
@@ -35,19 +38,22 @@ log_warn()  { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 log_skip()  { echo -e "${BLUE}[SKIP]${NC} $1"; }
 
-# 检查是否在容器内运行
-if [ -f /.dockerenv ] || grep -q docker /proc/1/cgroup 2>/dev/null; then
-    MYSQL_CMD_ROOT="mysql -u root -p${MYSQL_ROOT_PASS} --default-character-set=utf8mb4"
-    MYSQL_CMD_DB="mysql -u root -p${MYSQL_ROOT_PASS} $MYSQL_DB --default-character-set=utf8mb4"
-fi
-
 log_info "===== sCare 数据库迁移 ====="
 log_info "迁移目录: $MIGRATIONS_DIR"
+log_info "MySQL 用户: root"
 
 # 检查迁移目录
 if [ ! -d "$MIGRATIONS_DIR" ]; then
     log_warn "迁移目录不存在，跳过迁移"
     exit 0
+fi
+
+# 测试连接
+log_info "测试数据库连接..."
+if ! $MYSQL_CMD_DB -e "SELECT 1" >/dev/null 2>&1; then
+    log_error "无法连接数据库，请确认 MYSQL_ROOT_PASSWORD 环境变量正确"
+    log_error "错误信息: $($MYSQL_CMD_DB -e "SELECT 1" 2>&1 | grep -v "Enter password" | head -3)"
+    exit 1
 fi
 
 # 创建迁移记录表
@@ -60,8 +66,8 @@ CREATE TABLE IF NOT EXISTS \`_migrations\` (
     \`checksum\` VARCHAR(64) DEFAULT NULL,
     INDEX \`idx_migrations_name\` (\`name\`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-" 2>&1 | grep -v "already exists" || {
-    log_error "无法连接数据库: $( $MYSQL_CMD_DB -e "SELECT 1" 2>&1 | head -1 )"
+" 2>/dev/null || {
+    log_error "创建迁移记录表失败"
     exit 1
 }
 
