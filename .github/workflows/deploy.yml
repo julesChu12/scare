@@ -123,8 +123,9 @@ jobs:
             --exclude='.env' \
             --exclude='deployment/.env' \
             --exclude='paper/' \
+            --exclude='database/' \
             -e "ssh $SSH_OPTS" \
-            ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.DEPLOY_DIR }}/
+            ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.DEPLOY_DIR }}/ || true
 
       # 在服务器上执行部署（包含迁移）
       - name: 执行部署与迁移
