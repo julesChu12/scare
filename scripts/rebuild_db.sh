@@ -7,7 +7,8 @@
 
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 cd "$ROOT_DIR"
 
 if [[ -f .env ]]; then
@@ -25,13 +26,13 @@ DB_PASSWORD="${DB_PASSWORD:?DB_PASSWORD is required (from .env)}"
 DB_NAME="${DB_NAME:?DB_NAME is required (from .env)}"
 
 SEED_FILES=(
-  "database/seeds/001_seed_permissions.sql"
-  "database/seeds/002_seed_users.sql"
-  "database/seeds/003_seed_stations.sql"
-  "database/seeds/004_seed_requests.sql"
-  "database/seeds/005_seed_notifications.sql"
-  "database/seeds/006_seed_news.sql"
-  "database/seeds/007_seed_menus.sql"
+  "backend/database/seeds/001_seed_permissions.sql"
+  "backend/database/seeds/002_seed_users.sql"
+  "backend/database/seeds/003_seed_stations.sql"
+  "backend/database/seeds/004_seed_requests.sql"
+  "backend/database/seeds/005_seed_notifications.sql"
+  "backend/database/seeds/006_seed_news.sql"
+  "backend/database/seeds/007_seed_menus.sql"
 )
 
 echo "Rebuilding database '$DB_NAME' in container '$MYSQL_CONTAINER'..."
