@@ -19,7 +19,7 @@ services:
       - ../backend/database/seeds/seed_all.sql:/docker-entrypoint-initdb.d/02-seed.sql
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-time-zone='+08:00'
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$${MYSQL_ROOT_PASSWORD}"]
+      test: mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD
       interval: 10s
       timeout: 5s
       retries: 5
@@ -44,7 +44,7 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
       TZ: Asia/Shanghai
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-}", "ping"]
+      test: redis-cli -a "$$REDIS_PASSWORD" ping | grep PONG
       interval: 10s
       timeout: 3s
       retries: 3
