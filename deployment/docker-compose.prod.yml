@@ -18,11 +18,6 @@ services:
       - ../backend/database/schema/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
       - ../backend/database/seeds/seed_all.sql:/docker-entrypoint-initdb.d/02-seed.sql
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-time-zone='+08:00'
-    healthcheck:
-      test: mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD
-      interval: 10s
-      timeout: 5s
-      retries: 5
     networks:
       - scare-network
 
@@ -43,11 +38,6 @@ services:
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD:-}
       TZ: Asia/Shanghai
-    healthcheck:
-      test: redis-cli -a "$$REDIS_PASSWORD" ping | grep PONG
-      interval: 10s
-      timeout: 3s
-      retries: 3
     networks:
       - scare-network
 
@@ -58,10 +48,8 @@ services:
     container_name: scare_backend
     restart: unless-stopped
     depends_on:
-      mysql:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+      - mysql
+      - redis
     environment:
       DB_HOST: mysql
       DB_PORT: 3306

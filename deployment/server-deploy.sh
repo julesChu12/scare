@@ -84,11 +84,24 @@ docker_compose up -d mysql redis
 log "  等待 MySQL 就绪..."
 for i in $(seq 1 30); do
     if docker exec scare_mysql mysqladmin ping -h localhost -u root -p"${DB_ROOT_PASSWORD}" &>/dev/null 2>&1; then
-        echo -e " ${GREEN}✅${NC}"
+        echo -e " ${GREEN}MySQL ✅${NC}"
         break
     fi
     echo -n "."
     sleep 2
+    [ "$i" -eq 30 ] && err "MySQL 启动超时"
+done
+
+# 等待 Redis 健康
+log "  等待 Redis 就绪..."
+for i in $(seq 1 15); do
+    if docker exec scare_redis redis-cli -a "${REDIS_PASSWORD:-}" ping 2>/dev/null | grep -q PONG; then
+        echo -e " ${GREEN}Redis ✅${NC}"
+        break
+    fi
+    echo -n "."
+    sleep 2
+    [ "$i" -eq 15 ] && err "Redis 启动超时"
 done
 
 # ============================================
