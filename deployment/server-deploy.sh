@@ -95,13 +95,19 @@ done
 # 等待 Redis 健康
 log "  等待 Redis 就绪..."
 for i in $(seq 1 15); do
-    if docker exec scare_redis redis-cli -a "${REDIS_PASSWORD:-}" ping 2>/dev/null | grep -q PONG; then
+    # 尝试连接 Redis，如果不带密码则自动尝试
+    if docker exec scare_redis redis-cli -a "${REDIS_PASSWORD:-}" ping 2>&1 | grep -q PONG; then
         echo -e " ${GREEN}Redis ✅${NC}"
         break
     fi
     echo -n "."
     sleep 2
-    [ "$i" -eq 15 ] && err "Redis 启动超时"
+    [ "$i" -eq 15 ] && {
+        echo ""
+        log "Redis 检查失败详情："
+        docker exec scare_redis redis-cli -a "${REDIS_PASSWORD:-}" ping 2>&1 || true
+        err "Redis 启动超时"
+    }
 done
 
 # ============================================
