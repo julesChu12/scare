@@ -15,9 +15,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   DEPLOY_DIR: /opt/scare
-  NODE_VERSION: '18'
+  NODE_VERSION: '20'
 
 jobs:
   # ============================================
