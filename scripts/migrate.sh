@@ -97,7 +97,7 @@ for file in $(ls "$MIGRATIONS_DIR"/*.sql 2>/dev/null | sort); do
     # 检查是否已执行
     if echo "$EXECUTED" | grep -qx "$filename"; then
         log_skip "$filename (已执行)"
-        ((SKIPPED++))
+        SKIPPED=$((SKIPPED + 1))
         continue
     fi
 
@@ -111,7 +111,7 @@ for file in $(ls "$MIGRATIONS_DIR"/*.sql 2>/dev/null | sort); do
         # 记录迁移
         run_mysql -e "INSERT INTO \`_migrations\` (\`name\`) VALUES ('$filename');" 2>/dev/null || true
         log_info "✓ $filename 执行成功"
-        ((MIGRATED++))
+        MIGRATED=$((MIGRATED + 1))
     else
         log_error "✗ $filename 执行失败"
         exit 1
@@ -120,5 +120,10 @@ done
 
 echo ""
 log_info "===== 迁移完成 ====="
-[ $MIGRATED -gt 0 ] && log_info "新增迁移: $MIGRATED 个"
-[ $SKIPPED -gt 0 ] && log_info "跳过: $SKIPPED 个"
+if [ "$MIGRATED" -gt 0 ]; then
+    log_info "新增迁移: $MIGRATED 个"
+fi
+if [ "$SKIPPED" -gt 0 ]; then
+    log_info "跳过: $SKIPPED 个"
+fi
+exit 0
