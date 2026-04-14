@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"testing"
 
+	"community-elderly-care-platform/internal/dao/model"
+	"community-elderly-care-platform/pkg/jwt"
 	"community-elderly-care-platform/test/integration/testutil"
 
 	"github.com/stretchr/testify/assert"
@@ -76,6 +78,55 @@ func TestAuth(t *testing.T) {
 	t.Run("未认证访问C端受保护接口", func(t *testing.T) {
 		w := testutil.DoRequest(env.Engine, http.MethodGet, "/api/v1/c/auth/me", "")
 		assert.Equal(t, http.StatusUnauthorized, w.Code)
+	})
+
+	t.Run("C端设置密码后可使用密码登录", func(t *testing.T) {
+		user := &model.User{
+			Phone:  "13900000999",
+			Name:   "测试用户",
+			Status: "active",
+		}
+		assert.NoError(t, env.DB.DB.Omit("PasswordHash").Create(user).Error)
+		assert.NoError(t, env.DB.DB.Create(&model.CustomerProfile{
+			UserID:           user.ID,
+			CustomerType:     "elderly",
+			EmergencyContact: `{}`,
+		}).Error)
+		assert.NoError(t, env.DB.DB.Create(&model.UserIdentity{
+			UserID:       user.ID,
+			IdentityType: "elderly",
+			IsPrimary:    true,
+			Status:       "active",
+		}).Error)
+
+		token, _ := jwt.NewManager("test-jwt-secret-key-for-integration-tests", 24, 168).
+			GenerateToken(user.ID, "c_end", 0, []string{"elderly"}, "elderly")
+
+		setBody := `{"current_password":"InitPass@123","new_password":"NewPass@123"}`
+		setResp := testutil.DoRequest(env.Engine, http.MethodPost, "/api/v1/c/auth/password", token, setBody)
+		assert.Equal(t, http.StatusOK, setResp.Code)
+
+		loginBody := `{"phone":"13900000999","password":"NewPass@123","type":"password"}`
+		loginResp := testutil.DoRequest(env.Engine, http.MethodPost, "/api/v1/c/auth/login", "", loginBody)
+		assert.Equal(t, http.StatusOK, loginResp.Code)
+
+		data := testutil.AssertOK(t, loginResp)
+		assert.Equal(t, "13900000999", data["phone"])
+		assert.NotEmpty(t, data["token"])
+	})
+
+	t.Run("C端验证码重置密码后可使用新密码登录", func(t *testing.T) {
+		resetBody := `{"phone":"13900000001","code":"000000","new_password":"ResetPass@123"}`
+		resetResp := testutil.DoRequest(env.Engine, http.MethodPost, "/api/v1/c/auth/reset-password", "", resetBody)
+		assert.Equal(t, http.StatusOK, resetResp.Code)
+
+		loginBody := `{"phone":"13900000001","password":"ResetPass@123","type":"password"}`
+		loginResp := testutil.DoRequest(env.Engine, http.MethodPost, "/api/v1/c/auth/login", "", loginBody)
+		assert.Equal(t, http.StatusOK, loginResp.Code)
+
+		data := testutil.AssertOK(t, loginResp)
+		assert.Equal(t, "13900000001", data["phone"])
+		assert.NotEmpty(t, data["token"])
 	})
 
 	t.Run("无效Token", func(t *testing.T) {

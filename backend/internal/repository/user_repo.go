@@ -32,6 +32,11 @@ func (r *UserRepository) Create(user *model.User) error {
 	return r.q.User.Omit(r.q.User.BirthDate).Create(user)
 }
 
+// CreateWithoutPassword 创建未设置密码的用户。
+func (r *UserRepository) CreateWithoutPassword(user *model.User) error {
+	return r.q.User.Omit(r.q.User.PasswordHash, r.q.User.BirthDate).Create(user)
+}
+
 // GetByID 根据ID获取用户
 func (r *UserRepository) GetByID(id int64) (*model.User, error) {
 	u := r.q.User

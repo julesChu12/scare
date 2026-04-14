@@ -170,6 +170,187 @@ func TestCAuthHandler_QuickStart_RequiresAddressOrLocation(t *testing.T) {
 	}
 }
 
+func TestCAuthHandler_Login_PasswordNotSet(t *testing.T) {
+	db := openHandlerTestDB(t, "c_auth_login_password_not_set.db")
+	createHandlerTables(t, db)
+
+	user := &model.User{
+		Phone:  "13800138009",
+		Name:   "测试用户",
+		Status: "active",
+	}
+	if err := db.Omit("PasswordHash").Create(user).Error; err != nil {
+		t.Fatalf("failed to create user: %v", err)
+	}
+	if err := db.Create(&model.CustomerProfile{
+		UserID:           user.ID,
+		CustomerType:     "elderly",
+		EmergencyContact: `{}`,
+	}).Error; err != nil {
+		t.Fatalf("failed to create profile: %v", err)
+	}
+	if err := db.Create(&model.UserIdentity{
+		UserID:       user.ID,
+		IdentityType: "elderly",
+		IsPrimary:    true,
+		Status:       "active",
+	}).Error; err != nil {
+		t.Fatalf("failed to create identity: %v", err)
+	}
+
+	smsSvc := service.NewSMSService(nil, "development")
+	authSvc := service.NewAuthService(
+		repository.NewUserRepository(db),
+		repository.NewUserIdentityRepository(db),
+		repository.NewCustomerRepository(db),
+		jwt.NewManager("test-secret", 1, 2),
+		smsSvc,
+		db,
+	)
+
+	handler := NewCAuthHandler(authSvc, repository.NewUserRepository(db), repository.NewCustomerRepository(db), smsSvc)
+	c, w := newJSONTestContext(t, http.MethodPost, "/c/auth/login", map[string]any{
+		"phone":    "13800138009",
+		"password": "Test@123",
+		"type":     "password",
+	})
+
+	handler.Login(c)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", w.Code)
+	}
+	resp := decodeResponseMap(t, w)
+	if resp["msg"] != "用户未设置密码，请使用验证码登录" {
+		t.Fatalf("unexpected message: %v", resp["msg"])
+	}
+}
+
+func TestCAuthHandler_SetPassword_FirstTimeSuccess(t *testing.T) {
+	db := openHandlerTestDB(t, "c_auth_set_password_first_time.db")
+	createHandlerTables(t, db)
+
+	user := &model.User{
+		Phone:  "13800138010",
+		Name:   "测试用户",
+		Status: "active",
+	}
+	if err := db.Omit("PasswordHash").Create(user).Error; err != nil {
+		t.Fatalf("failed to create user: %v", err)
+	}
+
+	smsSvc := service.NewSMSService(nil, "development")
+	authSvc := service.NewAuthService(
+		repository.NewUserRepository(db),
+		repository.NewUserIdentityRepository(db),
+		repository.NewCustomerRepository(db),
+		jwt.NewManager("test-secret", 1, 2),
+		smsSvc,
+		db,
+	)
+
+	handler := NewCAuthHandler(authSvc, repository.NewUserRepository(db), repository.NewCustomerRepository(db), smsSvc)
+	c, w := newJSONTestContext(t, http.MethodPost, "/c/auth/password", map[string]any{
+		"new_password": "NewPass@123",
+	})
+	setCEndClaims(c, user.ID)
+
+	handler.SetPassword(c)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+}
+
+func TestCAuthHandler_SetPassword_RequiresCurrentPasswordWhenExisting(t *testing.T) {
+	db := openHandlerTestDB(t, "c_auth_set_password_require_current.db")
+	createHandlerTables(t, db)
+
+	hash, _ := service.HashPassword("Test@123")
+	user := &model.User{
+		Phone:        "13800138011",
+		PasswordHash: hash,
+		Name:         "测试用户",
+		Status:       "active",
+	}
+	if err := db.Create(user).Error; err != nil {
+		t.Fatalf("failed to create user: %v", err)
+	}
+
+	smsSvc := service.NewSMSService(nil, "development")
+	authSvc := service.NewAuthService(
+		repository.NewUserRepository(db),
+		repository.NewUserIdentityRepository(db),
+		repository.NewCustomerRepository(db),
+		jwt.NewManager("test-secret", 1, 2),
+		smsSvc,
+		db,
+	)
+
+	handler := NewCAuthHandler(authSvc, repository.NewUserRepository(db), repository.NewCustomerRepository(db), smsSvc)
+	c, w := newJSONTestContext(t, http.MethodPost, "/c/auth/password", map[string]any{
+		"new_password": "NewPass@123",
+	})
+	setCEndClaims(c, user.ID)
+
+	handler.SetPassword(c)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", w.Code)
+	}
+	resp := decodeResponseMap(t, w)
+	if resp["msg"] != "请输入当前密码" {
+		t.Fatalf("unexpected message: %v", resp["msg"])
+	}
+}
+
+func TestCAuthHandler_ResetPassword_Success(t *testing.T) {
+	db := openHandlerTestDB(t, "c_auth_reset_password_success.db")
+	createHandlerTables(t, db)
+
+	hash, _ := service.HashPassword("Test@123")
+	user := &model.User{
+		Phone:        "13800138012",
+		PasswordHash: hash,
+		Name:         "测试用户",
+		Status:       "active",
+	}
+	if err := db.Create(user).Error; err != nil {
+		t.Fatalf("failed to create user: %v", err)
+	}
+	if err := db.Create(&model.CustomerProfile{
+		UserID:           user.ID,
+		CustomerType:     "elderly",
+		EmergencyContact: `{}`,
+	}).Error; err != nil {
+		t.Fatalf("failed to create profile: %v", err)
+	}
+
+	smsSvc := service.NewSMSService(nil, "test")
+	smsSvc.SetTestCode("13800138012", "123456")
+	authSvc := service.NewAuthService(
+		repository.NewUserRepository(db),
+		repository.NewUserIdentityRepository(db),
+		repository.NewCustomerRepository(db),
+		jwt.NewManager("test-secret", 1, 2),
+		smsSvc,
+		db,
+	)
+
+	handler := NewCAuthHandler(authSvc, repository.NewUserRepository(db), repository.NewCustomerRepository(db), smsSvc)
+	c, w := newJSONTestContext(t, http.MethodPost, "/c/auth/reset-password", map[string]any{
+		"phone":        "13800138012",
+		"code":         "123456",
+		"new_password": "ResetPass@123",
+	})
+
+	handler.ResetPassword(c)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+}
+
 func TestCAuthHandler_CheckToken_ReturnsUserAndProfile(t *testing.T) {
 	db := openHandlerTestDB(t, "c_auth_check_token.db")
 	createHandlerTables(t, db)
@@ -200,6 +381,9 @@ func TestCAuthHandler_CheckToken_ReturnsUserAndProfile(t *testing.T) {
 	user := data["user"].(map[string]any)
 	if user["phone"] != "13900000001" {
 		t.Fatalf("expected phone 13900000001, got %v", user["phone"])
+	}
+	if user["has_password"] != true {
+		t.Fatalf("expected has_password=true, got %v", user["has_password"])
 	}
 	profile := data["profile"].(map[string]any)
 	if profile["address"] != "测试地址" || profile["user_type"] != "elderly" {

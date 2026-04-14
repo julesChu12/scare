@@ -1,19 +1,13 @@
 <template>
-  <div class="register-container">
-    <el-card class="register-card" shadow="hover">
-      <div class="register-header">
-        <!-- 返回按钮已隐藏 -->
-        <!-- <div class="header-action">
-          <el-button class="back-btn" @click="goBack">
-            <el-icon><ArrowLeft /></el-icon>
-          </el-button>
-        </div> -->
+  <div class="reset-password-container">
+    <el-card class="reset-password-card" shadow="hover">
+      <div class="reset-password-header">
         <h2>sCare 社区养老服务</h2>
-        <p class="subtitle">新用户注册</p>
+        <p class="subtitle">验证码重置密码</p>
       </div>
 
-      <el-form ref="formRef" :model="form" :rules="rules" size="large" label-position="top">
-        <el-form-item label="手机号" prop="phone">
+      <el-form ref="formRef" :model="form" :rules="rules" size="large" label-width="0">
+        <el-form-item prop="phone">
           <el-input
             v-model="form.phone"
             placeholder="请输入手机号"
@@ -23,7 +17,7 @@
           />
         </el-form-item>
 
-        <el-form-item label="验证码" prop="code">
+        <el-form-item prop="code">
           <div class="code-input-group">
             <el-input
               v-model="form.code"
@@ -38,33 +32,24 @@
           </div>
         </el-form-item>
 
-        <el-form-item label="密码" prop="password">
+        <el-form-item prop="new_password">
           <el-input
-            v-model="form.password"
+            v-model="form.new_password"
             type="password"
-            placeholder="请设置密码（至少 6 位）"
+            placeholder="请输入新密码，至少 6 位"
             :prefix-icon="Lock"
             show-password
             clearable
           />
         </el-form-item>
 
-        <el-form-item label="确认密码" prop="confirmPassword">
+        <el-form-item prop="confirm_password">
           <el-input
-            v-model="form.confirmPassword"
+            v-model="form.confirm_password"
             type="password"
-            placeholder="请再次输入密码"
+            placeholder="请再次输入新密码"
             :prefix-icon="Lock"
             show-password
-            clearable
-          />
-        </el-form-item>
-
-        <el-form-item label="姓名" prop="name">
-          <el-input
-            v-model="form.name"
-            placeholder="请输入您的姓名"
-            :prefix-icon="User"
             clearable
           />
         </el-form-item>
@@ -74,33 +59,30 @@
             type="primary"
             :loading="loading"
             style="width: 100%"
-            @click="handleRegister"
+            @click="handleSubmit"
           >
-            {{ loading ? '注册中...' : '注 册' }}
+            {{ loading ? '提交中...' : '重置密码' }}
           </el-button>
         </el-form-item>
       </el-form>
 
       <div class="auth-footer">
-        <p>已有账号？<router-link :to="loginLink">立即登录</router-link></p>
+        <router-link class="extra-link" :to="loginLink">返回登录</router-link>
       </div>
     </el-card>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Phone, Message, Lock, User } from '@element-plus/icons-vue'
 import type { FormInstance } from 'element-plus'
+import { Lock, Message, Phone } from '@element-plus/icons-vue'
 import { authAPI } from '@/api'
-import { useTokenStore, useUserStore } from '@/store'
 
-const route = useRoute()
 const router = useRouter()
-const tokenStore = useTokenStore()
-const userStore = useUserStore()
+const route = useRoute()
 
 const formRef = ref<FormInstance>()
 const loading = ref(false)
@@ -109,18 +91,16 @@ const countdown = ref(0)
 const form = reactive({
   phone: '',
   code: '',
-  password: '',
-  confirmPassword: '',
-  name: ''
+  new_password: '',
+  confirm_password: ''
 })
 
-// 表单验证规则
-const validateConfirmPassword = (_rule: any, value: string, callback: any) => {
-  if (value !== form.password) {
-    callback(new Error('两次输入的密码不一致'))
-  } else {
-    callback()
+const validateConfirmPassword = (_rule: unknown, value: string, callback: (error?: Error) => void) => {
+  if (value !== form.new_password) {
+    callback(new Error('两次输入的新密码不一致'))
+    return
   }
+  callback()
 }
 
 const rules = {
@@ -130,18 +110,15 @@ const rules = {
   ],
   code: [
     { required: true, message: '请输入验证码', trigger: 'blur' },
-    { pattern: /^\d{6}$/, message: '验证码为6位数字', trigger: 'blur' }
+    { pattern: /^\d{6}$/, message: '验证码为 6 位数字', trigger: 'blur' }
   ],
-  password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, message: '密码至少6位', trigger: 'blur' }
+  new_password: [
+    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { min: 6, message: '密码长度不能少于 6 位', trigger: 'blur' }
   ],
-  confirmPassword: [
-    { required: true, message: '请再次输入密码', trigger: 'blur' },
+  confirm_password: [
+    { required: true, message: '请再次输入新密码', trigger: 'blur' },
     { validator: validateConfirmPassword, trigger: 'blur' }
-  ],
-  name: [
-    { required: true, message: '请输入姓名', trigger: 'blur' }
   ]
 }
 
@@ -150,7 +127,6 @@ const loginLink = computed(() => {
   return redirect ? { path: '/login', query: { redirect } } : { path: '/login' }
 })
 
-// 发送验证码
 const sendCode = async () => {
   if (!form.phone) {
     ElMessage.warning('请先输入手机号')
@@ -166,7 +142,6 @@ const sendCode = async () => {
     await authAPI.sendCode({ phone: form.phone })
     ElMessage.success('验证码已发送')
 
-    // 开始倒计时
     countdown.value = 60
     const timer = setInterval(() => {
       countdown.value--
@@ -179,8 +154,7 @@ const sendCode = async () => {
   }
 }
 
-// 注册
-const handleRegister = async () => {
+const handleSubmit = async () => {
   if (!formRef.value) return
 
   await formRef.value.validate(async (valid) => {
@@ -188,29 +162,16 @@ const handleRegister = async () => {
 
     loading.value = true
     try {
-      const result = await authAPI.register({
+      await authAPI.resetPassword({
         phone: form.phone,
         code: form.code,
-        password: form.password,
-        name: form.name
+        new_password: form.new_password
       })
 
-      // 保存 Token 和用户信息
-      tokenStore.setToken(result.token)
-      tokenStore.setRefreshToken(result.refresh_token)
-      userStore.setUser(result.user)
-      userStore.setProfile(result.profile)
-
-      ElMessage.success('注册成功！')
-      const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/home'
-      router.replace(redirect)
-    } catch (error: any) {
-      if (error?.response?.data?.msg) {
-        ElMessage.error(error.response.data.msg)
-      } else {
-        ElMessage.error('注册失败')
-      }
-      console.error('注册失败:', error)
+      ElMessage.success('密码已重置，请使用新密码登录')
+      router.replace(loginLink.value)
+    } catch (error) {
+      console.error('重置密码失败:', error)
     } finally {
       loading.value = false
     }
@@ -219,7 +180,7 @@ const handleRegister = async () => {
 </script>
 
 <style scoped>
-.register-container {
+.reset-password-container {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -228,40 +189,33 @@ const handleRegister = async () => {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-.register-card {
+.reset-password-card {
   width: 100%;
   max-width: 460px;
 }
 
-.register-card :deep(.el-card__body) {
+.reset-password-card :deep(.el-card__body) {
   padding: 28px 22px 22px;
 }
 
-.register-card :deep(.el-form-item) {
+.reset-password-card :deep(.el-form-item) {
   margin-bottom: 20px;
 }
 
-.register-card :deep(.el-input__wrapper) {
+.reset-password-card :deep(.el-input__wrapper) {
   border-radius: 10px;
 }
 
-.register-card :deep(.el-button) {
+.reset-password-card :deep(.el-button) {
   border-radius: 10px;
 }
 
-.register-header {
-  position: relative;
+.reset-password-header {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
-.header-action {
-  position: absolute;
-  left: 0;
-  top: 2px;
-}
-
-.register-header h2 {
+.reset-password-header h2 {
   margin: 0 0 8px;
   color: #303133;
   font-size: var(--font-size-title, 24px);
@@ -272,19 +226,6 @@ const handleRegister = async () => {
   margin: 0;
   font-size: var(--font-size-sm, 14px);
   color: #909399;
-}
-
-.back-btn {
-  border: none;
-  color: var(--color-primary, #409EFF);
-}
-
-:deep(.el-form-item__label) {
-  font-size: var(--font-size-sm, 14px);
-  color: var(--text-color-primary, #303133);
-  font-weight: 500;
-  padding-bottom: 4px !important;
-  line-height: 1.2;
 }
 
 .code-input-group {
@@ -306,12 +247,17 @@ const handleRegister = async () => {
   text-align: center;
   margin-top: 10px;
   font-size: var(--font-size-sm, 14px);
-  color: #909399;
 }
 
 .auth-footer a {
   color: var(--color-primary, #409EFF);
   text-decoration: none;
   font-weight: 500;
+}
+
+.extra-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

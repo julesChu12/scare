@@ -79,7 +79,7 @@ func (s *SMSService) SendCode(phone string) error {
 // VerifyCode 验证验证码
 func (s *SMSService) VerifyCode(phone, code string) error {
 	// 测试环境：万能验证码
-	if s.env == "development" || s.env == "debug" {
+	if s.env == "development" || s.env == "debug" || s.env == "test" {
 		if code == "000000" {
 			return nil // 万能验证码直接通过
 		}
@@ -184,7 +184,7 @@ func (s *SMSService) storeCode(phone, code string) error {
 // sendSMS 发送短信（Mock实现）
 func (s *SMSService) sendSMS(phone, code string) error {
 	// 开发/调试环境：打印到控制台
-	if s.env == "development" || s.env == "debug" {
+	if s.env == "development" || s.env == "debug" || s.env == "test" {
 		fmt.Printf("\n========== 短信验证码（Mock） ==========\n")
 		fmt.Printf("手机号：%s\n", phone)
 		fmt.Printf("验证码：%s\n", code)

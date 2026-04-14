@@ -33,6 +33,9 @@
             :disabled="isLoggedIn"
           />
         </el-form-item>
+        <div v-if="showAccountHint" class="phone-status-hint neutral">
+          {{ accountHint }}
+        </div>
 
         <el-form-item label="验证码" prop="code" v-if="!isLoggedIn">
           <div class="code-input-group">
@@ -55,10 +58,6 @@
             :rows="1"
             size="large"
           />
-          <div class="location-hint" v-if="hasLocation">
-            <el-icon><Location /></el-icon>
-            <span>已获取您的当前位置，仅用于记录提交位置，不参与最终受理站点匹配</span>
-          </div>
         </el-form-item>
 
         <el-form-item label="服务类型" prop="service_type" v-if="!selectedServiceType">
@@ -105,7 +104,7 @@
             size="large"
             style="width: 100%; margin-top: 8px;"
           >
-            {{ isLoggedIn ? '提交申请' : '提交并开通服务' }}
+            提交申请
           </el-button>
         </el-form-item>
       </el-form>
@@ -121,7 +120,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowLeft, Location, Plus } from '@element-plus/icons-vue'
+import { ArrowLeft, Plus } from '@element-plus/icons-vue'
 import type { FormInstance, UploadFile, UploadRequestOptions } from 'element-plus'
 import { authAPI, geocodeAPI, requestsAPI, stationAPI, uploadAPI } from '@/api'
 import type { Station } from '@/api'
@@ -199,6 +198,10 @@ const form = reactive({
   service_type: '',
   description: ''
 })
+
+const isValidPhone = (phone: string) => /^1[3-9]\d{9}$/.test(phone)
+const showAccountHint = computed(() => !isLoggedIn.value && isValidPhone(form.phone))
+const accountHint = computed(() => '提交后系统会自动校验账号状态；如该手机号未注册，会自动创建账号并继续提交服务申请。')
 
 // 表单验证规则
 const rules = computed(() => ({
@@ -375,7 +378,7 @@ const handleSubmit = async () => {
         userStore.setUser(result.user)
         userStore.setProfile(result.profile)
 
-        ElMessage.success('服务开通成功！')
+        ElMessage.success('服务申请已提交！')
         router.push(`/requests/${result.request.id}`)
       }
     } catch (error) {
@@ -519,6 +522,20 @@ onMounted(async () => {
   color: var(--text-color-primary, #303133);
 }
 
+.phone-status-hint {
+  margin: -6px 0 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.phone-status-hint.neutral {
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
 .source-station-card {
   background: #fff7ed;
   border: 1px solid #fed7aa;
@@ -617,6 +634,13 @@ onMounted(async () => {
 .tips a {
   color: var(--color-primary, #409EFF);
   text-decoration: none;
+}
+
+.submit-hint {
+  text-align: center;
+  margin: 8px 0 0;
+  color: #909399;
+  font-size: var(--font-size-sm, 12px);
 }
 
 .upload-hint {

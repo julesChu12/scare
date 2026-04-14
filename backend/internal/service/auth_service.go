@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
 	"community-elderly-care-platform/internal/consts"
@@ -16,13 +17,16 @@ import (
 )
 
 var (
-	ErrInvalidCredentials = errors.New("invalid credentials")
-	ErrUserInactive       = errors.New("user inactive")
-	ErrUserNotFound       = errors.New("user not found")
-	ErrNoRoleForBEnd      = errors.New("user has no B-end identity")
-	ErrNoCustomerProfile  = errors.New("user has no customer profile")
-	ErrNoStation          = errors.New("no station available")
-	ErrNoCEndIdentity     = errors.New("user has no C-end identity")
+	ErrInvalidCredentials      = errors.New("invalid credentials")
+	ErrUserInactive            = errors.New("user inactive")
+	ErrUserNotFound            = errors.New("user not found")
+	ErrPasswordNotSet          = errors.New("password not set")
+	ErrCurrentPasswordRequired = errors.New("current password required")
+	ErrCurrentPasswordInvalid  = errors.New("current password invalid")
+	ErrNoRoleForBEnd           = errors.New("user has no B-end identity")
+	ErrNoCustomerProfile       = errors.New("user has no customer profile")
+	ErrNoStation               = errors.New("no station available")
+	ErrNoCEndIdentity          = errors.New("user has no C-end identity")
 )
 
 type AuthService struct {
@@ -127,6 +131,9 @@ func (s *AuthService) LoginCEnd(phone, password string) (*Tokens, *model.User, e
 	}
 	if user.Status != "active" {
 		return nil, nil, ErrUserInactive
+	}
+	if !hasPasswordHash(user.PasswordHash) {
+		return nil, nil, ErrPasswordNotSet
 	}
 	if err := VerifyPassword(user.PasswordHash, password); err != nil {
 		return nil, nil, ErrInvalidCredentials
@@ -247,6 +254,70 @@ func (s *AuthService) Refresh(refreshToken string) (*Tokens, error) {
 	return &Tokens{AccessToken: access, RefreshToken: refresh}, nil
 }
 
+// SetCEndPassword 为 C 端用户设置或更新密码。
+func (s *AuthService) SetCEndPassword(userID int64, currentPassword, newPassword string) error {
+	user, err := s.userRepo.GetByID(userID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrUserNotFound
+		}
+		return err
+	}
+	if user.Status != "active" {
+		return ErrUserInactive
+	}
+	if hasPasswordHash(user.PasswordHash) {
+		if strings.TrimSpace(currentPassword) == "" {
+			return ErrCurrentPasswordRequired
+		}
+		if err := VerifyPassword(user.PasswordHash, currentPassword); err != nil {
+			return ErrCurrentPasswordInvalid
+		}
+	}
+
+	hashedPassword, err := HashPassword(newPassword)
+	if err != nil {
+		return err
+	}
+
+	user.PasswordHash = hashedPassword
+	return s.userRepo.Update(user)
+}
+
+// ResetCEndPassword 通过手机号验证码重置 C 端用户密码。
+func (s *AuthService) ResetCEndPassword(phone, code, newPassword string) error {
+	if err := s.smsService.VerifyCode(phone, code); err != nil {
+		return err
+	}
+
+	user, err := s.userRepo.GetByPhone(phone)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrUserNotFound
+		}
+		return err
+	}
+	if user.Status != "active" {
+		return ErrUserInactive
+	}
+
+	exists, err := s.customerRepo.Exists(user.ID)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return ErrNoCustomerProfile
+	}
+
+	hashedPassword, err := HashPassword(newPassword)
+	if err != nil {
+		return err
+	}
+
+	user.PasswordHash = hashedPassword
+	return s.userRepo.Update(user)
+}
+
 // RegisterInput 注册输入参数
 type RegisterInput struct {
 	Phone    string
@@ -294,10 +365,10 @@ func (s *AuthService) Register(input RegisterInput) (*RegisterResult, error) {
 
 		// 创建用户
 		newUser := &model.User{
-			Phone:         input.Phone,
-			Name:          input.Name,
-			PasswordHash:  hashedPassword,
-			Status:        "active",
+			Phone:        input.Phone,
+			Name:         input.Name,
+			PasswordHash: hashedPassword,
+			Status:       "active",
 		}
 		if err := userRepoTx.Create(newUser); err != nil {
 			return err
@@ -424,7 +495,7 @@ func (s *AuthService) QuickStart(input QuickStartInput) (*QuickStartResult, erro
 				Name:   input.Name,
 				Status: "active",
 			}
-			if err := userRepoTx.Create(newUser); err != nil {
+			if err := userRepoTx.CreateWithoutPassword(newUser); err != nil {
 				return err
 			}
 			user = newUser
@@ -560,6 +631,15 @@ func (s *AuthService) QuickStart(input QuickStartInput) (*QuickStartResult, erro
 		Profile:      profile,
 		Request:      request,
 	}, nil
+}
+
+func hasPasswordHash(hash string) bool {
+	return strings.TrimSpace(hash) != ""
+}
+
+// HasPasswordHash reports whether the user currently has password login capability.
+func HasPasswordHash(hash string) bool {
+	return hasPasswordHash(hash)
 }
 
 func (s *AuthService) findNearestStation(lat, lng float64) (int64, error) {

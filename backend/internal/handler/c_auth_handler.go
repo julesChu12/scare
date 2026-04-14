@@ -38,6 +38,15 @@ type cRefreshRequest struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
 }
 
+func buildCEndUserPayload(user *model.User) gin.H {
+	return gin.H{
+		"id":           user.ID,
+		"phone":        user.Phone,
+		"role":         "c_end",
+		"has_password": service.HasPasswordHash(user.PasswordHash),
+	}
+}
+
 // Login C端登录接口（支持密码和验证码两种方式）
 // @Summary      C端用户登录
 // @Description  支持密码登录和验证码登录两种方式
@@ -85,6 +94,10 @@ func (h *CAuthHandler) Login(c *gin.Context) {
 	}
 
 	if err != nil {
+		if err == service.ErrPasswordNotSet {
+			RespondError(c, http.StatusBadRequest, "用户未设置密码，请使用验证码登录")
+			return
+		}
 		if err == service.ErrInvalidCredentials {
 			RespondError(c, http.StatusUnauthorized, "invalid credentials")
 			return
@@ -125,6 +138,7 @@ func (h *CAuthHandler) Login(c *gin.Context) {
 		"name":          user.Name,
 		"phone":         user.Phone,
 		"status":        user.Status,
+		"has_password":  service.HasPasswordHash(user.PasswordHash),
 	}
 	Respond(c, http.StatusOK, "ok", data)
 }
@@ -207,11 +221,7 @@ func (h *CAuthHandler) Register(c *gin.Context) {
 	Respond(c, http.StatusOK, "ok", gin.H{
 		"token":         result.Token,
 		"refresh_token": result.RefreshToken,
-		"user": gin.H{
-			"id":    result.User.ID,
-			"phone": result.User.Phone,
-			"role":  "c_end",
-		},
+		"user":          buildCEndUserPayload(result.User),
 		"profile": gin.H{
 			"name": result.User.Name,
 		},
@@ -261,6 +271,7 @@ func (h *CAuthHandler) Me(c *gin.Context) {
 		"name":          user.Name,
 		"phone":         user.Phone,
 		"status":        user.Status,
+		"has_password":  service.HasPasswordHash(user.PasswordHash),
 	})
 }
 
@@ -301,6 +312,51 @@ func (h *CAuthHandler) SendCode(c *gin.Context) {
 	}
 
 	Respond(c, http.StatusOK, "验证码已发送", nil)
+}
+
+// ResetPassword 通过手机号验证码重置密码
+// @Summary      重置登录密码
+// @Description  未登录用户通过手机号验证码重置 C 端登录密码
+// @Tags         c_auth
+// @Accept       json
+// @Produce      json
+// @Param        request body object{phone=string,code=string,new_password=string} true "重置密码信息"
+// @Success      200  {object} APIResponse "重置成功"
+// @Failure      400  {object} APIResponse "请求参数错误"
+// @Failure      404  {object} APIResponse "用户不存在"
+// @Failure      500  {object} APIResponse "服务器错误"
+// @Router       /c/auth/reset-password [post]
+func (h *CAuthHandler) ResetPassword(c *gin.Context) {
+	var req struct {
+		Phone       string `json:"phone" binding:"required"`
+		Code        string `json:"code" binding:"required"`
+		NewPassword string `json:"new_password" binding:"required,min=6"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		RespondError(c, http.StatusBadRequest, "invalid payload")
+		return
+	}
+
+	err := h.authService.ResetCEndPassword(req.Phone, req.Code, req.NewPassword)
+	if err != nil {
+		switch err {
+		case service.ErrCodeInvalid:
+			RespondError(c, http.StatusBadRequest, "验证码错误或已过期")
+			return
+		case service.ErrUserInactive:
+			RespondError(c, http.StatusForbidden, "user inactive")
+			return
+		case service.ErrUserNotFound, service.ErrNoCustomerProfile:
+			RespondError(c, http.StatusNotFound, "用户不存在")
+			return
+		default:
+			RespondError(c, http.StatusInternalServerError, "reset password failed")
+			return
+		}
+	}
+
+	Respond(c, http.StatusOK, "密码重置成功", nil)
 }
 
 // QuickStart 快速开通（注册+登录+创建服务请求）
@@ -395,11 +451,7 @@ func (h *CAuthHandler) QuickStart(c *gin.Context) {
 	data := gin.H{
 		"token":         result.Token,
 		"refresh_token": result.RefreshToken,
-		"user": gin.H{
-			"id":    result.User.ID,
-			"phone": result.User.Phone,
-			"role":  "c_end",
-		},
+		"user":          buildCEndUserPayload(result.User),
 		"profile": gin.H{
 			"name":    result.User.Name,
 			"address": result.Profile.Address,
@@ -456,11 +508,61 @@ func (h *CAuthHandler) CheckToken(c *gin.Context) {
 	}
 
 	Respond(c, http.StatusOK, "ok", gin.H{
-		"user": gin.H{
-			"id":    user.ID,
-			"phone": user.Phone,
-			"role":  "c_end",
-		},
+		"user":    buildCEndUserPayload(user),
 		"profile": profileData,
 	})
+}
+
+// SetPassword 设置或更新当前登录用户的密码
+// @Summary      设置登录密码
+// @Description  已登录的 C 端用户设置登录密码；首次设置无需提供旧密码，修改已有密码时必须提供旧密码
+// @Tags         c_auth
+// @Accept       json
+// @Produce      json
+// @Security     Bearer
+// @Param        request body object{current_password=string,new_password=string} true "密码信息"
+// @Success      200  {object} APIResponse "设置成功"
+// @Failure      400  {object} APIResponse "请求参数错误"
+// @Failure      401  {object} APIResponse "未认证"
+// @Failure      404  {object} APIResponse "用户不存在"
+// @Failure      500  {object} APIResponse "服务器错误"
+// @Router       /c/auth/password [post]
+func (h *CAuthHandler) SetPassword(c *gin.Context) {
+	userID, ok := GetUserID(c)
+	if !ok {
+		RespondError(c, http.StatusUnauthorized, "missing user")
+		return
+	}
+
+	var req struct {
+		CurrentPassword string `json:"current_password"`
+		NewPassword     string `json:"new_password" binding:"required,min=6"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		RespondError(c, http.StatusBadRequest, "invalid payload")
+		return
+	}
+
+	err := h.authService.SetCEndPassword(userID, req.CurrentPassword, req.NewPassword)
+	if err != nil {
+		switch err {
+		case service.ErrCurrentPasswordRequired:
+			RespondError(c, http.StatusBadRequest, "请输入当前密码")
+			return
+		case service.ErrCurrentPasswordInvalid:
+			RespondError(c, http.StatusBadRequest, "当前密码错误")
+			return
+		case service.ErrUserInactive:
+			RespondError(c, http.StatusForbidden, "user inactive")
+			return
+		case service.ErrUserNotFound:
+			RespondError(c, http.StatusNotFound, "用户不存在")
+			return
+		default:
+			RespondError(c, http.StatusInternalServerError, "set password failed")
+			return
+		}
+	}
+
+	Respond(c, http.StatusOK, "密码设置成功", nil)
 }

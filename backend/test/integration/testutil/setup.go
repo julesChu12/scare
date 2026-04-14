@@ -86,7 +86,7 @@ func createTables(t *testing.T, db *gorm.DB) {
 		CREATE TABLE users (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			phone TEXT UNIQUE,
-			password_hash TEXT NOT NULL,
+			password_hash TEXT,
 			name TEXT,
 			email TEXT,
 			avatar TEXT,

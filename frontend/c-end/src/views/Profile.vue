@@ -109,6 +109,16 @@
           {{ getHealthSummary() }}
         </div>
       </div>
+
+      <div class="module-card info-card" @click="goToPasswordInfo">
+        <div class="module-header">
+          <span class="module-title">{{ passwordModuleTitle }}</span>
+          <el-icon class="arrow"><ArrowRight /></el-icon>
+        </div>
+        <div class="module-summary">
+          {{ passwordModuleSummary }}
+        </div>
+      </div>
     </div>
 
     <!-- 底部导航 -->
@@ -130,7 +140,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ArrowLeft, ArrowRight, User, Phone, HomeFilled, List } from '@element-plus/icons-vue'
 import { stationAPI, authAPI, type StationInfo } from '@/api'
@@ -140,6 +150,12 @@ const router = useRouter()
 const userStore = useUserStore()
 
 const currentStation = ref<StationInfo | null>(null)
+const passwordModuleTitle = computed(() => userStore.user?.has_password ? '修改登录密码' : '设置登录密码')
+const passwordModuleSummary = computed(() => (
+  userStore.user?.has_password
+    ? '已启用手机号密码登录，可在这里更新密码'
+    : '设置后可使用手机号和密码登录'
+))
 
 // 手机号脱敏
 const maskPhone = (phone: string) => {
@@ -220,6 +236,7 @@ const goToBasicInfo = () => router.push('/profile/basic')
 const goToContactInfo = () => router.push('/profile/contact')
 const goToAddressInfo = () => router.push('/profile/address')
 const goToHealthInfo = () => router.push('/profile/health')
+const goToPasswordInfo = () => router.push('/profile/password')
 
 // 获取站点信息
 const fetchStation = async () => {

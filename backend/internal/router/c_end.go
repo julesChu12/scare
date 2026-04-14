@@ -18,6 +18,7 @@ func RegisterCEndRoutes(api *gin.RouterGroup, secured *gin.RouterGroup, deps *De
 		auth.POST("/login", deps.CAuthHandler.Login)
 		auth.POST("/refresh", deps.CAuthHandler.Refresh)
 		auth.POST("/register", deps.CAuthHandler.Register)
+		auth.POST("/reset-password", deps.CAuthHandler.ResetPassword)
 	}
 
 	public := api.Group("/c")
@@ -43,6 +44,7 @@ func RegisterCEndRoutes(api *gin.RouterGroup, secured *gin.RouterGroup, deps *De
 		// 认证相关
 		cSecured.GET("/auth/me", deps.CAuthHandler.Me)
 		cSecured.GET("/auth/check", deps.CAuthHandler.CheckToken)
+		cSecured.POST("/auth/password", deps.CAuthHandler.SetPassword)
 		cSecured.POST("/auth/logout", deps.LogoutHandler.Logout)
 
 		// 个人资料

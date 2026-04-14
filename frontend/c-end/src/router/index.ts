@@ -31,6 +31,12 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: false, title: '注册' }
   },
   {
+    path: '/reset-password',
+    name: 'ResetPassword',
+    component: () => import('@/views/ResetPassword.vue'),
+    meta: { requiresAuth: false, title: '重置密码' }
+  },
+  {
     path: '/services',
     name: 'ServiceList',
     component: () => import('@/views/ServiceListView.vue'),
@@ -77,6 +83,12 @@ const routes: RouteRecordRaw[] = [
     name: 'ProfileHealth',
     component: () => import('@/views/profile/HealthInfo.vue'),
     meta: { requiresAuth: true, title: '健康档案' }
+  },
+  {
+    path: '/profile/password',
+    name: 'ProfilePassword',
+    component: () => import('@/views/profile/PasswordSetting.vue'),
+    meta: { requiresAuth: true, title: '登录密码' }
   },
   {
     path: '/settings',

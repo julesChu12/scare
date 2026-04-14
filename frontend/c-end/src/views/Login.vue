@@ -1,94 +1,91 @@
 <template>
   <div class="login-container">
-    <div class="login-card">
-      <h1>霍营街道服务站</h1>
-
-      <!-- 登录方式切换 -->
-      <div class="login-tabs">
-        <div
-          class="tab-item"
-          :class="{ active: loginType === 'code' }"
-          @click="loginType = 'code'"
-        >
-          验证码登录
-        </div>
-        <div
-          class="tab-item"
-          :class="{ active: loginType === 'password' }"
-          @click="loginType = 'password'"
-        >
-          密码登录
-        </div>
+    <el-card class="login-card" shadow="hover">
+      <div class="login-header">
+        <!-- 返回按钮已隐藏 -->
+        <!-- <div class="header-action">
+          <el-button class="back-btn" @click="goBack">
+            <el-icon><ArrowLeft /></el-icon>
+          </el-button>
+        </div> -->
+        <h2>sCare 社区养老服务</h2>
+        <p class="subtitle">用户登录</p>
       </div>
 
-      <el-form :model="form" :rules="currentRules" ref="formRef" label-width="0">
+      <div class="login-tabs">
+        <button
+          type="button"
+          class="tab-chip"
+          :class="{ active: loginType === 'code' }"
+          @click="switchLoginType('code')"
+        >
+          验证码登录
+        </button>
+        <button
+          type="button"
+          class="tab-chip"
+          :class="{ active: loginType === 'password' }"
+          @click="switchLoginType('password')"
+        >
+          密码登录
+        </button>
+      </div>
+
+      <el-form ref="formRef" :model="form" :rules="currentRules" size="large" label-width="0">
         <el-form-item prop="phone">
           <el-input
             v-model="form.phone"
             placeholder="请输入手机号"
             maxlength="11"
-            size="large"
-          >
-            <template #prefix>
-              <el-icon><Phone /></el-icon>
-            </template>
-          </el-input>
+            :prefix-icon="Phone"
+            clearable
+          />
         </el-form-item>
 
-        <!-- 验证码登录 -->
-        <el-form-item prop="code" v-if="loginType === 'code'">
+        <el-form-item v-if="loginType === 'code'" prop="code">
           <div class="code-input-group">
             <el-input
               v-model="form.code"
               placeholder="请输入验证码"
               maxlength="6"
-              size="large"
-            >
-              <template #prefix>
-                <el-icon><Message /></el-icon>
-              </template>
-            </el-input>
-            <el-button :disabled="countdown > 0" @click="sendCode" size="large">
+              :prefix-icon="Message"
+              clearable
+            />
+            <el-button class="send-code-btn" :disabled="countdown > 0" plain @click="sendCode">
               {{ countdown > 0 ? `${countdown}s` : '发送验证码' }}
             </el-button>
           </div>
         </el-form-item>
 
-        <!-- 密码登录 -->
-        <el-form-item prop="password" v-else>
+        <el-form-item v-else prop="password">
           <el-input
             v-model="form.password"
             type="password"
             placeholder="请输入密码"
-            size="large"
+            :prefix-icon="Lock"
             show-password
-          >
-            <template #prefix>
-              <el-icon><Lock /></el-icon>
-            </template>
-          </el-input>
+            clearable
+          />
         </el-form-item>
 
         <el-form-item>
           <el-button
             type="primary"
-            @click="handleLogin"
             :loading="loading"
-            size="large"
             style="width: 100%"
+            @click="handleLogin"
           >
-            登录
+            {{ loading ? '登录中...' : '登 录' }}
           </el-button>
         </el-form-item>
       </el-form>
 
-      <div class="tips">
-        <p>首次使用？<router-link to="/register">立即注册</router-link></p>
+      <div class="auth-footer">
+        <p>首次使用？<router-link :to="registerLink">立即注册</router-link></p>
+        <router-link v-if="loginType === 'password'" class="extra-link" :to="resetPasswordLink">忘记密码</router-link>
+        <router-link class="extra-link" to="/quick">先去申请服务</router-link>
       </div>
-      <div class="tips" style="margin-top: 12px;">
-        <router-link to="/home">返回首页</router-link>
-      </div>
-    </div>
+    </el-card>
   </div>
 </template>
 
@@ -143,6 +140,22 @@ const passwordRules = {
 // 当前验证规则
 const currentRules = computed(() => loginType.value === 'code' ? codeRules : passwordRules)
 
+const registerLink = computed(() => {
+  const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : undefined
+  return redirect ? { path: '/register', query: { redirect } } : { path: '/register' }
+})
+
+const resetPasswordLink = computed(() => {
+  const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : undefined
+  return redirect ? { path: '/reset-password', query: { redirect } } : { path: '/reset-password' }
+})
+
+const switchLoginType = (type: 'code' | 'password') => {
+  if (loginType.value === type) return
+  loginType.value = type
+  formRef.value?.clearValidate()
+}
+
 // 发送验证码
 const sendCode = async () => {
   if (!form.phone) {
@@ -194,7 +207,8 @@ const handleLogin = async () => {
       userStore.setUser({
         id: result.user_id,
         phone: result.phone,
-        role: 'c_end'
+        role: 'c_end',
+        has_password: result.has_password
       })
 
       // Fetch profile for prefill (id_number/address/user_type)
@@ -211,7 +225,7 @@ const handleLogin = async () => {
       ElMessage.success('登录成功')
 
       // 跳转到原目标页面或首页
-      const redirect = route.query.redirect as string || '/home'
+      const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/home'
       router.replace(redirect)
     } catch (error) {
       console.error('登录失败:', error)
@@ -224,61 +238,87 @@ const handleLogin = async () => {
 
 <style scoped>
 .login-container {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  min-height: 100vh;
+  padding: 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .login-card {
   width: 100%;
-  max-width: 400px;
-  background: white;
-  border-radius: 16px;
-  padding: 40px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  max-width: 460px;
 }
 
-.login-card h1 {
+.login-card :deep(.el-card__body) {
+  padding: 28px 22px 22px;
+}
+
+.login-card :deep(.el-form-item) {
+  margin-bottom: 20px;
+}
+
+.login-card :deep(.el-input__wrapper) {
+  border-radius: 10px;
+}
+
+.login-card :deep(.el-button) {
+  border-radius: 10px;
+}
+
+.header-action {
+  position: absolute;
+  left: 0;
+  top: 2px;
+}
+
+.login-header {
+  position: relative;
   text-align: center;
-  font-size: var(--font-size-title, 20px);
-  font-weight: bold;
   margin-bottom: 24px;
-  color: var(--text-color-primary, #303133);
+}
+
+.login-header h2 {
+  margin: 0 0 8px;
+  color: #303133;
+  font-size: var(--font-size-title, 24px);
+  font-weight: 600;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: var(--font-size-sm, 14px);
+  color: #909399;
 }
 
 .login-tabs {
   display: flex;
-  margin-bottom: 24px;
-  border-bottom: 1px solid #eee;
+  gap: 8px;
+  margin-bottom: 18px;
 }
 
-.tab-item {
+.tab-chip {
   flex: 1;
-  text-align: center;
+  border: none;
+  border-radius: 999px;
   padding: 12px 0;
-  cursor: pointer;
+  background: #f4f7fb;
   color: var(--text-color-secondary, #909399);
-  font-size: var(--font-size-base, 16px);
-  transition: color 0.3s, border-color 0.3s;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
+  font-size: var(--font-size-sm, 14px);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.tab-item.active {
-  color: var(--color-primary, #409EFF);
-  border-bottom-color: var(--color-primary, #409EFF);
-}
-
-.tab-item:hover {
+.tab-chip.active {
+  background: rgba(64, 158, 255, 0.12);
   color: var(--color-primary, #409EFF);
 }
 
 .code-input-group {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
 }
 
@@ -286,16 +326,30 @@ const handleLogin = async () => {
   flex: 1;
 }
 
-.tips {
-  text-align: center;
-  margin-top: 20px;
-  color: var(--text-color-secondary, #909399);
-  font-size: var(--font-size-base, 16px);
+.send-code-btn {
+  min-width: 108px;
+  padding: 0 10px;
 }
 
-.tips a {
-  color: #667eea;
+.auth-footer {
+  text-align: center;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: var(--text-color-secondary, #909399);
+  font-size: var(--font-size-sm, 14px);
+}
+
+.auth-footer a {
+  color: var(--color-primary, #409EFF);
   text-decoration: none;
   font-weight: 500;
+}
+
+.extra-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

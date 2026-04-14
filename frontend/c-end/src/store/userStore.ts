@@ -6,6 +6,7 @@ export interface User {
   id: number
   phone: string
   role: string
+  has_password?: boolean
 }
 
 export interface EmergencyContact {

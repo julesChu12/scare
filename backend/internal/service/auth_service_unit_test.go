@@ -1,6 +1,7 @@
 package service
 
 import (
+	"database/sql"
 	"errors"
 	"testing"
 	"time"
@@ -148,6 +149,100 @@ func TestAuthService_LoginCEnd_FallsBackToFirstCEndIdentity(t *testing.T) {
 	}
 }
 
+func TestAuthService_LoginCEnd_PasswordNotSet(t *testing.T) {
+	authSvc, db, _ := setupAuthUnitService(t)
+	user := &model.User{
+		Phone:  "13820000009",
+		Name:   "未设密码用户",
+		Status: "active",
+	}
+	if err := db.Omit("PasswordHash").Create(user).Error; err != nil {
+		t.Fatalf("failed to create user without password: %v", err)
+	}
+	seedAuthUnitProfile(t, db, user.ID, "测试地址")
+	seedAuthUnitIdentity(t, db, user.ID, consts.IdentityElderly, true, 0)
+
+	_, _, err := authSvc.LoginCEnd("13820000009", "whatever")
+	if !errors.Is(err, ErrPasswordNotSet) {
+		t.Fatalf("expected ErrPasswordNotSet, got %v", err)
+	}
+}
+
+func TestAuthService_SetCEndPassword_FirstTimeWithoutCurrentPassword(t *testing.T) {
+	authSvc, db, _ := setupAuthUnitService(t)
+	user := &model.User{
+		Phone:  "13820000010",
+		Name:   "首次设密用户",
+		Status: "active",
+	}
+	if err := db.Omit("PasswordHash").Create(user).Error; err != nil {
+		t.Fatalf("failed to create user without password: %v", err)
+	}
+
+	if err := authSvc.SetCEndPassword(user.ID, "", "NewPass@123"); err != nil {
+		t.Fatalf("expected first-time password set to succeed, got %v", err)
+	}
+
+	updated, err := repository.NewUserRepository(db).GetByID(user.ID)
+	if err != nil {
+		t.Fatalf("failed to reload user: %v", err)
+	}
+	if !hasPasswordHash(updated.PasswordHash) {
+		t.Fatal("expected password hash to be stored")
+	}
+	if err := VerifyPassword(updated.PasswordHash, "NewPass@123"); err != nil {
+		t.Fatalf("stored password hash verification failed: %v", err)
+	}
+}
+
+func TestAuthService_SetCEndPassword_RequiresCurrentPasswordWhenAlreadySet(t *testing.T) {
+	authSvc, db, _ := setupAuthUnitService(t)
+	user := seedAuthUnitUser(t, db, "13820000011", "Test@123", "active", 0)
+
+	err := authSvc.SetCEndPassword(user.ID, "", "NewPass@123")
+	if !errors.Is(err, ErrCurrentPasswordRequired) {
+		t.Fatalf("expected ErrCurrentPasswordRequired, got %v", err)
+	}
+
+	err = authSvc.SetCEndPassword(user.ID, "Wrong@123", "NewPass@123")
+	if !errors.Is(err, ErrCurrentPasswordInvalid) {
+		t.Fatalf("expected ErrCurrentPasswordInvalid, got %v", err)
+	}
+
+	if err := authSvc.SetCEndPassword(user.ID, "Test@123", "NewPass@123"); err != nil {
+		t.Fatalf("expected password update to succeed, got %v", err)
+	}
+}
+
+func TestAuthService_ResetCEndPassword_Success(t *testing.T) {
+	authSvc, db, _ := setupAuthUnitService(t)
+	user := seedAuthUnitUser(t, db, "13820000012", "Test@123", "active", 0)
+	seedAuthUnitProfile(t, db, user.ID, "测试地址")
+	authSvc.smsService.SetTestCode("13820000012", "123456")
+
+	if err := authSvc.ResetCEndPassword("13820000012", "123456", "ResetPass@123"); err != nil {
+		t.Fatalf("expected reset password to succeed, got %v", err)
+	}
+
+	updated, err := repository.NewUserRepository(db).GetByID(user.ID)
+	if err != nil {
+		t.Fatalf("failed to reload user: %v", err)
+	}
+	if err := VerifyPassword(updated.PasswordHash, "ResetPass@123"); err != nil {
+		t.Fatalf("updated password verification failed: %v", err)
+	}
+}
+
+func TestAuthService_ResetCEndPassword_UserNotFound(t *testing.T) {
+	authSvc, _, _ := setupAuthUnitService(t)
+	authSvc.smsService.SetTestCode("13820000013", "123456")
+
+	err := authSvc.ResetCEndPassword("13820000013", "123456", "ResetPass@123")
+	if !errors.Is(err, ErrUserNotFound) {
+		t.Fatalf("expected ErrUserNotFound, got %v", err)
+	}
+}
+
 func TestAuthService_LoginCEndByCode_UserNotFound(t *testing.T) {
 	authSvc, _, _ := setupAuthUnitService(t)
 
@@ -197,6 +292,14 @@ func TestAuthService_QuickStart_CreatesUserProfileRequestByNearestStation(t *tes
 	}
 	if result.Profile.Address != "高纬地址" {
 		t.Fatalf("expected profile address updated, got %q", result.Profile.Address)
+	}
+
+	var passwordHash sql.NullString
+	if err := db.Raw("SELECT password_hash FROM users WHERE id = ?", result.User.ID).Scan(&passwordHash).Error; err != nil {
+		t.Fatalf("failed to query password hash: %v", err)
+	}
+	if passwordHash.Valid {
+		t.Fatalf("expected password_hash to be NULL for quick-start user, got %q", passwordHash.String)
 	}
 
 	var identity model.UserIdentity

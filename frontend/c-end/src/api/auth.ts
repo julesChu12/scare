@@ -35,6 +35,7 @@ export interface QuickStartResponse {
     id: number
     phone: string
     role: string
+    has_password?: boolean
   }
   profile: {
     name: string
@@ -75,6 +76,7 @@ export interface LoginResponse {
   name: string
   phone: string
   status: string
+  has_password?: boolean
 }
 
 export interface RefreshRequest {
@@ -100,10 +102,22 @@ export interface RegisterResponse {
     id: number
     phone: string
     role: string
+    has_password?: boolean
   }
   profile: {
     name: string
   }
+}
+
+export interface SetPasswordRequest {
+  current_password?: string
+  new_password: string
+}
+
+export interface ResetPasswordRequest {
+  phone: string
+  code: string
+  new_password: string
 }
 
 export interface CheckTokenResponse {
@@ -111,6 +125,7 @@ export interface CheckTokenResponse {
     id: number
     phone: string
     role: string
+    has_password?: boolean
   }
   profile?: {
     name: string
@@ -127,6 +142,7 @@ export interface MeResponse {
   name: string
   phone: string
   status: string
+  has_password?: boolean
 }
 
 // API 函数
@@ -154,6 +170,16 @@ export const authAPI = {
   // 注册
   register: (data: RegisterRequest) => {
     return client.post<any, RegisterResponse>('/c/auth/register', data)
+  },
+
+  // 设置或修改登录密码
+  setPassword: (data: SetPasswordRequest) => {
+    return client.post<any, void>('/c/auth/password', data)
+  },
+
+  // 通过验证码重置登录密码
+  resetPassword: (data: ResetPasswordRequest) => {
+    return client.post<any, void>('/c/auth/reset-password', data)
   },
 
   // 检查 Token 状态（用于预填充）

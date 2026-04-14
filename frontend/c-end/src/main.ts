@@ -32,7 +32,8 @@ if (import.meta.env.DEV && import.meta.env.VITE_MOCK_USER === 'true') {
   userStore.setUser({
     id: 1,
     phone: '13800138000',
-    role: 'customer'
+    role: 'customer',
+    has_password: true
   })
 
   // 设置 mock 个人资料
