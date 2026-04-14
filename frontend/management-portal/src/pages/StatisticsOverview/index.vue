@@ -69,14 +69,14 @@
     <!-- 图表区域 -->
     <el-row :gutter="20" class="charts-row">
       <el-col :xs="24" :md="12">
-        <el-card>
+        <el-card class="chart-card" shadow="never">
           <template #header>
             <div class="card-header">
               <span>服务类型分布</span>
             </div>
           </template>
-          <div class="chart-container">
-            <div class="service-type-list">
+          <div class="chart-container service-distribution">
+            <div v-if="serviceTypeStats.length" class="service-type-list">
               <div v-for="item in serviceTypeStats" :key="item.type" class="service-type-item">
                 <div class="type-info">
                   <el-tag :type="getServiceTypeTag(item.type)" size="small">
@@ -92,25 +92,20 @@
                 />
               </div>
             </div>
+            <el-empty v-else description="暂无服务类型数据" :image-size="90" />
           </div>
         </el-card>
       </el-col>
       <el-col :xs="24" :md="12">
-        <el-card>
+        <el-card class="chart-card" shadow="never">
           <template #header>
             <div class="card-header">
               <span>需求趋势</span>
             </div>
           </template>
           <div class="chart-container trend-chart">
-            <div v-for="(item, index) in trendData" :key="index" class="trend-item">
-              <span class="trend-date">{{ item.date }}</span>
-              <el-progress
-                :percentage="item.percentage"
-                :stroke-width="12"
-                :format="() => item.count"
-              />
-            </div>
+            <v-chart v-if="trendData.length" class="trend-chart-canvas" :option="trendChartOption" autoresize />
+            <el-empty v-else description="暂无趋势数据" :image-size="90" />
           </div>
         </el-card>
       </el-col>
@@ -124,19 +119,19 @@
         </div>
       </template>
       <el-row :gutter="20">
-        <el-col :span="8">
+        <el-col :xs="24" :md="8">
           <div class="efficiency-item">
             <div class="efficiency-value">{{ efficiencyStats.avg_response_time }} 分钟</div>
             <div class="efficiency-label">平均响应时间</div>
           </div>
         </el-col>
-        <el-col :span="8">
+        <el-col :xs="24" :md="8">
           <div class="efficiency-item">
             <div class="efficiency-value">{{ efficiencyStats.avg_process_time }} 分钟</div>
             <div class="efficiency-label">平均处理时间</div>
           </div>
         </el-col>
-        <el-col :span="8">
+        <el-col :xs="24" :md="8">
           <div class="efficiency-item">
             <div class="efficiency-value">{{ efficiencyStats.satisfaction_rate }}%</div>
             <div class="efficiency-label">满意度</div>
@@ -207,6 +202,12 @@
 import { computed, ref, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Document, Clock, CircleCheck, Loading, StarFilled } from '@element-plus/icons-vue'
+import dayjs from 'dayjs'
+import VChart from 'vue-echarts'
+import { use } from 'echarts/core'
+import { CanvasRenderer } from 'echarts/renderers'
+import { LineChart } from 'echarts/charts'
+import { GridComponent, TooltipComponent } from 'echarts/components'
 import { statisticsApi } from '@/api'
 import type {
   OverviewStatsData,
@@ -215,6 +216,8 @@ import type {
   EfficiencyStatsData,
   StaffRankingItemData,
 } from '@/types/api'
+
+use([CanvasRenderer, LineChart, GridComponent, TooltipComponent])
 
 const timeRange = ref('7')
 
@@ -239,6 +242,84 @@ const topCompletedCount = computed(() => {
   return Math.max(...staffRanking.value.map(item => item.completed_count), 0)
 })
 
+const trendChartOption = computed(() => {
+  const axisData = trendData.value.map(item => formatTrendDate(item.date))
+  const seriesData = trendData.value.map(item => item.count)
+
+  return {
+    tooltip: {
+      trigger: 'axis',
+      backgroundColor: 'rgba(15, 23, 42, 0.9)',
+      borderWidth: 0,
+      textStyle: {
+        color: '#f8fafc',
+      },
+      formatter: (params: Array<{ axisValue: string; data: number }>) => {
+        const [{ axisValue, data }] = params
+        return `${axisValue}<br/>新增需求：${data}`
+      },
+    },
+    grid: {
+      left: 12,
+      right: 12,
+      top: 28,
+      bottom: 12,
+      containLabel: true,
+    },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: axisData,
+      axisTick: {
+        show: false,
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#dbe3ef',
+        },
+      },
+      axisLabel: {
+        color: '#6b7280',
+        hideOverlap: true,
+      },
+    },
+    yAxis: {
+      type: 'value',
+      minInterval: 1,
+      splitLine: {
+        lineStyle: {
+          color: '#e8edf5',
+          type: 'dashed',
+        },
+      },
+      axisLabel: {
+        color: '#94a3b8',
+      },
+    },
+    series: [
+      {
+        type: 'line',
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 8,
+        data: seriesData,
+        lineStyle: {
+          width: 3,
+          color: '#409eff',
+        },
+        itemStyle: {
+          color: '#409eff',
+          borderColor: '#ffffff',
+          borderWidth: 2,
+        },
+        areaStyle: {
+          color: 'rgba(64, 158, 255, 0.16)',
+        },
+      },
+    ],
+  }
+})
+
 async function loadStatistics() {
   const days = parseInt(timeRange.value)
   try {
@@ -257,10 +338,7 @@ async function loadStatistics() {
       serviceTypeStats.value = serviceTypeRes.data || []
     }
     if (trendRes.msg === 'ok') {
-      trendData.value = (trendRes.data || []).map(item => ({
-        ...item,
-        date: item.date.slice(5),
-      }))
+      trendData.value = trendRes.data || []
     }
     if (efficiencyRes.msg === 'ok') {
       efficiencyStats.value = efficiencyRes.data
@@ -318,6 +396,15 @@ function getProgressColor(type: string): string {
   return serviceTypeColorMap[type] || '#409eff'
 }
 
+function formatTrendDate(date: string): string {
+  const parsedDate = dayjs(date)
+  if (parsedDate.isValid()) {
+    return parsedDate.format('MM-DD')
+  }
+
+  return date.length >= 10 ? date.slice(5, 10) : date
+}
+
 function getRankLabel(index: number): string {
   const labels = ['TOP 1', 'TOP 2', 'TOP 3']
   return labels[index] || `NO. ${index + 1}`
@@ -350,6 +437,8 @@ onMounted(() => {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
     margin-bottom: 24px;
 
     h2 {
@@ -369,10 +458,17 @@ onMounted(() => {
   }
 
   .stat-card {
+    height: 100%;
+
+    :deep(.el-card__body) {
+      height: 100%;
+    }
+
     .stat-content {
       display: flex;
       align-items: center;
       gap: 16px;
+      min-width: 0;
     }
 
     .stat-icon {
@@ -403,6 +499,7 @@ onMounted(() => {
 
     .stat-info {
       flex: 1;
+      min-width: 0;
 
       .stat-value {
         font-size: 28px;
@@ -415,6 +512,8 @@ onMounted(() => {
         font-size: 14px;
         color: #909399;
         margin-top: 4px;
+        line-height: 1.5;
+        word-break: break-word;
       }
     }
   }
@@ -433,10 +532,24 @@ onMounted(() => {
     align-items: center;
   }
 
+  .chart-card {
+    height: 100%;
+    border: 1px solid #ebeef5;
+
+    :deep(.el-card__body) {
+      height: calc(100% - 57px);
+    }
+  }
+
   .chart-container {
     padding: 12px 0;
+    min-height: 280px;
 
     .service-type-list {
+      max-height: 256px;
+      padding-right: 4px;
+      overflow-y: auto;
+
       .service-type-item {
         margin-bottom: 16px;
 
@@ -458,32 +571,27 @@ onMounted(() => {
       }
     }
 
+    &.service-distribution {
+      display: flex;
+      align-items: center;
+    }
+
     &.trend-chart {
-      .trend-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 12px;
+      padding: 0;
 
-        &:last-child {
-          margin-bottom: 0;
-        }
-
-        .trend-date {
-          width: 50px;
-          font-size: 13px;
-          color: #909399;
-        }
-
-        .el-progress {
-          flex: 1;
-        }
+      .trend-chart-canvas {
+        width: 100%;
+        height: 280px;
       }
     }
   }
 
   .efficiency-card {
     margin-bottom: 20px;
+
+    :deep(.el-col) {
+      margin-bottom: 12px;
+    }
 
     .efficiency-item {
       text-align: center;
@@ -500,6 +608,82 @@ onMounted(() => {
         font-size: 14px;
         color: #909399;
         margin-top: 8px;
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 16px;
+
+    .page-header {
+      align-items: flex-start;
+      margin-bottom: 20px;
+
+      h2 {
+        font-size: 22px;
+      }
+
+      :deep(.el-select) {
+        width: 100% !important;
+        max-width: 180px;
+      }
+    }
+
+    .stat-card {
+      .stat-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .stat-icon {
+        width: 56px;
+        height: 56px;
+      }
+
+      .stat-info {
+        width: 100%;
+
+        .stat-value {
+          font-size: 24px;
+        }
+
+        .stat-label {
+          margin-top: 6px;
+        }
+      }
+    }
+
+    .chart-container {
+      min-height: 240px;
+
+      &.trend-chart {
+        .trend-chart-canvas {
+          height: 240px;
+        }
+      }
+    }
+
+    .efficiency-card {
+      .efficiency-item {
+        padding: 10px 0;
+
+        .efficiency-value {
+          font-size: 28px;
+        }
+      }
+    }
+
+    .ranking-card {
+      .ranking-item {
+        flex-direction: column;
+      }
+
+      .ranking-badge {
+        width: 100%;
+        min-width: 0;
+        flex-direction: row;
+        justify-content: space-between;
       }
     }
   }
