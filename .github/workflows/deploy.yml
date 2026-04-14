@@ -1,12 +1,13 @@
 # sCare 自动部署流水线
 # 触发条件：master 分支 push（含 merge）
-# 流程：构建前端 → 同步到服务器 → Docker Compose 部署
+# 流程：构建前端 → 同步到服务器 → 执行迁移 → Docker Compose 部署
 
 name: Deploy to Production
 
 on:
   push:
     branches: [master]
+  workflow_dispatch:  # 手动触发
 
 # 同一时间只允许一个部署，新的会取消旧的
 concurrency:
@@ -123,12 +124,11 @@ jobs:
             --exclude='.env' \
             --exclude='deployment/.env' \
             --exclude='paper/' \
-            --exclude='database/' \
             -e "ssh $SSH_OPTS" \
             ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.DEPLOY_DIR }}/
 
-      # 在服务器上执行部署
-      - name: 执行部署
+      # 在服务器上执行部署（包含迁移）
+      - name: 执行部署与迁移
         run: |
           ssh $SSH_OPTS \
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \

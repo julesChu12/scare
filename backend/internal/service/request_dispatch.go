@@ -68,8 +68,13 @@ func resolveDispatch(input DispatchInput, stationRepo *repository.StationReposit
 				decision.ResolvedAddress = geo.FormattedAddress
 			}
 		} else if geoErr != nil && !errors.Is(geoErr, ErrGeocodeNotFound) {
-			return nil, geoErr
+			// Geocode API 错误（如 Key 平台不匹配），降级使用 submit 坐标作为服务位置
+			if decision.SubmitLatitude != 0 && decision.SubmitLongitude != 0 {
+				decision.ServiceLatitude = decision.SubmitLatitude
+				decision.ServiceLongitude = decision.SubmitLongitude
+			}
 		}
+		// ErrGeocodeNotFound：地址无法解析，保持 service_location=0，走人工派单
 	}
 
 	hasServiceLocation := decision.ServiceLatitude != 0 && decision.ServiceLongitude != 0
