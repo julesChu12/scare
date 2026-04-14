@@ -18,8 +18,10 @@ func NewStationHandler(service *service.StationService) *StationHandler {
 }
 
 type stationRequest struct {
+	Address   string  `json:"address"`
 	Name      string  `json:"name" binding:"required"`
 	Code      string  `json:"code"`
+	Phone     string  `json:"phone"`
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
 	Status    string  `json:"status"`
@@ -63,8 +65,10 @@ func (h *StationHandler) Create(c *gin.Context) {
 	}
 
 	station := &model.ServiceStation{
+		Address:   req.Address,
 		Name:      req.Name,
 		Code:      req.Code,
+		Phone:     req.Phone,
 		Latitude:  req.Latitude,
 		Longitude: req.Longitude,
 		Status:    req.Status,
@@ -109,8 +113,10 @@ func (h *StationHandler) Update(c *gin.Context) {
 
 	station := &model.ServiceStation{
 		ID:        id,
+		Address:   req.Address,
 		Name:      req.Name,
 		Code:      req.Code,
+		Phone:     req.Phone,
 		Latitude:  req.Latitude,
 		Longitude: req.Longitude,
 		Status:    req.Status,

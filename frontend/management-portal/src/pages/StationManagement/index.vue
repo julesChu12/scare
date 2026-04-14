@@ -108,26 +108,36 @@
           <el-col :span="24">
             <div class="location-panel">
               <div class="location-panel__header">
-                <div class="location-panel__title">当前位置</div>
-                <div class="location-panel__meta">
-                  {{ hasStationLocation ? '已展示当前站点落点' : '当前站点尚未保存坐标' }}
+                <div>
+                  <div class="location-panel__title">当前位置</div>
+                  <div class="location-panel__meta">
+                    {{ hasStationLocation ? '点击地图或拖拽标记可微调当前站点坐标' : '请输入地址后定位，或直接在地图上选择站点位置' }}
+                  </div>
                 </div>
+                <el-button
+                  type="primary"
+                  plain
+                  :loading="locatingByAddress"
+                  :disabled="!formData.address.trim()"
+                  @click="handleLocateByAddress"
+                >
+                  解析地址定位
+                </el-button>
               </div>
               <div class="location-panel__address">
                 {{ formData.address || '未填写站点地址' }}
               </div>
-              <div v-if="hasStationLocation" class="location-panel__map">
-                <map-viewer
-                  :longitude="formData.longitude!"
-                  :latitude="formData.latitude!"
+              <div class="location-panel__map">
+                <map-location-editor
+                  ref="locationEditorRef"
+                  :longitude="formData.longitude"
+                  :latitude="formData.latitude"
                   :zoom="16"
+                  @update:address="formData.address = $event"
+                  @update:longitude="formData.longitude = $event"
+                  @update:latitude="formData.latitude = $event"
                 />
               </div>
-              <el-empty
-                v-else
-                description="暂无可展示的位置坐标"
-                :image-size="88"
-              />
             </div>
           </el-col>
         </el-row>
@@ -213,7 +223,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import QRCode from 'qrcode'
 import { stationApi, userApi } from '@/api'
-import MapViewer from '@/components/MapViewer.vue'
+import MapLocationEditor from '@/components/MapLocationEditor.vue'
 import { PERM_STATION_CREATE, PERM_STATION_DELETE, PERM_STATION_UPDATE } from '@/constants/permissions'
 import { useAuthStore } from '@/store/modules/auth'
 import type { Station, User } from '@/types/api'
@@ -237,6 +247,10 @@ const dialogVisible = ref(false)
 const dialogType = ref<'add' | 'edit'>('add')
 const submitting = ref(false)
 const formRef = ref<FormInstance>()
+const locationEditorRef = ref<{
+  geocodeAddress: (address: string) => Promise<{ formattedAddress?: string }>
+} | null>(null)
+const locatingByAddress = ref(false)
 const formData = reactive({
   id: 0,
   name: '',
@@ -416,6 +430,32 @@ const handleEdit = async (row: Station) => {
   }
   // 加载该站点的工作人员
   await loadStationStaffs(row.id)
+}
+
+const handleLocateByAddress = async () => {
+  if (!formData.address.trim()) {
+    ElMessage.warning('请先输入站点地址')
+    return
+  }
+
+  if (!locationEditorRef.value?.geocodeAddress) {
+    ElMessage.warning('地图尚未加载完成，请稍后再试')
+    return
+  }
+
+  locatingByAddress.value = true
+  try {
+    const result = await locationEditorRef.value.geocodeAddress(formData.address)
+    if (typeof result?.formattedAddress === 'string' && result.formattedAddress.trim()) {
+      formData.address = result.formattedAddress.trim()
+    }
+    ElMessage.success('已根据地址定位，请确认地图落点')
+  } catch (error) {
+    console.error('地址定位失败', error)
+    ElMessage.error('地址解析失败，请检查地址或手动在地图上选择')
+  } finally {
+    locatingByAddress.value = false
+  }
 }
 
 const handleDelete = (row: Station) => {
@@ -613,7 +653,7 @@ onMounted(() => {
 .location-panel__header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   margin-bottom: 8px;
 }
@@ -636,7 +676,7 @@ onMounted(() => {
 }
 
 .location-panel__map {
-  height: 280px;
+  height: 320px;
   overflow: hidden;
   border-radius: 10px;
   border: 1px solid #dbeafe;
