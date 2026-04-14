@@ -114,16 +114,13 @@ jobs:
       - name: 同步文件到服务器
         run: |
           rsync -azP --delete --ignore-errors \
-            --exclude='.git' \
+            --exclude='/.git' \
             --exclude='node_modules' \
-            --exclude='frontend/c-end/dist' \
-            --exclude='frontend/management-portal/dist' \
-            --exclude='frontend/c-end/node_modules' \
-            --exclude='frontend/management-portal/node_modules' \
-            --exclude='.env' \
-            --exclude='deployment/.env' \
-            --exclude='paper/' \
-            --exclude='database/' \
+            --exclude='/frontend/*/dist' \
+            --exclude='/.env' \
+            --exclude='/deployment/.env' \
+            --exclude='/paper/' \
+            --exclude='/database/' \
             -e "ssh $SSH_OPTS" \
             ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.DEPLOY_DIR }}/ || true
 

@@ -36,8 +36,14 @@ if [ ! -f "$ENV_FILE" ]; then
     err "未找到 $ENV_FILE，请先创建环境配置文件（参考 .env.example）"
 fi
 
-# 加载环境变量
-source "$ENV_FILE"
+# 加载环境变量 (使用 set -a 将变量导出给子进程和 docker-compose)
+if [ -f "$ENV_FILE" ]; then
+    set -a
+    source "$ENV_FILE"
+    set +a
+else
+    err "未找到 $ENV_FILE，请先创建环境配置文件（参考 .env.example）"
+fi
 
 if ! command -v docker &> /dev/null; then
     err "未安装 Docker"
@@ -51,6 +57,9 @@ fi
 if [ ! -d "$SCRIPT_DIR/dist/c-end" ] || [ ! -d "$SCRIPT_DIR/dist/management-portal" ]; then
     err "前端构建产物不存在，请确认 CI 流程已正确执行"
 fi
+
+# 切换到 deployment 目录，确保 docker-compose 能找到 .env
+cd "$SCRIPT_DIR"
 
 # 修复 backend/database 目录权限（Docker init 脚本可能以 root 创建）
 if [ -d "$PROJECT_ROOT/backend/database" ]; then
@@ -88,8 +97,7 @@ done
 log "[3/5] 执行数据库迁移..."
 if [ -f "$MIGRATE_SCRIPT" ]; then
     chmod +x "$MIGRATE_SCRIPT"
-    cd "$PROJECT_ROOT"
-    bash "$MIGRATE_SCRIPT" || warn "迁移过程中有警告"
+    bash "$MIGRATE_SCRIPT" || err "迁移执行失败"
 else
     warn "迁移脚本不存在，跳过"
 fi
