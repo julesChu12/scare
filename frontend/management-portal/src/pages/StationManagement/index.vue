@@ -95,6 +95,41 @@
               <el-input v-model="formData.address" placeholder="请输入地址" type="textarea" :rows="2" />
             </el-form-item>
           </el-col>
+          <el-col :span="12">
+            <el-form-item label="纬度">
+              <el-input :model-value="locationLatitudeText" readonly placeholder="暂无定位坐标" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="经度">
+              <el-input :model-value="locationLongitudeText" readonly placeholder="暂无定位坐标" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="24">
+            <div class="location-panel">
+              <div class="location-panel__header">
+                <div class="location-panel__title">当前位置</div>
+                <div class="location-panel__meta">
+                  {{ hasStationLocation ? '已展示当前站点落点' : '当前站点尚未保存坐标' }}
+                </div>
+              </div>
+              <div class="location-panel__address">
+                {{ formData.address || '未填写站点地址' }}
+              </div>
+              <div v-if="hasStationLocation" class="location-panel__map">
+                <map-viewer
+                  :longitude="formData.longitude!"
+                  :latitude="formData.latitude!"
+                  :zoom="16"
+                />
+              </div>
+              <el-empty
+                v-else
+                description="暂无可展示的位置坐标"
+                :image-size="88"
+              />
+            </div>
+          </el-col>
         </el-row>
 
         <!-- 站点工作人员（仅编辑时显示） -->
@@ -178,6 +213,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import QRCode from 'qrcode'
 import { stationApi, userApi } from '@/api'
+import MapViewer from '@/components/MapViewer.vue'
 import { PERM_STATION_CREATE, PERM_STATION_DELETE, PERM_STATION_UPDATE } from '@/constants/permissions'
 import { useAuthStore } from '@/store/modules/auth'
 import type { Station, User } from '@/types/api'
@@ -207,6 +243,8 @@ const formData = reactive({
   code: '',
   address: '',
   phone: '',
+  latitude: undefined as number | undefined,
+  longitude: undefined as number | undefined,
   status: 'active'
 })
 
@@ -255,6 +293,18 @@ const rules: FormRules = {
 const canCreateStation = computed(() => authStore.hasPermission(PERM_STATION_CREATE))
 const canUpdateStation = computed(() => authStore.hasPermission(PERM_STATION_UPDATE))
 const canDeleteStation = computed(() => authStore.hasPermission(PERM_STATION_DELETE))
+const hasStationLocation = computed(() => (
+  typeof formData.latitude === 'number'
+  && Number.isFinite(formData.latitude)
+  && typeof formData.longitude === 'number'
+  && Number.isFinite(formData.longitude)
+))
+const locationLatitudeText = computed(() => (
+  hasStationLocation.value ? formData.latitude!.toFixed(6) : ''
+))
+const locationLongitudeText = computed(() => (
+  hasStationLocation.value ? formData.longitude!.toFixed(6) : ''
+))
 
 const resolveCEndBaseUrl = () => {
   const configuredBaseUrl = import.meta.env.VITE_C_END_BASE_URL?.trim()
@@ -329,6 +379,8 @@ const handleAdd = () => {
   formData.code = ''
   formData.address = ''
   formData.phone = ''
+  formData.latitude = undefined
+  formData.longitude = undefined
   formData.status = 'active'
   stationStaffs.value = []
 }
@@ -336,14 +388,32 @@ const handleAdd = () => {
 const handleEdit = async (row: Station) => {
   dialogType.value = 'edit'
   dialogVisible.value = true
-  Object.assign(formData, {
-    id: row.id,
-    name: row.name,
-    code: row.code,
-    address: row.address,
-    phone: row.phone,
-    status: row.status
-  })
+  try {
+    const res = await stationApi.getStation(row.id)
+    const station = res.data
+    Object.assign(formData, {
+      id: station.id,
+      name: station.name,
+      code: station.code,
+      address: station.address,
+      phone: station.phone,
+      latitude: station.latitude,
+      longitude: station.longitude,
+      status: station.status
+    })
+  } catch (error) {
+    console.error('加载站点详情失败', error)
+    Object.assign(formData, {
+      id: row.id,
+      name: row.name,
+      code: row.code,
+      address: row.address,
+      phone: row.phone,
+      latitude: row.latitude,
+      longitude: row.longitude,
+      status: row.status
+    })
+  }
   // 加载该站点的工作人员
   await loadStationStaffs(row.id)
 }
@@ -422,6 +492,8 @@ const submitForm = async () => {
             code: formData.code,
             address: formData.address,
             phone: formData.phone,
+            latitude: formData.latitude,
+            longitude: formData.longitude,
             status: formData.status
           })
         } else {
@@ -430,6 +502,8 @@ const submitForm = async () => {
             code: formData.code,
             address: formData.address,
             phone: formData.phone,
+            latitude: formData.latitude,
+            longitude: formData.longitude,
             status: formData.status
           })
         }
@@ -526,5 +600,46 @@ onMounted(() => {
   color: #909399;
   padding: 20px 0;
   font-size: 14px;
+}
+
+.location-panel {
+  margin-top: 4px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #f9fafb;
+}
+
+.location-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.location-panel__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.location-panel__meta {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.location-panel__address {
+  margin-bottom: 12px;
+  color: #374151;
+  line-height: 1.6;
+}
+
+.location-panel__map {
+  height: 280px;
+  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid #dbeafe;
+  background: #fff;
 }
 </style>
