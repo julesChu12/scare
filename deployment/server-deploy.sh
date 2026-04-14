@@ -57,11 +57,16 @@ else
 fi
 
 # ============================================
-# 步骤 2: 停止旧服务
+# 步骤 2: 停止旧服务并修复目录权限
 # ============================================
 log "[2/4] 停止旧服务..."
 cd "$SCRIPT_DIR"
 docker-compose -f "$COMPOSE_FILE" down --remove-orphans 2>/dev/null || true
+
+# 修复 backend/database 目录权限（Docker init 脚本可能以 root 创建）
+if [ -d "$PROJECT_ROOT/backend/database" ]; then
+    chmod -R 755 "$PROJECT_ROOT/backend/database" 2>/dev/null || true
+fi
 
 # ============================================
 # 步骤 3: 构建并启动服务
@@ -87,7 +92,7 @@ done
 
 if [ "$READY" = false ]; then
     warn "后端健康检查超时，查看日志："
-    docker-compose -f "$COMPOSE_FILE" logs --tail=20 backend
+    docker-compose -f "$COMPOSE_FILE" logs --tail=50 backend
     exit 1
 fi
 
