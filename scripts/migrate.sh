@@ -9,8 +9,7 @@ set -euo pipefail
 # 配置
 MYSQL_HOST="${DB_HOST:-localhost}"
 MYSQL_PORT="${DB_PORT:-3306}"
-MYSQL_USER="${DB_USER:-scare_user}"
-MYSQL_PASS="${DB_PASSWORD:-scare_pass}"
+MYSQL_ROOT_PASS="${DB_ROOT_PASSWORD:-}"
 MYSQL_DB="${DB_NAME:-scare_db}"
 
 # 脚本位于 /scripts/migrate.sh，迁移文件位于 /backend/database/migrations/
@@ -21,7 +20,8 @@ if [ -d "$SCRIPT_DIR/../backend/database/migrations" ]; then
 else
     MIGRATIONS_DIR="$SCRIPT_DIR/database/migrations"
 fi
-MYSQL_CMD="docker exec scare_mysql mysql -u $MYSQL_USER -p$MYSQL_PASS $MYSQL_DB --default-character-set=utf8mb4"
+MYSQL_CMD_ROOT="docker exec scare_mysql mysql -u root -p${MYSQL_ROOT_PASS} --default-character-set=utf8mb4"
+MYSQL_CMD_DB="docker exec scare_mysql mysql -u root -p${MYSQL_ROOT_PASS} $MYSQL_DB --default-character-set=utf8mb4"
 
 # 颜色
 RED='\033[0;31m'
@@ -37,7 +37,8 @@ log_skip()  { echo -e "${BLUE}[SKIP]${NC} $1"; }
 
 # 检查是否在容器内运行
 if [ -f /.dockerenv ] || grep -q docker /proc/1/cgroup 2>/dev/null; then
-    MYSQL_CMD="mysql -u $MYSQL_USER -p$MYSQL_PASS $MYSQL_DB --default-character-set=utf8mb4"
+    MYSQL_CMD_ROOT="mysql -u root -p${MYSQL_ROOT_PASS} --default-character-set=utf8mb4"
+    MYSQL_CMD_DB="mysql -u root -p${MYSQL_ROOT_PASS} $MYSQL_DB --default-character-set=utf8mb4"
 fi
 
 log_info "===== sCare 数据库迁移 ====="
@@ -51,7 +52,7 @@ fi
 
 # 创建迁移记录表
 log_info "初始化迁移记录表..."
-$MYSQL_CMD -e "
+$MYSQL_CMD_DB -e "
 CREATE TABLE IF NOT EXISTS \`_migrations\` (
     \`id\` INT AUTO_INCREMENT PRIMARY KEY,
     \`name\` VARCHAR(255) NOT NULL UNIQUE,
@@ -59,13 +60,13 @@ CREATE TABLE IF NOT EXISTS \`_migrations\` (
     \`checksum\` VARCHAR(64) DEFAULT NULL,
     INDEX \`idx_migrations_name\` (\`name\`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-" 2>/dev/null || {
-    log_error "无法连接数据库"
+" 2>&1 | grep -v "already exists" || {
+    log_error "无法连接数据库: $( $MYSQL_CMD_DB -e "SELECT 1" 2>&1 | head -1 )"
     exit 1
 }
 
 # 获取已执行的迁移
-EXECUTED=$($MYSQL_CMD -N -e "SELECT name FROM \`_migrations\`;" 2>/dev/null | sort)
+EXECUTED=$($MYSQL_CMD_DB -N -e "SELECT name FROM \`_migrations\`;" 2>/dev/null | sort)
 
 # 遍历迁移文件
 MIGRATED=0
@@ -87,9 +88,9 @@ for file in $(ls "$MIGRATIONS_DIR"/*.sql 2>/dev/null | sort); do
     echo "-------------------------------------------"
 
     # 执行迁移
-    if $MYSQL_CMD < "$file"; then
+    if $MYSQL_CMD_DB < "$file"; then
         # 记录迁移
-        $MYSQL_CMD -e "INSERT INTO \`_migrations\` (\`name\`) VALUES ('$filename');" 2>/dev/null || true
+        $MYSQL_CMD_DB -e "INSERT INTO \`_migrations\` (\`name\`) VALUES ('$filename');" 2>/dev/null || true
         log_info "✓ $filename 执行成功"
         ((MIGRATED++))
     else
