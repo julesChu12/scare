@@ -239,7 +239,7 @@ const goBack = () => {
 
 const parseSourceStationId = () => {
   const raw = route.query.source_station_id
-  const parsed = parseInt(Array.isArray(raw) ? raw[0] : raw || '', 10)
+  const parsed = parseInt(Array.isArray(raw) ? (raw[0] ?? '') : (raw ?? ''), 10)
   sourceStationId.value = Number.isFinite(parsed) && parsed > 0 ? parsed : null
 }
 
