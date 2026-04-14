@@ -275,3 +275,97 @@ func TestAuthService_QuickStart_RequiresAddress(t *testing.T) {
 		t.Fatalf("expected ErrAddressRequired, got %v", err)
 	}
 }
+
+func TestAuthService_Register_Success(t *testing.T) {
+	authSvc, db, _ := setupAuthUnitService(t)
+
+	// 设置测试验证码
+	authSvc.smsService.SetTestCode("13900000001", "123456")
+
+	// 注册新用户
+	result, err := authSvc.Register(RegisterInput{
+		Phone:    "13900000001",
+		Code:     "123456",
+		Password: "Test@123",
+		Name:     "测试用户",
+	})
+	if err != nil {
+		t.Fatalf("Register failed: %v", err)
+	}
+	if result.User == nil {
+		t.Fatal("expected user to be returned")
+	}
+	if result.User.Phone != "13900000001" {
+		t.Fatalf("expected phone 13900000001, got %s", result.User.Phone)
+	}
+	if result.User.Name != "测试用户" {
+		t.Fatalf("expected name 测试用户, got %s", result.User.Name)
+	}
+	if result.Token == "" {
+		t.Fatal("expected token to be returned")
+	}
+	if result.RefreshToken == "" {
+		t.Fatal("expected refresh token to be returned")
+	}
+
+	// 验证用户和身份已创建
+	var user model.User
+	if err := db.Where("phone = ?", "13900000001").First(&user).Error; err != nil {
+		t.Fatalf("user not found in db: %v", err)
+	}
+
+	var identity model.UserIdentity
+	if err := db.Where("user_id = ? AND identity_type = ?", user.ID, consts.IdentityElderly).First(&identity).Error; err != nil {
+		t.Fatalf("elderly identity not found: %v", err)
+	}
+
+	var profile model.CustomerProfile
+	if err := db.Where("user_id = ?", user.ID).First(&profile).Error; err != nil {
+		t.Fatalf("customer profile not found: %v", err)
+	}
+}
+
+func TestAuthService_Register_DuplicatePhone(t *testing.T) {
+	authSvc, db, _ := setupAuthUnitService(t)
+
+	// 创建已存在的用户
+	existing := seedAuthUnitUser(t, db, "13900000002", "Test@123", "active", 0)
+
+	// 设置测试验证码
+	authSvc.smsService.SetTestCode("13900000002", "123456")
+
+	// 尝试注册相同手机号
+	_, err := authSvc.Register(RegisterInput{
+		Phone:    "13900000002",
+		Code:     "123456",
+		Password: "Test@123",
+		Name:     "重复用户",
+	})
+	if err == nil {
+		t.Fatal("expected error for duplicate phone")
+	}
+	if err.Error() != "该手机号已注册，请直接登录" {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	_ = existing // avoid unused variable
+}
+
+func TestAuthService_Register_InvalidCode(t *testing.T) {
+	authSvc, _, _ := setupAuthUnitService(t)
+
+	// 设置了正确验证码，但注册时使用错误验证码
+	authSvc.smsService.SetTestCode("13900000003", "123456")
+
+	_, err := authSvc.Register(RegisterInput{
+		Phone:    "13900000003",
+		Code:     "999999", // 错误验证码
+		Password: "Test@123",
+		Name:     "无效验证码",
+	})
+	if err == nil {
+		t.Fatal("expected error for invalid code")
+	}
+	if err != ErrCodeInvalid {
+		t.Fatalf("expected ErrCodeInvalid, got %v", err)
+	}
+}

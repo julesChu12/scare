@@ -314,7 +314,7 @@ async function handleCommand(command: string) {
         type: 'warning',
       })
 
-      authStore.logout()
+      await authStore.logout()
       ElMessage.success('已退出登录')
       router.push('/login')
     } catch {

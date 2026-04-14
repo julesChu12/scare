@@ -50,25 +50,6 @@
           </el-button>
         </el-form-item>
       </el-form>
-
-      <!-- 测试账号提示 -->
-      <div class="test-accounts">
-        <el-divider>测试账号</el-divider>
-        <div class="account-list">
-          <div class="account-item" @click="fillTestAccount('13800000001')">
-            <span class="label">管理员：</span>
-            <span class="value">13800000001 / Test@123</span>
-          </div>
-          <div class="account-item" @click="fillTestAccount('13800000002')">
-            <span class="label">站点管理员：</span>
-            <span class="value">13800000002 / Test@123</span>
-          </div>
-          <div class="account-item" @click="fillTestAccount('13800000004')">
-            <span class="label">工作人员：</span>
-            <span class="value">13800000004 / Test@123</span>
-          </div>
-        </div>
-      </div>
     </el-card>
   </div>
 </template>
@@ -144,14 +125,6 @@ async function handleLogin() {
     loading.value = false
   }
 }
-
-/**
- * 填充测试账号
- */
-function fillTestAccount(phone: string) {
-  form.phone = phone
-  form.password = 'Test@123'
-}
 </script>
 
 <style scoped lang="scss">
@@ -186,39 +159,6 @@ function fillTestAccount(phone: string) {
       font-size: 14px;
       color: #909399;
       margin: 0;
-    }
-  }
-
-  .test-accounts {
-    margin-top: 30px;
-
-    .el-divider {
-      margin: 20px 0;
-    }
-
-    .account-list {
-      .account-item {
-        padding: 10px;
-        border-radius: 4px;
-        cursor: pointer;
-        transition: all 0.3s;
-        font-size: 13px;
-        color: #606266;
-
-        &:hover {
-          background-color: #f5f7fa;
-        }
-
-        .label {
-          font-weight: 500;
-          color: #303133;
-        }
-
-        .value {
-          color: #409eff;
-          margin-left: 5px;
-        }
-      }
     }
   }
 }

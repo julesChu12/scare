@@ -253,3 +253,51 @@ func TestRequestService_CancelByAdmin_ListAllAndUpdateStatus(t *testing.T) {
 		t.Fatalf("unexpected ListAll payload: %+v", list[0])
 	}
 }
+
+func TestRequestService_UpdateStationID(t *testing.T) {
+	svc, db := setupRequestServiceForTest(t)
+	stationA := createTestStation(t, db, 30, 120)
+	stationB := createTestStation(t, db, 31, 121)
+
+	req, _ := createRequestWithTask(t, db, consts.RequestStatusPending, 41)
+
+	// 初始 station_id 为 1（来自 createRequestWithTask）
+	var initialStationID int64
+	if err := db.Model(&model.ServiceRequest{}).Where("id = ?", req.ID).Pluck("station_id", &initialStationID).Error; err != nil {
+		t.Fatalf("failed to get initial station_id: %v", err)
+	}
+	if initialStationID != 1 {
+		t.Fatalf("expected initial station_id=1, got %d", initialStationID)
+	}
+
+	// 更新 station_id 到 stationA
+	newStationID := stationA.ID
+	updated, err := svc.Update(req.ID, UpdateInput{
+		StationID: &newStationID,
+	})
+	if err != nil {
+		t.Fatalf("Update station_id failed: %v", err)
+	}
+	if updated.StationID != stationA.ID {
+		t.Fatalf("expected station_id=%d after update, got %d", stationA.ID, updated.StationID)
+	}
+
+	// 再次更新 station_id 到 stationB
+	newStationID = stationB.ID
+	updated2, err := svc.Update(req.ID, UpdateInput{
+		StationID: &newStationID,
+	})
+	if err != nil {
+		t.Fatalf("Update station_id to stationB failed: %v", err)
+	}
+	if updated2.StationID != stationB.ID {
+		t.Fatalf("expected station_id=%d after second update, got %d", stationB.ID, updated2.StationID)
+	}
+
+	// 已完成状态的任务不能更新 station_id
+	completedReq, _ := createRequestWithTask(t, db, consts.RequestStatusCompleted, 42)
+	_, err = svc.Update(completedReq.ID, UpdateInput{StationID: &stationA.ID})
+	if !errors.Is(err, ErrRequestConflict) {
+		t.Fatalf("expected ErrRequestConflict for completed request, got %v", err)
+	}
+}

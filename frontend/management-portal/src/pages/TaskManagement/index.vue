@@ -116,7 +116,14 @@
             {{ row.request?.address || '-' }}
           </template>
         </el-table-column>
-        
+
+        <!-- 所属站点 -->
+        <el-table-column label="所属站点" width="150">
+          <template #default="{ row }">
+            {{ getStationName(row.station_id) }}
+          </template>
+        </el-table-column>
+
         <!-- 服务人员（仅任务池需要显示） -->
          <el-table-column v-if="activeTab !== 'my'" label="服务人员" width="120">
            <template #default="{ row }">
@@ -372,10 +379,9 @@ async function submitAssign() {
 }
 
 /**
- * 加载站点列表（仅管理员）
+ * 加载站点列表
  */
 async function loadStations() {
-  if (!isSystemAdmin.value) return
   try {
     const res = await stationApi.getStations({ page: 1, page_size: 100 })
     stationList.value = res.data.items
@@ -521,6 +527,15 @@ function getStatusTag(status?: string): string {
     cancelled: 'danger'
   }
   return map[status || ''] || ''
+}
+
+/**
+ * 获取站点名称
+ */
+function getStationName(stationId?: number): string {
+  if (!stationId) return '-'
+  const station = stationList.value.find(s => s.id === stationId)
+  return station?.name || String(stationId)
 }
 
 /**

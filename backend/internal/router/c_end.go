@@ -17,6 +17,7 @@ func RegisterCEndRoutes(api *gin.RouterGroup, secured *gin.RouterGroup, deps *De
 		auth.POST("/quick-start", deps.CAuthHandler.QuickStart)
 		auth.POST("/login", deps.CAuthHandler.Login)
 		auth.POST("/refresh", deps.CAuthHandler.Refresh)
+		auth.POST("/register", deps.CAuthHandler.Register)
 	}
 
 	public := api.Group("/c")
@@ -27,6 +28,7 @@ func RegisterCEndRoutes(api *gin.RouterGroup, secured *gin.RouterGroup, deps *De
 		public.GET("/stations/:id", deps.StationHandler.GetPublic)
 		public.GET("/stations/match", deps.StationHandler.MatchStation)
 		public.POST("/stations/match", deps.StationHandler.MatchStation)
+		public.POST("/upload", deps.UploadHandler.Upload)
 		public.GET("/news", deps.NewsHandler.List)
 		public.GET("/news/:id", deps.NewsHandler.Get)
 		public.GET("/banners", deps.BannerHandler.ListForC)
@@ -56,8 +58,5 @@ func RegisterCEndRoutes(api *gin.RouterGroup, secured *gin.RouterGroup, deps *De
 		// 通知
 		cSecured.GET("/notifications", deps.NotificationHandler.List)
 		cSecured.POST("/notifications/:id/read", deps.NotificationHandler.MarkRead)
-
-		// 文件上传
-		cSecured.POST("/upload", deps.UploadHandler.Upload)
 	}
 }

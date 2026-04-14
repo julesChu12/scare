@@ -12,6 +12,7 @@ export interface ApiResponse<T = any> {
 export interface PaginationParams {
   page?: number
   page_size?: number
+  station_id?: number
 }
 
 export interface StationListParams extends PaginationParams {

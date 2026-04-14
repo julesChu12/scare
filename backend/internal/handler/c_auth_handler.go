@@ -159,6 +159,65 @@ func (h *CAuthHandler) Refresh(c *gin.Context) {
 	})
 }
 
+// Register 用户注册
+// @Summary      用户注册
+// @Description  创建新账号，完成手机号验证和密码设置
+// @Tags         c_auth
+// @Accept       json
+// @Produce      json
+// @Param        request body object{phone=string,code=string,password=string,name=string} true "注册信息"
+// @Success      200  {object} APIResponse "注册成功"
+// @Failure      400  {object} APIResponse "请求参数错误"
+// @Failure      409  {object} APIResponse "手机号已注册"
+// @Failure      500  {object} APIResponse "服务器错误"
+// @Router       /c/auth/register [post]
+func (h *CAuthHandler) Register(c *gin.Context) {
+	var req struct {
+		Phone    string `json:"phone" binding:"required"`
+		Code     string `json:"code" binding:"required"`
+		Password string `json:"password" binding:"required,min=6"`
+		Name     string `json:"name" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		RespondError(c, http.StatusBadRequest, "invalid payload")
+		return
+	}
+
+	result, err := h.authService.Register(service.RegisterInput{
+		Phone:    req.Phone,
+		Code:     req.Code,
+		Password: req.Password,
+		Name:     req.Name,
+	})
+
+	if err != nil {
+		if err.Error() == "该手机号已注册，请直接登录" {
+			RespondError(c, http.StatusConflict, err.Error())
+			return
+		}
+		if err == service.ErrCodeInvalid {
+			RespondError(c, http.StatusBadRequest, "验证码错误或已过期")
+			return
+		}
+		RespondError(c, http.StatusInternalServerError, "register failed: "+err.Error())
+		return
+	}
+
+	Respond(c, http.StatusOK, "ok", gin.H{
+		"token":         result.Token,
+		"refresh_token": result.RefreshToken,
+		"user": gin.H{
+			"id":    result.User.ID,
+			"phone": result.User.Phone,
+			"role":  "c_end",
+		},
+		"profile": gin.H{
+			"name": result.User.Name,
+		},
+	})
+}
+
 // Me 获取当前登录用户信息（C端）
 // @Summary      获取当前登录用户信息
 // @Description  获取当前C端用户的详细信息

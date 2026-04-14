@@ -54,7 +54,7 @@
     <el-dialog
       v-model="dialogVisible"
       :title="dialogType === 'add' ? '新增站点' : '编辑站点'"
-      width="700px"
+      width="800px"
       @close="resetForm"
     >
       <el-form
@@ -94,6 +94,44 @@
             <el-form-item label="地址" prop="address">
               <el-input v-model="formData.address" placeholder="请输入地址" type="textarea" :rows="2" />
             </el-form-item>
+          </el-col>
+        </el-row>
+
+        <!-- 站点工作人员（仅编辑时显示） -->
+        <el-row v-if="dialogType === 'edit'">
+          <el-col :span="24">
+            <div class="staff-section">
+              <div class="staff-title">站点工作人员</div>
+              <el-table :data="stationStaffs" v-loading="staffLoading" stripe size="small">
+                <el-table-column prop="name" label="姓名" width="100" />
+                <el-table-column prop="phone" label="手机号" width="140" />
+                <el-table-column label="B端角色" min-width="120">
+                  <template #default="{ row }">
+                    <template v-if="row.b_end_identities?.length">
+                      <el-tag
+                        v-for="identity in row.b_end_identities"
+                        :key="identity"
+                        size="small"
+                        style="margin-right: 4px"
+                      >
+                        {{ getIdentityName(identity) }}
+                      </el-tag>
+                    </template>
+                    <span v-else>-</span>
+                  </template>
+                </el-table-column>
+                <el-table-column label="状态" width="80">
+                  <template #default="{ row }">
+                    <el-tag :type="row.status === 'active' ? 'success' : 'info'" size="small">
+                      {{ row.status === 'active' ? '正常' : '停用' }}
+                    </el-tag>
+                  </template>
+                </el-table-column>
+              </el-table>
+              <div v-if="!staffLoading && stationStaffs.length === 0" class="staff-empty">
+                暂无工作人员
+              </div>
+            </div>
           </el-col>
         </el-row>
       </el-form>
@@ -139,10 +177,10 @@ import { computed, ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import QRCode from 'qrcode'
-import { stationApi } from '@/api'
+import { stationApi, userApi } from '@/api'
 import { PERM_STATION_CREATE, PERM_STATION_DELETE, PERM_STATION_UPDATE } from '@/constants/permissions'
 import { useAuthStore } from '@/store/modules/auth'
-import type { Station } from '@/types/api'
+import type { Station, User } from '@/types/api'
 
 // 数据
 const authStore = useAuthStore()
@@ -177,6 +215,37 @@ const qrLoading = ref(false)
 const qrStationName = ref('')
 const qrCodeUrl = ref('')
 const qrCodeDataUrl = ref('')
+
+// 站点工作人员
+const stationStaffs = ref<User[]>([])
+const staffLoading = ref(false)
+
+// 身份名称映射
+const identityMap: Record<string, string> = {
+  admin: '系统管理员',
+  station_manager: '站点管理员',
+  staff: '工作人员',
+}
+
+function getIdentityName(identity: string) {
+  return identityMap[identity] || identity
+}
+
+// 加载站点工作人员
+async function loadStationStaffs(stationId: number) {
+  staffLoading.value = true
+  try {
+    const res = await userApi.getUsers({ station_id: stationId, page: 1, page_size: 100 })
+    if (res.msg === 'ok') {
+      stationStaffs.value = res.data.items || []
+    }
+  } catch (error) {
+    console.error('加载站点工作人员失败', error)
+    stationStaffs.value = []
+  } finally {
+    staffLoading.value = false
+  }
+}
 
 const rules: FormRules = {
   name: [{ required: true, message: '请输入站点名称', trigger: 'blur' }],
@@ -261,9 +330,10 @@ const handleAdd = () => {
   formData.address = ''
   formData.phone = ''
   formData.status = 'active'
+  stationStaffs.value = []
 }
 
-const handleEdit = (row: Station) => {
+const handleEdit = async (row: Station) => {
   dialogType.value = 'edit'
   dialogVisible.value = true
   Object.assign(formData, {
@@ -274,6 +344,8 @@ const handleEdit = (row: Station) => {
     phone: row.phone,
     status: row.status
   })
+  // 加载该站点的工作人员
+  await loadStationStaffs(row.id)
 }
 
 const handleDelete = (row: Station) => {
@@ -434,5 +506,25 @@ onMounted(() => {
   width: 320px;
   height: 320px;
   object-fit: contain;
+}
+
+.staff-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.staff-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #606266;
+  margin-bottom: 12px;
+}
+
+.staff-empty {
+  text-align: center;
+  color: #909399;
+  padding: 20px 0;
+  font-size: 14px;
 }
 </style>

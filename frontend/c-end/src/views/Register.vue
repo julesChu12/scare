@@ -1,28 +1,16 @@
 <template>
-  <div class="login-container">
-    <div class="login-card">
-      <h1>霍营街道服务站</h1>
-
-      <!-- 登录方式切换 -->
-      <div class="login-tabs">
-        <div
-          class="tab-item"
-          :class="{ active: loginType === 'code' }"
-          @click="loginType = 'code'"
-        >
-          验证码登录
-        </div>
-        <div
-          class="tab-item"
-          :class="{ active: loginType === 'password' }"
-          @click="loginType = 'password'"
-        >
-          密码登录
-        </div>
+  <div class="register-container">
+    <div class="register-card">
+      <div class="header">
+        <el-button class="back-btn" circle @click="goBack">
+          <el-icon><ArrowLeft /></el-icon>
+        </el-button>
+        <h1>注册账号</h1>
+        <div class="placeholder"></div>
       </div>
 
-      <el-form :model="form" :rules="currentRules" ref="formRef" label-width="0">
-        <el-form-item prop="phone">
+      <el-form :model="form" :rules="rules" ref="formRef" label-position="top" class="register-form">
+        <el-form-item label="手机号" prop="phone">
           <el-input
             v-model="form.phone"
             placeholder="请输入手机号"
@@ -35,8 +23,7 @@
           </el-input>
         </el-form-item>
 
-        <!-- 验证码登录 -->
-        <el-form-item prop="code" v-if="loginType === 'code'">
+        <el-form-item label="验证码" prop="code">
           <div class="code-input-group">
             <el-input
               v-model="form.code"
@@ -54,12 +41,11 @@
           </div>
         </el-form-item>
 
-        <!-- 密码登录 -->
-        <el-form-item prop="password" v-else>
+        <el-form-item label="密码" prop="password">
           <el-input
             v-model="form.password"
             type="password"
-            placeholder="请输入密码"
+            placeholder="请设置密码（至少6位）"
             size="large"
             show-password
           >
@@ -69,56 +55,87 @@
           </el-input>
         </el-form-item>
 
+        <el-form-item label="确认密码" prop="confirmPassword">
+          <el-input
+            v-model="form.confirmPassword"
+            type="password"
+            placeholder="请再次输入密码"
+            size="large"
+            show-password
+          >
+            <template #prefix>
+              <el-icon><Lock /></el-icon>
+            </template>
+          </el-input>
+        </el-form-item>
+
+        <el-form-item label="姓名" prop="name">
+          <el-input
+            v-model="form.name"
+            placeholder="请输入您的姓名"
+            size="large"
+          >
+            <template #prefix>
+              <el-icon><User /></el-icon>
+            </template>
+          </el-input>
+        </el-form-item>
+
         <el-form-item>
           <el-button
             type="primary"
-            @click="handleLogin"
+            @click="handleRegister"
             :loading="loading"
             size="large"
-            style="width: 100%"
+            style="width: 100%; margin-top: 8px;"
           >
-            登录
+            注册
           </el-button>
         </el-form-item>
       </el-form>
 
       <div class="tips">
-        <p>首次使用？<router-link to="/register">立即注册</router-link></p>
-      </div>
-      <div class="tips" style="margin-top: 12px;">
-        <router-link to="/home">返回首页</router-link>
+        <p>已有账号？<router-link to="/login">立即登录</router-link></p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Phone, Message, Lock } from '@element-plus/icons-vue'
+import { ArrowLeft, Phone, Message, Lock, User } from '@element-plus/icons-vue'
 import type { FormInstance } from 'element-plus'
 import { authAPI } from '@/api'
 import { useTokenStore, useUserStore } from '@/store'
 
 const router = useRouter()
-const route = useRoute()
 const tokenStore = useTokenStore()
 const userStore = useUserStore()
 
 const formRef = ref<FormInstance>()
 const loading = ref(false)
 const countdown = ref(0)
-const loginType = ref<'code' | 'password'>('code') // 默认验证码登录
 
 const form = reactive({
   phone: '',
   code: '',
-  password: ''
+  password: '',
+  confirmPassword: '',
+  name: ''
 })
 
-// 验证码登录规则
-const codeRules = {
+// 表单验证规则
+const validateConfirmPassword = (_rule: any, value: string, callback: any) => {
+  if (value !== form.password) {
+    callback(new Error('两次输入的密码不一致'))
+  } else {
+    callback()
+  }
+}
+
+const rules = {
   phone: [
     { required: true, message: '请输入手机号', trigger: 'blur' },
     { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' }
@@ -126,22 +143,24 @@ const codeRules = {
   code: [
     { required: true, message: '请输入验证码', trigger: 'blur' },
     { pattern: /^\d{6}$/, message: '验证码为6位数字', trigger: 'blur' }
-  ]
-}
-
-// 密码登录规则
-const passwordRules = {
-  phone: [
-    { required: true, message: '请输入手机号', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' }
   ],
   password: [
-    { required: true, message: '请输入密码', trigger: 'blur' }
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, message: '密码至少6位', trigger: 'blur' }
+  ],
+  confirmPassword: [
+    { required: true, message: '请再次输入密码', trigger: 'blur' },
+    { validator: validateConfirmPassword, trigger: 'blur' }
+  ],
+  name: [
+    { required: true, message: '请输入姓名', trigger: 'blur' }
   ]
 }
 
-// 当前验证规则
-const currentRules = computed(() => loginType.value === 'code' ? codeRules : passwordRules)
+// 返回上一页
+const goBack = () => {
+  router.back()
+}
 
 // 发送验证码
 const sendCode = async () => {
@@ -172,7 +191,8 @@ const sendCode = async () => {
   }
 }
 
-const handleLogin = async () => {
+// 注册
+const handleRegister = async () => {
   if (!formRef.value) return
 
   await formRef.value.validate(async (valid) => {
@@ -180,41 +200,28 @@ const handleLogin = async () => {
 
     loading.value = true
     try {
-      const result = await authAPI.login({
+      const result = await authAPI.register({
         phone: form.phone,
-        password: loginType.value === 'password' ? form.password : undefined,
-        code: loginType.value === 'code' ? form.code : undefined,
-        type: loginType.value
+        code: form.code,
+        password: form.password,
+        name: form.name
       })
 
+      // 保存 Token 和用户信息
       tokenStore.setToken(result.token)
       tokenStore.setRefreshToken(result.refresh_token)
+      userStore.setUser(result.user)
+      userStore.setProfile(result.profile)
 
-      // Minimal user info from login response
-      userStore.setUser({
-        id: result.user_id,
-        phone: result.phone,
-        role: 'c_end'
-      })
-
-      // Fetch profile for prefill (id_number/address/user_type)
-      try {
-        const check = await authAPI.checkToken()
-        userStore.setUser(check.user)
-        if (check.profile) {
-          userStore.setProfile(check.profile)
-        }
-      } catch (e) {
-        // ignore: profile may be missing
+      ElMessage.success('注册成功！')
+      router.replace('/home')
+    } catch (error: any) {
+      if (error?.response?.data?.msg) {
+        ElMessage.error(error.response.data.msg)
+      } else {
+        ElMessage.error('注册失败')
       }
-
-      ElMessage.success('登录成功')
-
-      // 跳转到原目标页面或首页
-      const redirect = route.query.redirect as string || '/home'
-      router.replace(redirect)
-    } catch (error) {
-      console.error('登录失败:', error)
+      console.error('注册失败:', error)
     } finally {
       loading.value = false
     }
@@ -223,57 +230,58 @@ const handleLogin = async () => {
 </script>
 
 <style scoped>
-.login-container {
+.register-container {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   padding: 20px;
 }
 
-.login-card {
+.register-card {
   width: 100%;
   max-width: 400px;
   background: white;
   border-radius: 16px;
-  padding: 40px;
+  padding: 24px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
 }
 
-.login-card h1 {
-  text-align: center;
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.header h1 {
   font-size: var(--font-size-title, 20px);
   font-weight: bold;
-  margin-bottom: 24px;
+  margin: 0;
   color: var(--text-color-primary, #303133);
 }
 
-.login-tabs {
-  display: flex;
-  margin-bottom: 24px;
-  border-bottom: 1px solid #eee;
+.back-btn {
+  background: rgba(102, 126, 234, 0.1);
+  border: none;
+  color: #667eea;
 }
 
-.tab-item {
-  flex: 1;
-  text-align: center;
-  padding: 12px 0;
-  cursor: pointer;
-  color: var(--text-color-secondary, #909399);
+.placeholder {
+  width: 32px;
+}
+
+.register-form :deep(.el-form-item__label) {
+  font-size: var(--font-size-sm, 14px);
+  color: var(--text-color-primary, #303133);
+  font-weight: 500;
+  padding-bottom: 4px !important;
+}
+
+.register-form :deep(.el-input__inner) {
   font-size: var(--font-size-base, 16px);
-  transition: color 0.3s, border-color 0.3s;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
-}
-
-.tab-item.active {
-  color: var(--color-primary, #409EFF);
-  border-bottom-color: var(--color-primary, #409EFF);
-}
-
-.tab-item:hover {
-  color: var(--color-primary, #409EFF);
 }
 
 .code-input-group {
@@ -290,7 +298,7 @@ const handleLogin = async () => {
   text-align: center;
   margin-top: 20px;
   color: var(--text-color-secondary, #909399);
-  font-size: var(--font-size-base, 16px);
+  font-size: var(--font-size-sm, 14px);
 }
 
 .tips a {

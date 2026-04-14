@@ -247,6 +247,118 @@ func (s *AuthService) Refresh(refreshToken string) (*Tokens, error) {
 	return &Tokens{AccessToken: access, RefreshToken: refresh}, nil
 }
 
+// RegisterInput 注册输入参数
+type RegisterInput struct {
+	Phone    string
+	Code     string
+	Password string
+	Name     string
+}
+
+// RegisterResult 注册结果
+type RegisterResult struct {
+	Token        string
+	RefreshToken string
+	User         *model.User
+	Profile      *model.CustomerProfile
+}
+
+// Register 用户注册（创建 User + CustomerProfile + ElderlyIdentity）
+func (s *AuthService) Register(input RegisterInput) (*RegisterResult, error) {
+	if err := s.smsService.VerifyCode(input.Phone, input.Code); err != nil {
+		return nil, err
+	}
+
+	// 检查用户是否已存在
+	existingUser, err := s.userRepo.GetByPhone(input.Phone)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+	if existingUser != nil {
+		return nil, errors.New("该手机号已注册，请直接登录")
+	}
+
+	// 密码哈希
+	hashedPassword, err := HashPassword(input.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	var user *model.User
+	var profile *model.CustomerProfile
+
+	err = s.db.Transaction(func(tx *gorm.DB) error {
+		userRepoTx := repository.NewUserRepository(tx)
+		customerRepoTx := repository.NewCustomerRepository(tx)
+		identityRepoTx := repository.NewUserIdentityRepository(tx)
+
+		// 创建用户
+		newUser := &model.User{
+			Phone:         input.Phone,
+			Name:          input.Name,
+			PasswordHash:  hashedPassword,
+			Status:        "active",
+		}
+		if err := userRepoTx.Create(newUser); err != nil {
+			return err
+		}
+		user = newUser
+
+		// 创建 elderly 身份
+		identity := &model.UserIdentity{
+			UserID:       user.ID,
+			IdentityType: consts.IdentityElderly,
+			IsPrimary:    true,
+			Status:       "active",
+			GrantedAt:    time.Now(),
+		}
+		if err := identityRepoTx.Create(identity); err != nil {
+			return err
+		}
+
+		// 创建空的客户档案
+		newProfile := &model.CustomerProfile{
+			UserID:           user.ID,
+			EmergencyContact: `{}`,
+		}
+		if err := customerRepoTx.Create(newProfile); err != nil {
+			return err
+		}
+		profile = newProfile
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	// 生成 Token
+	identities, _ := s.identityRepo.GetCEndIdentities(user.ID)
+	var identityTypes []string
+	var primary string
+	if len(identities) > 0 {
+		identityTypes = GetIdentityTypes(identities)
+		primary = identityTypes[0]
+	}
+
+	access, err := s.jwtManager.GenerateToken(user.ID, "c_end", 0, identityTypes, primary)
+	if err != nil {
+		return nil, err
+	}
+	refresh, err := s.jwtManager.GenerateRefreshToken(user.ID, "c_end", 0, identityTypes, primary)
+	if err != nil {
+		return nil, err
+	}
+
+	return &RegisterResult{
+		Token:        access,
+		RefreshToken: refresh,
+		User:         user,
+		Profile:      profile,
+	}, nil
+}
+
 // QuickStartInput 快速开通的输入参数
 type QuickStartInput struct {
 	Phone            string

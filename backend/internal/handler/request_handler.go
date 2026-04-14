@@ -276,6 +276,7 @@ type updateRequestBody struct {
 	Address      string `json:"address"`
 	Description  string `json:"description"`
 	Urgency      string `json:"urgency"`
+	StationID   *int64 `json:"station_id"`
 }
 
 // Update B端编辑服务请求
@@ -313,6 +314,7 @@ func (h *RequestHandler) Update(c *gin.Context) {
 		Address:      req.Address,
 		Description:  req.Description,
 		Urgency:      req.Urgency,
+		StationID:    req.StationID,
 	})
 	if err != nil {
 		switch err {

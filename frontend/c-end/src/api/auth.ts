@@ -86,6 +86,26 @@ export interface RefreshResponse {
   refresh_token: string
 }
 
+export interface RegisterRequest {
+  phone: string
+  code: string
+  password: string
+  name: string
+}
+
+export interface RegisterResponse {
+  token: string
+  refresh_token: string
+  user: {
+    id: number
+    phone: string
+    role: string
+  }
+  profile: {
+    name: string
+  }
+}
+
 export interface CheckTokenResponse {
   user: {
     id: number
@@ -129,6 +149,11 @@ export const authAPI = {
   // 刷新 Token
   refresh: (data: RefreshRequest) => {
     return client.post<any, RefreshResponse>('/c/auth/refresh', data)
+  },
+
+  // 注册
+  register: (data: RegisterRequest) => {
+    return client.post<any, RegisterResponse>('/c/auth/register', data)
   },
 
   // 检查 Token 状态（用于预填充）

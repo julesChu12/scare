@@ -185,7 +185,7 @@ func NewDeps(db *database.DB, rdb *redis.Client, cfg *config.Config) (*Deps, err
 	d.RequestHandler = handler.NewRequestHandler(d.RequestService)
 	d.TaskHandler = handler.NewTaskHandler(d.TaskService)
 	d.NotificationHandler = handler.NewNotificationHandler(d.NotificationService)
-	d.UploadHandler = handler.NewUploadHandler(d.StorageService)
+	d.UploadHandler = handler.NewUploadHandler(d.StorageService, d.Redis)
 	d.UserHandler = handler.NewUserHandler(d.UserService, cfg.JWT.Secret, cfg.Security.IDCardEncryptKey)
 	d.LogoutHandler = handler.NewLogoutHandler(d.BlacklistService)
 	d.PermissionHandler = handler.NewPermissionHandler(d.PermissionService)

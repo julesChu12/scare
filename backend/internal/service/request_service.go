@@ -194,6 +194,7 @@ type UpdateInput struct {
 	Address      string `json:"address"`
 	Description  string `json:"description"`
 	Urgency      string `json:"urgency"`
+	StationID   *int64 `json:"station_id"`
 }
 
 // Update B端编辑服务请求（仅 pending/dispatched 状态可编辑）
@@ -229,6 +230,9 @@ func (s *RequestService) Update(id int64, input UpdateInput) (*model.ServiceRequ
 	}
 	if input.Urgency != "" {
 		updates["urgency"] = input.Urgency
+	}
+	if input.StationID != nil {
+		updates["station_id"] = *input.StationID
 	}
 
 	if len(updates) == 0 {

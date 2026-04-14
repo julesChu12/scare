@@ -244,6 +244,22 @@
             <el-form-item label="头像">
               <image-upload v-model="editForm.avatar" :limit="1" />
             </el-form-item>
+            <!-- 所属站点：仅B端用户可编辑 -->
+            <el-form-item v-if="hasBEndIdentity" label="所属站点" prop="station_id">
+              <el-select
+                v-model="editForm.station_id"
+                placeholder="请选择站点"
+                clearable
+                style="width: 100%"
+              >
+                <el-option
+                  v-for="station in stations"
+                  :key="station.id"
+                  :label="station.name"
+                  :value="station.id"
+                />
+              </el-select>
+            </el-form-item>
           </el-col>
         </el-row>
       </el-form>
@@ -304,7 +320,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, computed, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import { Plus, Search } from "@element-plus/icons-vue";
 import ImageUpload from "@/components/ImageUpload.vue";
@@ -373,6 +389,7 @@ interface EditForm {
   birth_date: string;
   id_card: string;
   status: "active" | "inactive";
+  station_id: number | null;
 }
 
 const editForm = reactive<EditForm>({
@@ -382,6 +399,13 @@ const editForm = reactive<EditForm>({
   birth_date: "",
   id_card: "",
   status: "active",
+  station_id: null,
+});
+
+// 当前编辑用户是否有B端身份
+const editingUser = ref<User | null>(null);
+const hasBEndIdentity = computed(() => {
+  return editingUser.value?.b_end_identities && editingUser.value.b_end_identities.length > 0;
 });
 
 const editRules: FormRules = {
@@ -470,6 +494,7 @@ function showCreateDialog() {
 
 // 显示编辑对话框
 function showEditDialog(user: User) {
+  editingUser.value = user;
   editUserId.value = user.id;
   editForm.name = user.name;
   editForm.avatar = user.avatar ? [user.avatar] : [];
@@ -477,6 +502,7 @@ function showEditDialog(user: User) {
   editForm.birth_date = user.birth_date || "";
   editForm.id_card = user.id_card || "";
   editForm.status = user.status as "active" | "inactive";
+  editForm.station_id = user.station_id || null;
   editDialogVisible.value = true;
 }
 
@@ -524,6 +550,7 @@ async function submitEdit() {
         birth_date: editForm.birth_date,
         id_card: editForm.id_card,
         status: editForm.status,
+        station_id: hasBEndIdentity.value ? (editForm.station_id || undefined) : undefined,
       });
       ElMessage.success("更新成功");
       editDialogVisible.value = false;

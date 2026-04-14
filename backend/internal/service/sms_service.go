@@ -38,6 +38,13 @@ func NewSMSService(rdb *redis.Client, env string) *SMSService {
 	return svc
 }
 
+// SetTestCode 设置测试验证码（仅用于单元测试，fallback 模式下直接存储验证码）
+func (s *SMSService) SetTestCode(phone, code string) {
+	if s.fallback != nil {
+		s.fallback.set("sms_code:"+phone, code, 300*time.Second)
+	}
+}
+
 // SendCode 发送验证码
 func (s *SMSService) SendCode(phone string) error {
 	// 1. 检查频率限制

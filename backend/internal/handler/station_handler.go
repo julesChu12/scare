@@ -284,13 +284,12 @@ func (h *StationHandler) List(c *gin.Context) {
 // @Router       /c/stations/match [get]
 func (h *StationHandler) MatchStation(c *gin.Context) {
 	var req matchStationRequest
-	// 尝试从查询参数绑定
-	if err := c.ShouldBindQuery(&req); err != nil {
-		// 如果查询参数失败，尝试从 JSON body 绑定
-		if err := c.ShouldBindJSON(&req); err != nil {
-			// 允许空请求
-			req = matchStationRequest{}
-		}
+
+	// 根据请求方法选择绑定方式，避免 GET/POST 参数混淆
+	if c.Request.Method == "GET" {
+		c.ShouldBindQuery(&req)
+	} else {
+		c.ShouldBindJSON(&req)
 	}
 
 	// 从 JWT 中获取用户ID（如果已登录）
