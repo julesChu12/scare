@@ -165,7 +165,7 @@ func TestCAuthHandler_QuickStart_RequiresAddressOrLocation(t *testing.T) {
 		t.Fatalf("expected 400, got %d", w.Code)
 	}
 	resp := decodeResponseMap(t, w)
-	if resp["msg"] != "无法确定服务地点，请完善服务地址或确认当前位置" {
+	if resp["msg"] != "服务地址不能为空" {
 		t.Fatalf("unexpected message: %v", resp["msg"])
 	}
 }

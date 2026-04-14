@@ -2,17 +2,21 @@ package service
 
 import (
 	"errors"
+	"strings"
 
 	"community-elderly-care-platform/internal/repository"
 )
 
 const (
-	DispatchBasisServiceGeofence       = "service_geofence"
-	DispatchBasisServiceNearest        = "service_nearest"
-	DispatchBasisSourceStationFallback = "source_station_fallback"
+	DispatchBasisServiceGeofence     = "service_geofence"
+	DispatchBasisServiceNearest      = "service_nearest"
+	DispatchBasisAddressManualReview = "service_address_manual_review"
 )
 
-var ErrServiceLocationRequired = errors.New("service location required")
+var (
+	ErrServiceLocationRequired = errors.New("service location required")
+	ErrAddressRequired         = errors.New("address required")
+)
 
 type DispatchInput struct {
 	Address          string
@@ -36,8 +40,9 @@ type DispatchDecision struct {
 }
 
 func resolveDispatch(input DispatchInput, stationRepo *repository.StationRepository, geofenceSvc *GeofenceService, geocodeSvc *GeocodeService) (*DispatchDecision, error) {
+	address := strings.TrimSpace(input.Address)
 	decision := &DispatchDecision{
-		ResolvedAddress: input.Address,
+		ResolvedAddress: address,
 	}
 
 	if err := assignCoordinatePair(input.SubmitLatitude, input.SubmitLongitude, &decision.SubmitLatitude, &decision.SubmitLongitude); err != nil {
@@ -50,17 +55,15 @@ func resolveDispatch(input DispatchInput, stationRepo *repository.StationReposit
 	}
 	decision.SourceStationID = validSourceStationID
 
-	if err := assignCoordinatePair(input.ServiceLatitude, input.ServiceLongitude, &decision.ServiceLatitude, &decision.ServiceLongitude); err != nil {
-		return nil, err
+	if address == "" {
+		return nil, ErrAddressRequired
 	}
 
-	hasServiceLocation := decision.ServiceLatitude != 0 && decision.ServiceLongitude != 0
-	if !hasServiceLocation && input.Address != "" && geocodeSvc != nil {
-		geo, geoErr := geocodeSvc.Geocode(input.Address)
+	if geocodeSvc != nil {
+		geo, geoErr := geocodeSvc.Geocode(address)
 		if geoErr == nil && validCoordinate(geo.Latitude, geo.Longitude) {
 			decision.ServiceLatitude = geo.Latitude
 			decision.ServiceLongitude = geo.Longitude
-			hasServiceLocation = true
 			if geo.FormattedAddress != "" {
 				decision.ResolvedAddress = geo.FormattedAddress
 			}
@@ -69,6 +72,7 @@ func resolveDispatch(input DispatchInput, stationRepo *repository.StationReposit
 		}
 	}
 
+	hasServiceLocation := decision.ServiceLatitude != 0 && decision.ServiceLongitude != 0
 	if hasServiceLocation {
 		stationID, matched, matchErr := resolveAssignedStation(decision.ServiceLatitude, decision.ServiceLongitude, stationRepo, geofenceSvc)
 		if matchErr != nil {
@@ -84,14 +88,9 @@ func resolveDispatch(input DispatchInput, stationRepo *repository.StationReposit
 		return decision, nil
 	}
 
-	if decision.SourceStationID > 0 {
-		decision.AssignedStationID = decision.SourceStationID
-		decision.DispatchBasis = DispatchBasisSourceStationFallback
-		decision.NeedsManualVerify = true
-		return decision, nil
-	}
-
-	return nil, ErrServiceLocationRequired
+	decision.DispatchBasis = DispatchBasisAddressManualReview
+	decision.NeedsManualVerify = true
+	return decision, nil
 }
 
 func assignCoordinatePair(lat, lng *float64, outLat, outLng *float64) error {

@@ -11,7 +11,8 @@ import (
 
 func TestRequestService_Create_InvalidAndIdempotentBranches(t *testing.T) {
 	svc, db := setupRequestServiceForTest(t)
-	createTestStation(t, db, 30, 120)
+	svc.geocodeSvc = NewGeocodeService("")
+	createTestStation(t, db, 39.908823, 116.397470)
 
 	if _, _, err := svc.Create(RequestInput{UserID: 0, ServiceType: consts.ServiceTypeMeal}); !errors.Is(err, ErrInvalidRequest) {
 		t.Fatalf("expected ErrInvalidRequest for missing user, got %v", err)
@@ -19,15 +20,14 @@ func TestRequestService_Create_InvalidAndIdempotentBranches(t *testing.T) {
 	if _, _, err := svc.Create(RequestInput{UserID: 1, ServiceType: "unknown"}); !errors.Is(err, ErrInvalidRequest) {
 		t.Fatalf("expected ErrInvalidRequest for invalid service type, got %v", err)
 	}
+	if _, _, err := svc.Create(RequestInput{UserID: 1, ServiceType: consts.ServiceTypeMeal, Address: " "}); !errors.Is(err, ErrAddressRequired) {
+		t.Fatalf("expected ErrAddressRequired for blank address, got %v", err)
+	}
 
-	lat := 30.0
-	lng := 120.0
 	createdReq, created, err := svc.Create(RequestInput{
 		UserID:       1,
 		RequestNo:    "REQ-IDEMPOTENT-1",
 		ServiceType:  consts.ServiceTypeMeal,
-		ServiceLat:   &lat,
-		ServiceLng:   &lng,
 		ContactName:  "测试人",
 		ContactPhone: "13800138002",
 		Address:      "测试地址",
@@ -43,8 +43,6 @@ func TestRequestService_Create_InvalidAndIdempotentBranches(t *testing.T) {
 		UserID:       1,
 		RequestNo:    "REQ-IDEMPOTENT-1",
 		ServiceType:  consts.ServiceTypeMeal,
-		ServiceLat:   &lat,
-		ServiceLng:   &lng,
 		ContactName:  "测试人",
 		ContactPhone: "13800138002",
 		Address:      "测试地址",
@@ -63,8 +61,6 @@ func TestRequestService_Create_InvalidAndIdempotentBranches(t *testing.T) {
 		UserID:       2,
 		RequestNo:    "REQ-IDEMPOTENT-1",
 		ServiceType:  consts.ServiceTypeMeal,
-		ServiceLat:   &lat,
-		ServiceLng:   &lng,
 		ContactName:  "冲突用户",
 		ContactPhone: "13800138003",
 		Address:      "测试地址",
@@ -97,6 +93,44 @@ func TestRequestService_Create_UsesGeocodeAddressWhenCoordinatesMissing(t *testi
 	}
 	if req.ServiceLocationLat != 39.908823 || req.ServiceLocationLng != 116.397470 {
 		t.Fatalf("unexpected service coordinates: (%f, %f)", req.ServiceLocationLat, req.ServiceLocationLng)
+	}
+}
+
+func TestRequestService_Create_ManualReviewWhenAddressCannotBeResolved(t *testing.T) {
+	svc, db := setupRequestServiceForTest(t)
+	sourceStation := createTestStation(t, db, 39.9, 116.3)
+	sourceStationID := sourceStation.ID
+
+	req, created, err := svc.Create(RequestInput{
+		UserID:          12,
+		ServiceType:     consts.ServiceTypeMedical,
+		Address:         "无法解析的地址",
+		SourceStationID: &sourceStationID,
+		ContactName:     "人工复核用户",
+		ContactPhone:    "13800138006",
+	})
+	if err != nil {
+		t.Fatalf("Create returned error: %v", err)
+	}
+	if !created {
+		t.Fatalf("expected created=true")
+	}
+	if req.Status != consts.RequestStatusPending {
+		t.Fatalf("expected pending status, got %s", req.Status)
+	}
+	if req.StationID != 0 || !req.NeedsManualVerify || req.DispatchBasis != DispatchBasisAddressManualReview {
+		t.Fatalf("unexpected manual review request: %+v", req)
+	}
+	if req.SourceStationID != sourceStationID {
+		t.Fatalf("expected source station %d to be recorded, got %d", sourceStationID, req.SourceStationID)
+	}
+
+	var taskCount int64
+	if err := db.Model(&model.TaskAssignment{}).Where("request_id = ?", req.ID).Count(&taskCount).Error; err != nil {
+		t.Fatalf("failed to count tasks: %v", err)
+	}
+	if taskCount != 0 {
+		t.Fatalf("expected no task to be created for manual review request, got %d", taskCount)
 	}
 }
 

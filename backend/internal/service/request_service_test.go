@@ -136,39 +136,38 @@ func TestResolveDispatch(t *testing.T) {
 		t.Fatalf("expected ErrInvalidRequest for partial coordinates, got %v", err)
 	}
 
-	badLat := 91.0
 	_, err = resolveDispatch(DispatchInput{
-		ServiceLatitude:  &badLat,
-		ServiceLongitude: &lng,
+		Address: "  ",
 	}, stationRepo, &GeofenceService{}, nil)
-	if !errors.Is(err, ErrInvalidRequest) {
-		t.Fatalf("expected ErrInvalidRequest for out-of-range coordinates, got %v", err)
+	if !errors.Is(err, ErrAddressRequired) {
+		t.Fatalf("expected ErrAddressRequired, got %v", err)
 	}
 
-	_, err = resolveDispatch(DispatchInput{
+	decision, err := resolveDispatch(DispatchInput{
 		Address: "test address",
 	}, stationRepo, &GeofenceService{}, nil)
-	if !errors.Is(err, ErrServiceLocationRequired) {
-		t.Fatalf("expected ErrServiceLocationRequired, got %v", err)
+	if err != nil {
+		t.Fatalf("expected manual review decision, got error %v", err)
+	}
+	if !decision.NeedsManualVerify || decision.AssignedStationID != 0 || decision.DispatchBasis != DispatchBasisAddressManualReview {
+		t.Fatalf("unexpected manual review decision: %+v", decision)
 	}
 
-	// 插入一个站点，供 resolveDispatch 在有服务坐标时进行站点匹配
-	createTestStation(t, db, lat, lng)
-	decision, err := resolveDispatch(DispatchInput{
-		SubmitLatitude:   &lat,
-		SubmitLongitude:  &lng,
-		ServiceLatitude:  &lat,
-		ServiceLongitude: &lng,
-		Address:          "input address",
-	}, stationRepo, &GeofenceService{}, nil)
+	// 插入一个站点，供 resolveDispatch 在地址解析成功后进行站点匹配
+	createTestStation(t, db, 39.908823, 116.397470)
+	decision, err = resolveDispatch(DispatchInput{
+		SubmitLatitude:  &lat,
+		SubmitLongitude: &lng,
+		Address:         "input address",
+	}, stationRepo, &GeofenceService{}, NewGeocodeService(""))
 	if err != nil {
 		t.Fatalf("resolveDispatch failed: %v", err)
 	}
 	if decision.SubmitLatitude != lat || decision.SubmitLongitude != lng {
 		t.Fatalf("unexpected submit coordinates: got (%v, %v), want (%v, %v)", decision.SubmitLatitude, decision.SubmitLongitude, lat, lng)
 	}
-	if decision.ServiceLatitude != lat || decision.ServiceLongitude != lng {
-		t.Fatalf("unexpected service coordinates: got (%v, %v), want (%v, %v)", decision.ServiceLatitude, decision.ServiceLongitude, lat, lng)
+	if decision.ServiceLatitude != 39.908823 || decision.ServiceLongitude != 116.397470 {
+		t.Fatalf("unexpected service coordinates: got (%v, %v)", decision.ServiceLatitude, decision.ServiceLongitude)
 	}
 	if decision.ResolvedAddress != "input address" {
 		t.Fatalf("unexpected address: got %q", decision.ResolvedAddress)
@@ -177,16 +176,13 @@ func TestResolveDispatch(t *testing.T) {
 
 func TestRequestService_Create_FallsBackToHaversineNearest(t *testing.T) {
 	svc, db := setupRequestServiceForTest(t)
-	createTestStation(t, db, 75, 0)
-	expected := createTestStation(t, db, 80, 20)
+	svc.geocodeSvc = NewGeocodeService("")
+	createTestStation(t, db, 39.5, 116.0)
+	expected := createTestStation(t, db, 39.908823, 116.397470)
 
-	lat := 80.0
-	lng := 20.0
 	req, created, err := svc.Create(RequestInput{
 		UserID:       1001,
 		ServiceType:  consts.ServiceTypeMeal,
-		ServiceLat:   &lat,
-		ServiceLng:   &lng,
 		ContactName:  "测试用户",
 		ContactPhone: "13800138000",
 		Address:      "测试地址",

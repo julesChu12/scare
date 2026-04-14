@@ -68,15 +68,16 @@ func NewRequestService(db *gorm.DB, repo *repository.RequestRepository, taskRepo
 //
 // 主要流程：
 //  1. 验证输入参数（用户ID、服务类型必填）
-//  2. 解析坐标（优先使用传入坐标，否则通过地址反向地理编码）
+//  2. 解析服务地址（通过地址地理编码得到服务坐标）
 //  3. 幂等性检查：如果提供了 RequestNo，检查是否已存在
 //  4. 生成请求编号（REQ + 时间戳 + 随机数）
 //  5. 匹配服务站点：
 //     a. 首先检查地理围栏（点是否在多边形内）
 //     b. 如果没有匹配的围栏，查找最近的站点（Haversine 距离计算）
-//  6. 在事务中创建服务请求和对应任务（状态为 dispatched）
+//     c. 如果服务地址无法解析，则创建待人工复核的需求
+//  6. 在事务中创建服务请求；仅在已分配站点时同步创建任务
 //
-// 坐标解析优先级：显式传入坐标 > 地址反向地理编码
+// 站点匹配只基于最终服务地址解析出的坐标进行，提交位置仅用于记录
 //
 // 返回值：
 // - request: 服务请求信息
@@ -129,7 +130,7 @@ func (s *RequestService) Create(input RequestInput) (*model.ServiceRequest, bool
 		RequestNo:          requestNo,
 		UserID:             input.UserID,
 		ServiceType:        input.ServiceType,
-		Status:             consts.RequestStatusDispatched,
+		Status:             consts.RequestStatusPending,
 		SubmitLocationLat:  decision.SubmitLatitude,
 		SubmitLocationLng:  decision.SubmitLongitude,
 		ServiceLocationLat: decision.ServiceLatitude,
@@ -143,13 +144,19 @@ func (s *RequestService) Create(input RequestInput) (*model.ServiceRequest, bool
 		NeedsManualVerify:  decision.NeedsManualVerify,
 		Images:             string(images),
 	}
+	if decision.AssignedStationID > 0 {
+		request.Status = consts.RequestStatusDispatched
+	}
 
 	err = s.db.Transaction(func(tx *gorm.DB) error {
 		reqRepo := s.repo.WithTx(tx)
-		taskRepo := s.taskRepo.WithTx(tx)
 		if err := reqRepo.Create(request); err != nil {
 			return err
 		}
+		if decision.AssignedStationID == 0 {
+			return nil
+		}
+		taskRepo := s.taskRepo.WithTx(tx)
 		task := &model.TaskAssignment{
 			RequestID: request.ID,
 			StationID: decision.AssignedStationID,
@@ -164,8 +171,10 @@ func (s *RequestService) Create(input RequestInput) (*model.ServiceRequest, bool
 		return nil, false, err
 	}
 
-	// 异步通知站点管理员
-	s.sendRequestNotification(decision.AssignedStationID, "新服务需求", fmt.Sprintf("收到新的%s服务需求，请及时处理。", consts.GetServiceTypeName(input.ServiceType)))
+	if decision.AssignedStationID > 0 {
+		// 异步通知站点管理员
+		s.sendRequestNotification(decision.AssignedStationID, "新服务需求", fmt.Sprintf("收到新的%s服务需求，请及时处理。", consts.GetServiceTypeName(input.ServiceType)))
+	}
 	return request, true, nil
 }
 

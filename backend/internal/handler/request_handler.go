@@ -88,6 +88,8 @@ func (h *RequestHandler) Create(c *gin.Context) {
 	})
 	if err != nil {
 		switch err {
+		case service.ErrAddressRequired:
+			RespondError(c, http.StatusBadRequest, "address required")
 		case service.ErrInvalidRequest:
 			RespondError(c, http.StatusBadRequest, "invalid request")
 		case service.ErrServiceLocationRequired:

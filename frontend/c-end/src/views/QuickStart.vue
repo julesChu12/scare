@@ -57,17 +57,7 @@
           />
           <div class="location-hint" v-if="hasLocation">
             <el-icon><Location /></el-icon>
-            <span>已获取您的当前位置，仅用于辅助校验与回填</span>
-          </div>
-        </el-form-item>
-
-        <el-form-item label="服务地点判定">
-          <div class="location-mode">
-            <el-switch v-model="useCurrentLocationAsServiceLocation" :disabled="!hasLocation" />
-            <span class="location-mode-text">服务地点与当前位置一致</span>
-          </div>
-          <div class="location-mode-hint">
-            开启后，系统将按当前位置判断受理站点；未开启时，优先按您填写的服务地址判断。
+            <span>已获取您的当前位置，仅用于记录提交位置，不参与最终受理站点匹配</span>
           </div>
         </el-form-item>
 
@@ -152,7 +142,6 @@ const countdown = ref(0)
 const loading = ref(false)
 const hasLocation = ref(false)
 const coordinates = ref<{ lng: number; lat: number } | null>(null)
-const useCurrentLocationAsServiceLocation = ref(false)
 const sourceStation = ref<Station | null>(null)
 const sourceStationId = ref<number | null>(null)
 
@@ -263,11 +252,12 @@ const matchStation = async (lat: number, lng: number) => {
   return stationAPI.matchStation({ latitude: lat, longitude: lng })
 }
 
-const confirmDispatchIfNeeded = async (assignedStation: Station, submitStation: Station | null, usedSourceFallback: boolean) => {
-  if (usedSourceFallback && sourceStation.value) {
+const confirmDispatchIfNeeded = async (preview: { assignedStation: Station | null; manualReview: boolean }) => {
+  if (preview.manualReview) {
+    const sourceLabel = sourceStation.value ? `来源站点“${sourceStation.value.name}”将仅作为入口记录，` : ''
     await ElMessageBox.confirm(
-      `未能识别服务地址，系统将暂按来源站点“${sourceStation.value.name}”受理，工作人员可能联系您确认。是否继续？`,
-      '确认受理方式',
+      `当前无法准确解析服务地址，${sourceLabel}本次申请将进入人工复核，暂不自动分派站点。是否继续提交？`,
+      '确认提交方式',
       {
         confirmButtonText: '继续提交',
         cancelButtonText: '返回修改',
@@ -277,72 +267,28 @@ const confirmDispatchIfNeeded = async (assignedStation: Station, submitStation: 
     return
   }
 
-  if (!useCurrentLocationAsServiceLocation.value && submitStation && submitStation.id !== assignedStation.id) {
-    await ElMessageBox.confirm(
-      `检测到您当前位置与服务地址匹配到的站点不一致，本次服务将由“${assignedStation.name}”受理。请确认服务地址填写无误。`,
-      '确认受理站点',
-      {
-        confirmButtonText: '确认提交',
-        cancelButtonText: '返回修改',
-        type: 'warning'
-      }
-    )
-    return
-  }
-
-  if (sourceStation.value && sourceStation.value.id !== assignedStation.id) {
-    ElMessage.info(`您从“${sourceStation.value.name}”入口进入，本次服务将由“${assignedStation.name}”受理`)
+  if (preview.assignedStation && sourceStation.value && sourceStation.value.id !== preview.assignedStation.id) {
+    ElMessage.info(`您从“${sourceStation.value.name}”入口进入，本次服务将按服务地址由“${preview.assignedStation.name}”受理`)
   }
 }
 
 const resolveDispatchPreview = async () => {
-  const submitLat = coordinates.value?.lat
-  const submitLng = coordinates.value?.lng
-  const submitStation = submitLat !== undefined && submitLng !== undefined
-    ? await matchStation(submitLat, submitLng).catch(() => null)
-    : null
-
-  if (useCurrentLocationAsServiceLocation.value) {
-    if (submitLat === undefined || submitLng === undefined) {
-      throw new Error('current-location-required')
-    }
-
-    const assignedStation = submitStation || await matchStation(submitLat, submitLng)
+  let geocodeResult
+  try {
+    geocodeResult = await geocodeAPI.geocode({ address: form.address })
+  } catch (_error) {
     return {
-      assignedStation,
-      submitStation,
-      serviceLat: submitLat,
-      serviceLng: submitLng,
+      assignedStation: null,
       resolvedAddress: form.address,
-      usedSourceFallback: false
+      manualReview: true
     }
   }
 
-  try {
-    const geocodeResult = await geocodeAPI.geocode({ address: form.address })
-    const assignedStation = await matchStation(geocodeResult.latitude, geocodeResult.longitude)
-
-    return {
-      assignedStation,
-      submitStation,
-      serviceLat: geocodeResult.latitude,
-      serviceLng: geocodeResult.longitude,
-      resolvedAddress: geocodeResult.formatted_address || form.address,
-      usedSourceFallback: false
-    }
-  } catch (error) {
-    if (sourceStation.value) {
-      return {
-        assignedStation: sourceStation.value,
-        submitStation,
-        serviceLat: undefined,
-        serviceLng: undefined,
-        resolvedAddress: form.address,
-        usedSourceFallback: true
-      }
-    }
-
-    throw error
+  const assignedStation = await matchStation(geocodeResult.latitude, geocodeResult.longitude)
+  return {
+    assignedStation,
+    resolvedAddress: geocodeResult.formatted_address || form.address,
+    manualReview: false
   }
 }
 
@@ -386,13 +332,11 @@ const handleSubmit = async () => {
     try {
       const serviceType = selectedServiceType.value || form.service_type
       const preview = await resolveDispatchPreview()
-      await confirmDispatchIfNeeded(preview.assignedStation, preview.submitStation, preview.usedSourceFallback)
+      await confirmDispatchIfNeeded(preview)
       const requestPayload = {
         address: preview.resolvedAddress,
         submit_lat: coordinates.value?.lat,
         submit_lng: coordinates.value?.lng,
-        service_lat: preview.serviceLat,
-        service_lng: preview.serviceLng,
         source_station_id: sourceStationId.value || undefined,
         contact_name: form.name,
         contact_phone: form.phone,
@@ -417,8 +361,6 @@ const handleSubmit = async () => {
           address: preview.resolvedAddress,
           submit_lat: coordinates.value?.lat,
           submit_lng: coordinates.value?.lng,
-          service_lat: preview.serviceLat,
-          service_lng: preview.serviceLng,
           source_station_id: sourceStationId.value || undefined,
           service_type: serviceType,
           description: form.description || undefined,
@@ -437,10 +379,6 @@ const handleSubmit = async () => {
         router.push(`/requests/${result.request.id}`)
       }
     } catch (error) {
-      if (error instanceof Error && error.message === 'current-location-required') {
-        ElMessage.warning('请先获取当前位置，或关闭“服务地点与当前位置一致”')
-        return
-      }
       if (error === 'cancel' || error === 'close') {
         return
       }
@@ -665,24 +603,6 @@ onMounted(async () => {
   margin-top: 4px;
   color: var(--color-success, #67C23A);
   font-size: var(--font-size-sm, 14px);
-}
-
-.location-mode {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.location-mode-text {
-  font-size: var(--font-size-base, 16px);
-  color: var(--text-color-primary, #303133);
-}
-
-.location-mode-hint {
-  margin-top: 8px;
-  color: var(--text-color-secondary, #909399);
-  font-size: var(--font-size-sm, 14px);
-  line-height: 1.5;
 }
 
 .tips {

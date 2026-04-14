@@ -372,7 +372,7 @@ func (s *AuthService) QuickStart(input QuickStartInput) (*QuickStartResult, erro
 			RequestNo:          requestNo,
 			UserID:             user.ID,
 			ServiceType:        input.ServiceType,
-			Status:             consts.RequestStatusDispatched,
+			Status:             consts.RequestStatusPending,
 			SubmitLocationLat:  decision.SubmitLatitude,
 			SubmitLocationLng:  decision.SubmitLongitude,
 			ServiceLocationLat: decision.ServiceLatitude,
@@ -384,6 +384,9 @@ func (s *AuthService) QuickStart(input QuickStartInput) (*QuickStartResult, erro
 			NeedsManualVerify:  decision.NeedsManualVerify,
 			ContactName:        input.ContactName,
 			ContactPhone:       input.ContactPhone,
+		}
+		if decision.AssignedStationID > 0 {
+			newRequest.Status = consts.RequestStatusDispatched
 		}
 
 		if input.Description != nil {
@@ -401,13 +404,15 @@ func (s *AuthService) QuickStart(input QuickStartInput) (*QuickStartResult, erro
 			return err
 		}
 
-		task := &model.TaskAssignment{
-			RequestID: newRequest.ID,
-			StationID: decision.AssignedStationID,
-			Status:    consts.TaskStatusDispatched,
-		}
-		if err := taskRepo.Create(task); err != nil {
-			return err
+		if decision.AssignedStationID > 0 {
+			task := &model.TaskAssignment{
+				RequestID: newRequest.ID,
+				StationID: decision.AssignedStationID,
+				Status:    consts.TaskStatusDispatched,
+			}
+			if err := taskRepo.Create(task); err != nil {
+				return err
+			}
 		}
 
 		request = newRequest

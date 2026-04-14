@@ -316,6 +316,10 @@ func (h *CAuthHandler) QuickStart(c *gin.Context) {
 			RespondError(c, http.StatusBadRequest, "验证码错误或已过期")
 			return
 		}
+		if err == service.ErrAddressRequired {
+			RespondError(c, http.StatusBadRequest, "服务地址不能为空")
+			return
+		}
 		if err == service.ErrServiceLocationRequired {
 			RespondError(c, http.StatusBadRequest, "无法确定服务地点，请完善服务地址或确认当前位置")
 			return

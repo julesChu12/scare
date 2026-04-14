@@ -167,24 +167,21 @@ func TestAuthService_Refresh_InvalidToken(t *testing.T) {
 
 func TestAuthService_QuickStart_CreatesUserProfileRequestByNearestStation(t *testing.T) {
 	authSvc, db, _ := setupAuthUnitService(t)
-	createTestStation(t, db, 75, 1)
-	expected := createTestStation(t, db, 80, 21)
+	authSvc.SetGeocodeService(NewGeocodeService(""))
+	createTestStation(t, db, 39.5, 116.0)
+	expected := createTestStation(t, db, 39.908823, 116.397470)
 
-	lat := 80.0
-	lng := 1.0
 	description := "需要送餐上门"
 	result, err := authSvc.QuickStart(QuickStartInput{
-		Phone:            "13820000004",
-		Code:             "000000",
-		Name:             "快速用户",
-		Address:          "高纬地址",
-		ServiceLatitude:  &lat,
-		ServiceLongitude: &lng,
-		ServiceType:      consts.ServiceTypeMeal,
-		Description:      &description,
-		Images:           []string{"a.png"},
-		ContactName:      "联系人",
-		ContactPhone:     "13800138000",
+		Phone:        "13820000004",
+		Code:         "000000",
+		Name:         "快速用户",
+		Address:      "高纬地址",
+		ServiceType:  consts.ServiceTypeMeal,
+		Description:  &description,
+		Images:       []string{"a.png"},
+		ContactName:  "联系人",
+		ContactPhone: "13800138000",
 	})
 	if err != nil {
 		t.Fatalf("QuickStart returned error: %v", err)
@@ -216,15 +213,15 @@ func TestAuthService_QuickStart_CreatesUserProfileRequestByNearestStation(t *tes
 	}
 }
 
-func TestAuthService_QuickStart_UpdatesExistingUserAndFallsBackToSourceStationWithoutCoords(t *testing.T) {
+func TestAuthService_QuickStart_UpdatesExistingUserAndCreatesManualReviewRequestWhenAddressCannotBeResolved(t *testing.T) {
 	authSvc, db, _ := setupAuthUnitService(t)
-	expected := createTestStation(t, db, 30, 120)
+	sourceStation := createTestStation(t, db, 30, 120)
 	createTestStation(t, db, 31, 121)
 
 	user := seedAuthUnitUser(t, db, "13820000005", "Test@123", "active", 0)
 	seedAuthUnitProfile(t, db, user.ID, "旧地址")
 	seedAuthUnitIdentity(t, db, user.ID, consts.IdentityElderly, true, 0)
-	sourceStationID := expected.ID
+	sourceStationID := sourceStation.ID
 
 	result, err := authSvc.QuickStart(QuickStartInput{
 		Phone:           "13820000005",
@@ -246,25 +243,35 @@ func TestAuthService_QuickStart_UpdatesExistingUserAndFallsBackToSourceStationWi
 	if result.Profile.Address != "新地址" {
 		t.Fatalf("expected profile address updated, got %q", result.Profile.Address)
 	}
-	if result.Request.StationID != expected.ID {
-		t.Fatalf("expected source station fallback %d, got %d", expected.ID, result.Request.StationID)
+	if result.Request.Status != consts.RequestStatusPending {
+		t.Fatalf("expected pending request, got %s", result.Request.Status)
 	}
-	if !result.Request.NeedsManualVerify {
-		t.Fatalf("expected manual verification flag to be set")
+	if result.Request.StationID != 0 || !result.Request.NeedsManualVerify || result.Request.DispatchBasis != DispatchBasisAddressManualReview {
+		t.Fatalf("expected manual review request, got %+v", result.Request)
+	}
+	if result.Request.SourceStationID != sourceStationID {
+		t.Fatalf("expected source station %d to be recorded, got %d", sourceStationID, result.Request.SourceStationID)
+	}
+
+	var taskCount int64
+	if err := db.Model(&model.TaskAssignment{}).Where("request_id = ?", result.Request.ID).Count(&taskCount).Error; err != nil {
+		t.Fatalf("failed to count tasks: %v", err)
+	}
+	if taskCount != 0 {
+		t.Fatalf("expected no task to be created, got %d", taskCount)
 	}
 }
 
-func TestAuthService_QuickStart_RequiresServiceLocationWhenNoFallbackAvailable(t *testing.T) {
+func TestAuthService_QuickStart_RequiresAddress(t *testing.T) {
 	authSvc, _, _ := setupAuthUnitService(t)
 
 	_, err := authSvc.QuickStart(QuickStartInput{
 		Phone:       "13820000006",
 		Code:        "000000",
 		Name:        "无站点用户",
-		Address:     "未知地址",
 		ServiceType: consts.ServiceTypeMeal,
 	})
-	if !errors.Is(err, ErrServiceLocationRequired) {
-		t.Fatalf("expected ErrServiceLocationRequired, got %v", err)
+	if !errors.Is(err, ErrAddressRequired) {
+		t.Fatalf("expected ErrAddressRequired, got %v", err)
 	}
 }
