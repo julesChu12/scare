@@ -16,7 +16,7 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ../backend/database/schema/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
-      - ../database/seeds/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
+      - ../backend/database/seeds/seed_all.sql:/docker-entrypoint-initdb.d/02-seed.sql
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-time-zone='+08:00'
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]

@@ -123,7 +123,6 @@ jobs:
             --exclude='.env' \
             --exclude='deployment/.env' \
             --exclude='paper/' \
-            --exclude='database/' \
             -e "ssh $SSH_OPTS" \
             ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.DEPLOY_DIR }}/
 

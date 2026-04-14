@@ -12,7 +12,15 @@ MYSQL_PORT="${DB_PORT:-3306}"
 MYSQL_USER="${DB_USER:-scare_user}"
 MYSQL_PASS="${DB_PASSWORD:-scare_pass}"
 MYSQL_DB="${DB_NAME:-scare_db}"
-MIGRATIONS_DIR="$(cd "$(dirname "$0")" && pwd)/database/migrations"
+
+# 脚本位于 /scripts/migrate.sh，迁移文件位于 /backend/database/migrations/
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# 判断是后端项目结构(scare/scripts/)还是旧结构(直接 scripts/)
+if [ -d "$SCRIPT_DIR/../backend/database/migrations" ]; then
+    MIGRATIONS_DIR="$SCRIPT_DIR/../backend/database/migrations"
+else
+    MIGRATIONS_DIR="$SCRIPT_DIR/database/migrations"
+fi
 MYSQL_CMD="docker exec scare_mysql mysql -u $MYSQL_USER -p$MYSQL_PASS $MYSQL_DB --default-character-set=utf8mb4"
 
 # 颜色
