@@ -142,8 +142,16 @@ coverage/
 .serena/
 *.claude
 
+# 测试覆盖率报告
+**/coverage.html
+**/coverage_report.html
+**/coverage_report.md
+
 # 测试产物
 frontend/management-portal/test-results/
+
+# 论文文档
+paper/
 
 # AI 生成文档
 GEMINI.md
