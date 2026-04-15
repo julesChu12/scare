@@ -51,9 +51,23 @@
 ### 环境要求
 - Go 1.25+
 - Node.js 18+
-- MySQL 8.0+
-- Redis 7.0+
+- Docker / Docker Compose
 - npm 或 pnpm
+
+### 配置与依赖说明
+
+| 模块 | 配置文件 | 是否必须 | 说明 |
+|------|----------|----------|------|
+| 后端 | `backend/.env` | 必须 | MySQL、Redis、JWT、存储、安全加密、高德 Key 等配置 |
+| 管理门户 | `frontend/management-portal/.env` | 推荐 | `VITE_API_BASE_URL`、地图 Key、C 端跳转地址等 |
+| C端 | 无必须文件 | 否 | 本地开发默认走 Vite 代理到 `http://localhost:8080`，可选 `VITE_MOCK_USER` |
+
+本地默认端口：
+- 后端 API：`8080`
+- MySQL：`3306`
+- Redis：`6379`
+- 管理门户：`3001`
+- C端：`5174`（HTTPS）
 
 ### 1. 克隆项目
 ```bash
@@ -61,19 +75,29 @@ git clone https://github.com/your-org/community-elderly-care-platform.git
 cd community-elderly-care-platform
 ```
 
-### 2. 初始化数据库
+### 2. 启动 MySQL / Redis 并初始化数据库
 ```bash
-cd database
-./scripts/init.sh
+cd backend
+cp .env.example .env
+docker compose up -d
 ```
+
+说明：
+- `backend/docker-compose.yml` 会启动本地 MySQL 8.0 和 Redis 7.0
+- MySQL 首次启动会自动执行 `database/schema/schema.sql` 和 `database/seeds/*.sql`
+- 如需重建本地数据库，可执行 `docker compose down -v && docker compose up -d`
+- 当前默认种子数据会初始化 `12` 个用户、`4` 个站点、`6` 个围栏、`4` 条服务请求和 `18` 个菜单
 
 ### 3. 启动后端
 ```bash
 cd backend
-cp .env.example .env  # 修改配置
 go mod download
-go run cmd/server/main.go
+go run . serve
 ```
+
+启动成功后可访问：
+- 健康检查：`http://localhost:8080/api/v1/health`
+- Swagger：`http://localhost:8080/swagger/index.html`
 
 ### 4. 启动前端
 
@@ -81,14 +105,39 @@ go run cmd/server/main.go
 ```bash
 cd frontend/c-end
 npm install
-npm run dev  # http://localhost:5174
+npm run dev  # https://localhost:5174
 ```
+
+说明：
+- C端本地开发启用了 `basicSsl`，浏览器首次访问会出现本地证书提示
+- C端接口默认走 `/api` 代理到 `http://localhost:8080`
 
 #### 管理门户
 ```bash
 cd frontend/management-portal
+cp .env.development.example .env
 npm install
 npm run dev  # http://localhost:3001
+```
+
+说明：
+- 管理门户通过 `VITE_API_BASE_URL` 指向后端，默认值为 `http://localhost:8080/api/v1`
+- 涉及地图选点/围栏编辑页面时，需要配置 `VITE_AMAP_KEY` 与 `VITE_AMAP_SECURITY_JS_CODE`
+
+### 5. 验证默认测试数据
+
+数据库自动初始化后，默认会写入测试账号和基础业务数据。
+
+示例管理员账号：
+- 手机号：`13800000001`
+- 密码：`Test@123`
+
+示例状态检查：
+
+```bash
+curl http://localhost:8080/api/v1/health
+curl -I http://localhost:3001
+curl -k -I https://localhost:5174
 ```
 
 ---
@@ -100,17 +149,27 @@ npm run dev  # http://localhost:3001
 ```
 sCare/
 ├── backend/                    # 后端服务（Go 1.25）
-│   ├── cmd/                    # 程序入口
-│   │   └── server/             # API 服务启动入口
+│   ├── main.go                 # CLI 入口（如 serve / migrate）
+│   ├── cmd/                    # 子命令实现
 │   ├── internal/               # 私有应用代码
 │   │   ├── config/             # 配置管理
-│   │   ├── domain/             # 领域模型（Entity、VO）
+│   │   ├── consts/             # 常量定义
+│   │   ├── dao/                # GORM Gen 生成模型与查询
+│   │   ├── dto/                # 数据传输对象
 │   │   ├── repository/         # 数据访问层
 │   │   ├── service/            # 业务逻辑层
 │   │   ├── handler/            # HTTP 处理器
-│   │   ├── middleware/         # 中间件（认证、权限、CORS等）
-│   │   └── algorithm/          # 算法实现（点在多边形）
+│   │   ├── middleware/         # 中间件（认证、权限、端隔离等）
+│   │   ├── router/             # 路由注册
+│   │   ├── notify/             # 通知能力
+│   │   └── storage/            # 文件存储封装
 │   ├── pkg/                    # 公共库
+│   │   ├── database/           # MySQL 连接
+│   │   ├── geo/                # 地理围栏算法
+│   │   ├── jwt/                # JWT 工具
+│   │   ├── logger/             # 日志封装
+│   │   └── redis/              # Redis 连接
+│   ├── database/               # schema / seed / migration
 │   └── docs/                   # 后端文档
 │       ├── 02-系统架构设计.md   # 架构设计
 │       └── 03-数据库设计.md     # 数据库设计
@@ -171,57 +230,37 @@ sCare/
 ├── deployment/                # 部署配置
 │   └── docs/                  # 部署文档
 │
-└── docker-compose.yml         # Docker Compose配置
+└── backend/docker-compose.yml # 本地 MySQL / Redis 依赖
 ```
 
 ### 后端结构详解
 
 ```
 backend/
-├── cmd/server/
-│   └── main.go                # 服务启动入口
-│
+├── main.go                    # CLI 入口
+├── cmd/                       # serve / migrate 等命令
+├── database/                  # schema / seeds / migrations
 ├── internal/
-│   ├── config/                 # 配置管理
-│   │   └── config.go          # 配置结构定义
-│   ├── domain/                # 领域模型
-│   │   ├── models.go          # 数据库模型（GORM）
-│   │   ├── roles.go           # 角色定义
-│   │   ├── status.go          # 状态定义
-│   │   └── service_types.go   # 服务类型
+│   ├── config/                # 配置管理
+│   ├── consts/                # 业务常量
+│   ├── dao/                   # 生成模型与查询
+│   ├── dto/                   # DTO 定义
 │   ├── repository/            # 数据访问层
-│   │   ├── user_repo.go
-│   │   ├── request_repo.go
-│   │   ├── station_repo.go
-│   │   ├── zone_repo.go
-│   │   └── task_repo.go
 │   ├── service/               # 业务逻辑层
-│   │   ├── auth_service.go    # 认证服务
-│   │   ├── request_service.go # 需求处理服务
-│   │   ├── geofence_service.go # 围栏匹配服务
-│   │   ├── task_service.go    # 任务管理服务
-│   │   └── notification_service.go
 │   ├── handler/               # HTTP 处理器
-│   │   ├── b_auth_handler.go  # B端认证
-│   │   ├── c_auth_handler.go  # C端认证
-│   │   ├── request_handler.go
-│   │   ├── zone_handler.go
-│   │   └── task_handler.go
-│   ├── middleware/            # 中间件
-│   │   ├── auth.go            # JWT 认证
-│   │   ├── permission.go       # RBAC 权限检查
-│   │   └── end_type.go        # 端隔离
-│   └── geofence/              # 地理围栏引擎
-│       └── engine.go          # 射线法实现
-│
+│   ├── middleware/            # 认证、权限、端隔离
+│   ├── router/                # 路由装配
+│   ├── notify/                # 邮件/通知
+│   └── storage/               # 文件存储
 ├── pkg/                       # 公共库
+│   ├── database/              # GORM/MySQL 连接
+│   ├── geo/                   # 围栏匹配算法
 │   ├── jwt/                   # JWT 工具
 │   ├── logger/                # 日志工具
-│   ├── response/              # 统一响应格式
-│   └── errors/                # 错误处理
-│
-└── configs/                   # 配置文件
-    └── config.yaml            # 应用配置
+│   └── redis/                 # Redis 客户端
+├── docs/                      # 后端文档
+├── tests/                     # API 测试脚本
+└── storage/                   # 本地上传文件
 ```
 
 ### 前端结构详解
@@ -316,6 +355,12 @@ go fmt ./...
 
 # 构建
 go build -o scare .
+
+# 标准启动
+go run . serve
+
+# 热重载（已安装 air 时）
+air -c .air.toml
 ```
 
 ### 前端开发
@@ -324,13 +369,14 @@ go build -o scare .
 ```bash
 cd frontend/c-end
 npm install
-npm run dev      # http://localhost:5174
+npm run dev      # https://localhost:5174
 npm run build    # 生产构建
 ```
 
 #### B端管理门户
 ```bash
 cd frontend/management-portal
+cp .env.development.example .env
 npm install
 npm run dev      # http://localhost:3001
 npm run build    # 生产构建
@@ -343,7 +389,8 @@ npm run lint     # 代码检查
 
 ### 开发环境
 ```bash
-docker-compose up -d
+cd backend
+docker compose up -d
 ```
 
 ### 生产环境
@@ -366,8 +413,8 @@ docker-compose -f deployment/docker-compose.prod.yml up -d
 ### 后端测试
 ```bash
 cd backend
-go test -v ./internal/algorithm  # 点在多边形算法测试
-go test -v ./internal/service     # 业务逻辑测试
+go test -v ./pkg/geo              # 点在多边形算法测试
+go test -v ./internal/service/... # 业务逻辑测试
 ```
 
 ### 前端测试

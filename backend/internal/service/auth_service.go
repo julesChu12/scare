@@ -467,6 +467,9 @@ func (s *AuthService) QuickStart(input QuickStartInput) (*QuickStartResult, erro
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
+	if existingUser != nil && existingUser.Status != "active" {
+		return nil, ErrUserInactive
+	}
 
 	decision, err := resolveDispatch(DispatchInput{
 		Address:          input.Address,

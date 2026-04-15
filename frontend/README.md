@@ -1,204 +1,216 @@
-# sCare 社区养老服务 - C端前端
+# sCare 前端执行与开发说明
 
-基于 Vue 3 + TypeScript + PWA 的移动端应用，支持扫码即用的快速开通流程。
+## 1. 依赖说明
 
-## 技术栈
+前端本地开发依赖：
 
-- **Vue 3** - 渐进式JavaScript框架
-- **TypeScript** - 类型安全的JavaScript超集
-- **Vite** - 快速的前端构建工具
-- **Pinia** - Vue 3 状态管理
-- **Vue Router** - 官方路由管理
-- **Element Plus** - 基于 Vue 3 的组件库
-- **Axios** - HTTP 客户端
-- **PWA** - 渐进式Web应用支持
+| 组件 | 建议版本 | 用途 |
+|------|----------|------|
+| Node.js | 18+ | Vite、TypeScript、构建工具链 |
+| npm / pnpm | 最新稳定版 | 安装依赖 |
+| 后端 API | `http://localhost:8080` | 两个前端都依赖后端接口 |
 
-## 项目结构
+默认访问地址：
 
-```
-frontend/
-├── README.md                      # 前端总览文档
-│
-├── c-end/                         # C端用户端（独立项目）
-│   ├── src/
-│   │   ├── api/                   # API 服务层
-│   │   ├── views/                 # 页面组件（16个）
-│   │   ├── store/                 # Pinia 状态管理
-│   │   ├── router/                # 路由配置
-│   │   ├── components/            # 组件
-│   │   ├── composables/           # 组合式函数
-│   │   └── ...
-│   ├── public/                    # PWA 静态资源
-│   ├── docs/                      # C端文档
-│   ├── package.json               # 依赖配置
-│   └── vite.config.ts             # Vite配置（含PWA）
-│
-└── management-portal/             # B端管理门户（独立项目）
-    ├── src/
-    │   ├── pages/                 # 页面组件（6个）
-    │   ├── layouts/               # 布局组件
-    │   ├── router/                # 路由配置
-    │   ├── store/                 # Pinia 状态管理
-    │   ├── config/                # 项目配置
-    │   └── ...
-    ├── docs/                      # B端文档
-    ├── package.json               # 依赖配置
-    └── vite.config.ts             # Vite配置
+| 应用 | 地址 | 说明 |
+|------|------|------|
+| 管理门户 | `http://localhost:3001` | B端管理后台 |
+| C端 | `https://localhost:5174` | 本地开发启用 HTTPS |
+
+启动顺序建议：
+
+1. 先启动 `backend/docker-compose.yml` 中的 MySQL / Redis。
+2. 启动后端 `go run . serve`。
+3. 启动管理门户与 C 端前端。
+
+## 2. 配置文件说明
+
+### 2.1 管理门户：`frontend/management-portal/.env`
+
+首次使用请复制：
+
+```bash
+cd frontend/management-portal
+cp .env.development.example .env
 ```
 
-## 快速开始
+关键配置项：
 
-### C端用户端
+| 配置项 | 是否必须 | 默认值 | 说明 |
+|--------|----------|--------|------|
+| `VITE_API_BASE_URL` | 必须 | `http://localhost:8080/api/v1` | 管理门户请求的后端地址 |
+| `VITE_APP_TITLE` | 否 | `sCare 管理后台` | 页面标题 |
+| `VITE_AMAP_KEY` | 推荐 | 空 | 地图选点、围栏编辑需要 |
+| `VITE_AMAP_SECURITY_JS_CODE` | 推荐 | 空 | 高德地图安全密钥 |
+| `VITE_C_END_BASE_URL` | 推荐 | `https://localhost:5174` | 管理端生成二维码或跳转 C 端时使用 |
+
+说明：
+
+- 若只做登录、列表、基础 CRUD 联调，`VITE_API_BASE_URL` 足够
+- 若涉及站点管理、地图选点、围栏编辑，必须补齐高德相关配置
+
+### 2.2 C端
+
+C端本地开发默认不依赖额外环境文件：
+
+- 接口通过 Vite proxy 转发到 `http://localhost:8080`
+- 默认 `baseURL` 为 `/api/v1`
+- 可选环境变量 `VITE_MOCK_USER=true` 用于本地调试 Mock 用户逻辑
+
+## 3. 启动方式
+
+### 3.1 管理门户
+
+```bash
+cd frontend/management-portal
+cp .env.development.example .env
+npm install
+npm run dev
+```
+
+启动后访问：`http://localhost:3001`
+
+### 3.2 C端
 
 ```bash
 cd frontend/c-end
 npm install
-npm run dev      # http://localhost:5174
-npm run build    # 生产构建
-npm run preview  # 预览构建
+npm run dev
 ```
 
-### B端管理门户
+启动后访问：`https://localhost:5174`
+
+说明：
+
+- C端使用 `@vitejs/plugin-basic-ssl`
+- 浏览器首次访问可能提示本地证书风险，这是开发环境预期行为
+
+## 4. 构建命令
+
+### 管理门户
 
 ```bash
 cd frontend/management-portal
-npm install
-npm run dev      # http://localhost:3001
-npm run build    # 生产构建
-npm run preview  # 预览构建
+npm run build
+npm run preview
+npm run lint
 ```
 
-## 核心功能
+### C端
 
-### 扫码即用流程
-
-1. 用户扫描服务站二维码
-2. 自动跳转到快速开通页面（带 station 参数）
-3. 填写基本信息（手机号、验证码、姓名、身份证、地址、服务类型、服务描述）
-4. 提交后自动完成：
-   - 注册账号
-   - 登录系统
-   - 创建服务请求
-5. 跳转到服务详情页
-
-### 页面路由
-
-- `/quick` - 快速开通（支持扫码携带 ?station=X 参数）
-- `/login` - 密码登录（已有账号）
-- `/home` - C端首页
-- `/requests` - 我的服务列表
-- `/requests/:id` - 服务详情
-- `/profile` - 个人资料编辑
-
-### API 集成
-
-所有 API 调用都通过统一的 Axios 客户端，自动处理：
-
-- Token 注入（从 localStorage）
-- 401 自动跳转登录
-- 统一错误提示（Element Plus Message）
-- 请求/响应拦截
-
-## 开发说明
-
-### 状态管理
-
-使用 Pinia 管理全局状态：
-
-```typescript
-// Token 管理
-import { useTokenStore } from '@/stores'
-const tokenStore = useTokenStore()
-tokenStore.setToken(token)
-tokenStore.clearToken()
-
-// 用户信息管理
-import { useUserStore } from '@/stores'
-const userStore = useUserStore()
-userStore.setUser(user)
-userStore.setProfile(profile)
+```bash
+cd frontend/c-end
+npm run build
+npm run preview
 ```
 
-### API 调用示例
+## 5. 与后端联调
 
-```typescript
-import { authAPI, requestsAPI } from '@/api'
+### 5.1 后端依赖
 
-// 发送验证码
-await authAPI.sendCode({ phone: '13800138000' })
+两个前端都要求后端已运行在 `http://localhost:8080`，至少保证以下接口可访问：
 
-// 快速开通
-const result = await authAPI.quickStart({
+- `GET /api/v1/health`
+- `POST /api/v1/b/auth/login`
+- `POST /api/v1/c/auth/login`
+
+### 5.2 管理门户代理与接口地址
+
+管理门户默认通过 `.env` 中的 `VITE_API_BASE_URL` 直接请求后端。
+
+推荐配置：
+
+```env
+VITE_API_BASE_URL=http://localhost:8080/api/v1
+VITE_C_END_BASE_URL=https://localhost:5174
+```
+
+### 5.3 C端代理
+
+C端 `vite.config.ts` 中默认代理：
+
+- `/api` -> `http://localhost:8080`
+- `/static` -> `http://localhost:8080`
+
+因此本地开发通常无需单独配置 API 地址。
+
+## 6. 常用调试场景
+
+### 6.1 管理门户登录
+
+使用种子管理员账号：
+
+- 手机号：`13800000001`
+- 密码：`Test@123`
+
+### 6.2 C端登录
+
+使用种子老年人账号：
+
+- 手机号：`13800000008`
+- 密码：`Test@123`
+
+### 6.3 快速开通联调
+
+当前快速开通接口需要的核心字段示例：
+
+```ts
+await authAPI.quickStart({
   phone: '13800138000',
   code: '123456',
-  station_id: 1,
   name: '张三',
-  id_number: '110101199001011234',
-  address: '北京市朝阳区XXX',
-  service_type: 'meal'
+  address: '北京市昌平区霍营街道示例地址',
+  source_station_id: 1,
+  service_type: 'meal',
+  description: '需要送午餐',
+  contact_name: '张三',
+  contact_phone: '13800138000',
 })
-
-// 获取我的服务列表
-const { requests } = await requestsAPI.getMyRequests()
 ```
 
-### 路由守卫
+若需要更精确派单，可补充：
 
-已配置全局路由守卫，自动检查登录状态：
+- `submit_lat` / `submit_lng`
+- `service_lat` / `service_lng`
+- `images`
 
-- `meta.requiresAuth: true` 的路由需要登录
-- 未登录时自动跳转到 `/login` 并保存原始目标路径
-- 登录成功后自动跳转回原目标页面
+## 7. 常见问题
 
-## PWA 支持
+### Q1: 管理门户可以打开，但接口全是 401 / 404
 
-本项目已配置 PWA，支持：
+先检查：
 
-- 安装到主屏幕
-- 离线访问（缓存静态资源）
-- API 请求缓存（NetworkFirst 策略，1小时）
+1. 后端是否已启动在 `8080`
+2. `frontend/management-portal/.env` 中 `VITE_API_BASE_URL` 是否正确
+3. MySQL / Redis 是否正常启动
 
-Manifest 配置在 `vite.config.ts` 中，Service Worker 自动生成。
+### Q2: C端页面打不开
 
-## 环境变量
+通常是以下原因：
 
-开发环境 API 代理已配置：
+1. 浏览器未接受本地 HTTPS 证书
+2. `5174` 端口被占用
+3. 后端未启动，导致页面初始化请求失败
 
-```typescript
-// vite.config.ts
-server: {
-  proxy: {
-    '/api': {
-      target: 'http://localhost:8080',
-      changeOrigin: true
-    }
-  }
-}
+### Q3: 地图组件空白或报高德 Key 错误
+
+请补齐：
+
+- `VITE_AMAP_KEY`
+- `VITE_AMAP_SECURITY_JS_CODE`
+
+### Q4: 管理门户二维码跳转地址不对
+
+请检查：
+
+- `VITE_C_END_BASE_URL`
+
+建议本地开发固定为：
+
+```env
+VITE_C_END_BASE_URL=https://localhost:5174
 ```
 
-生产环境需要配置实际的后端地址。
+---
 
-## 待完成功能
-
-前端基础功能已完成，以下为待补齐或优化项：
-
-1. **样式美化** - 根据设计稿优化移动端 UI 细节
-2. **加载与空状态** - 统一 loading、骨架屏和空态
-3. **错误边界** - 关键页面错误提示与恢复
-4. **定位体验** - 位置授权/地图选点（当前仅地址解析）
-5. **图片上传** - 服务请求支持上传图片
-6. **消息推送** - 服务状态变更通知
-7. **离线体验** - 完善 PWA 离线缓存与重试
-
-## 注意事项
-
-1. **后端接口依赖** - 需启动后端并保证 `/api/v1` 可用
-2. **验证码服务** - 需后端提供短信/验证码接口
-3. **地址解析** - 高德 API 需要申请 Key 并配置
-
-## 下一步
-
-1. 联调前后端接口
-2. 优化 UI 样式和交互
-3. 真机测试 PWA 功能
-4. 性能优化和测试
+前端开发文档已按当前仓库实际启动方式、端口和配置项更新，可直接用于本地联调。

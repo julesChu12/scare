@@ -16,7 +16,7 @@ const TableNameUser = "users"
 type User struct {
 	ID           int64          `gorm:"column:id;type:bigint;primaryKey;autoIncrement:true;comment:主键ID" json:"id"` // 主键ID
 	Phone        string         `gorm:"column:phone;type:varchar(20);not null;uniqueIndex:idx_users_phone,priority:1" json:"phone"`
-	PasswordHash string         `gorm:"column:password_hash;type:varchar(255);not null" json:"password_hash"`
+	PasswordHash string         `gorm:"column:password_hash;type:varchar(255)" json:"password_hash"`
 	Name         string         `gorm:"column:name;type:varchar(50)" json:"name"`
 	Email        string         `gorm:"column:email;type:varchar(100);index:idx_users_email,priority:1" json:"email"`
 	Avatar       string         `gorm:"column:avatar;type:varchar(255)" json:"avatar"`

@@ -368,6 +368,7 @@ func (h *CAuthHandler) ResetPassword(c *gin.Context) {
 // @Param        request body object{phone=string,code=string,name=string,address=string,latitude=float64,longitude=float64,submit_lat=float64,submit_lng=float64,service_lat=float64,service_lng=float64,source_station_id=int,service_type=string,description=string,images=[]string,contact_name=string,contact_phone=string} true "快速开通请求"
 // @Success      200  {object} APIResponse "快速开通成功"
 // @Failure      400  {object} APIResponse "请求参数错误"
+// @Failure      403  {object} APIResponse "用户已停用"
 // @Failure      500  {object} APIResponse "服务器错误"
 // @Router       /c/auth/quick-start [post]
 func (h *CAuthHandler) QuickStart(c *gin.Context) {
@@ -441,6 +442,10 @@ func (h *CAuthHandler) QuickStart(c *gin.Context) {
 		}
 		if err == service.ErrNoStation {
 			RespondError(c, http.StatusBadRequest, "无法找到服务站点，请检查地址")
+			return
+		}
+		if err == service.ErrUserInactive {
+			RespondError(c, http.StatusForbidden, "user inactive")
 			return
 		}
 		RespondError(c, http.StatusInternalServerError, "quick start failed")

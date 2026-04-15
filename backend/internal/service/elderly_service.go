@@ -203,7 +203,7 @@ func (s *ElderlyService) Create(input ElderlyInput) (*ElderlyInfo, error) {
 			IsPrimary:    true,
 			Status:       "active",
 		}
-		if err := tx.Create(identity).Error; err != nil {
+		if err := tx.Omit("RevokedAt").Create(identity).Error; err != nil {
 			return err
 		}
 
@@ -213,15 +213,22 @@ func (s *ElderlyService) Create(input ElderlyInput) (*ElderlyInfo, error) {
 			healthStatus = "good"
 		}
 		profile := &model.CustomerProfile{
-			UserID:          user.ID,
-			Address:         input.Address,
-			CustomerType:    consts.IdentityElderly,
-			HealthStatus:    healthStatus,
-			DisabilityLevel: input.DisabilityLevel,
-			MedicalHistory:  input.MedicalHistory,
-			SpecialNeeds:    input.SpecialNeeds,
+			UserID:           user.ID,
+			Address:          input.Address,
+			CustomerType:     consts.IdentityElderly,
+			EmergencyContact: "{}",
+			Gender:           input.Gender,
+			BirthDate:        input.BirthDate,
+			HealthStatus:     healthStatus,
+			DisabilityLevel:  input.DisabilityLevel,
+			MedicalHistory:   input.MedicalHistory,
+			SpecialNeeds:     input.SpecialNeeds,
 		}
-		if err := tx.Create(profile).Error; err != nil {
+		profileTx := tx
+		if input.BirthDate.IsZero() {
+			profileTx = profileTx.Omit("BirthDate")
+		}
+		if err := profileTx.Create(profile).Error; err != nil {
 			return err
 		}
 
@@ -316,7 +323,7 @@ func (s *ElderlyService) GetServiceRecords(userID int64, page, pageSize int) ([]
 		Select(`sr.id as request_id, sr.request_no, sr.service_type, sr.status,
 			sr.description, sr.address, sr.rating, sr.feedback, sr.created_at,
 			t.id as task_id, u.name as staff_name, t.claimed_at, t.completed_at`).
-		Joins("LEFT JOIN tasks t ON t.request_id = sr.id AND t.deleted_at IS NULL").
+		Joins("LEFT JOIN task_assignments t ON t.request_id = sr.id AND t.deleted_at IS NULL").
 		Joins("LEFT JOIN users u ON u.id = t.staff_id AND u.deleted_at IS NULL").
 		Where("sr.user_id = ? AND sr.deleted_at IS NULL", userID)
 

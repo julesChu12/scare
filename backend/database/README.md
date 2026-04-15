@@ -91,7 +91,7 @@ if err := domain.AutoMigrate(db.DB); err != nil {
 | 字段 | 类型 | 说明 | 设计理由 |
 |------|------|------|---------|
 | phone | VARCHAR(20) | 手机号(登录账号) | 国内手机号登录惯例，唯一索引 |
-| password_hash | VARCHAR(255) | 密码哈希 | bcrypt哈希存储，安全性 |
+| password_hash | VARCHAR(255) | 密码哈希 | bcrypt哈希存储；C端快速开通用户在首次设置密码前允许为空 |
 | avatar | VARCHAR(255) | 头像URL | 扩展字段，提升用户体验 |
 | gender | VARCHAR(10) | 性别 | 可选字段，业务统计需要 |
 | birth_date | DATE | 出生日期 | 年龄计算，可选 |

@@ -1,12 +1,23 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # =====================================================
 # sCare Backend API 测试脚本
 # 用法: ./scripts/test_api.sh [base_url]
 # 默认: http://localhost:8080
 # =====================================================
 
-BASE_URL="${1:-http://localhost:8080}"
-API_URL="$BASE_URL/api/v1"
+set -u
+
+RAW_BASE_URL="${1:-http://localhost:8080}"
+case "${RAW_BASE_URL%/}" in
+    */api/v1)
+        API_URL="${RAW_BASE_URL%/}"
+        BASE_URL="${API_URL%/api/v1}"
+        ;;
+    *)
+        BASE_URL="${RAW_BASE_URL%/}"
+        API_URL="$BASE_URL/api/v1"
+        ;;
+esac
 
 # 颜色定义
 RED='\033[0;31m'
@@ -18,6 +29,13 @@ NC='\033[0m' # No Color
 TOTAL=0
 PASSED=0
 FAILED=0
+
+require_tool() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        echo -e "${RED}✗${NC} 缺少依赖命令: $1"
+        exit 1
+    fi
+}
 
 # 测试函数
 test_api() {
@@ -31,18 +49,16 @@ test_api() {
 
     TOTAL=$((TOTAL + 1))
 
-    local auth_header=""
+    local -a cmd=(curl -sS -X "$method" "$API_URL$endpoint" -H "Content-Type: application/json")
     if [ -n "$token" ]; then
-        auth_header="-H \"Authorization: Bearer $token\""
+        cmd+=(-H "Authorization: Bearer $token")
     fi
-
-    local data_param=""
     if [ -n "$data" ]; then
-        data_param="-d '$data'"
+        cmd+=(-d "$data")
     fi
 
-    local cmd="curl -s -X $method \"$API_URL$endpoint\" -H \"Content-Type: application/json\" $auth_header $data_param -w '\n%{http_code}'"
-    local raw_response=$(eval $cmd)
+    local raw_response
+    raw_response=$("${cmd[@]}" -w '\n%{http_code}')
     local http_code=$(echo "$raw_response" | tail -n 1)
     local response=$(echo "$raw_response" | sed '$d')
     local msg=$(echo "$response" | jq -r '.msg // empty' 2>/dev/null)
@@ -80,18 +96,15 @@ api_call() {
     local token="$3"
     local data="$4"
 
-    local auth_header=""
+    local -a cmd=(curl -sS -X "$method" "$API_URL$endpoint" -H "Content-Type: application/json")
     if [ -n "$token" ]; then
-        auth_header="-H \"Authorization: Bearer $token\""
+        cmd+=(-H "Authorization: Bearer $token")
     fi
-
-    local data_param=""
     if [ -n "$data" ]; then
-        data_param="-d '$data'"
+        cmd+=(-d "$data")
     fi
 
-    local cmd="curl -s -X $method \"$API_URL$endpoint\" -H \"Content-Type: application/json\" $auth_header $data_param"
-    eval $cmd
+    "${cmd[@]}"
 }
 
 # 登录并获取 token（B端）
@@ -137,18 +150,23 @@ echo "sCare Backend API 测试"
 echo "Base URL: $BASE_URL"
 echo "=========================================="
 
+require_tool curl
+require_tool jq
+
 # =====================================================
 # 健康检查
 # =====================================================
 echo -e "\n${YELLOW}--- 健康检查 ---${NC}"
-HEALTH=$(curl -s "$API_URL/health" | jq -r '.msg // empty')
-if [ "$HEALTH" = "ok" ]; then
+HEALTH_RAW=$(curl -sS -w '\n%{http_code}' "$API_URL/health" 2>/dev/null || true)
+HEALTH=$(echo "$HEALTH_RAW" | sed '$d' | jq -r '.msg // empty' 2>/dev/null)
+HEALTH_CODE=$(echo "$HEALTH_RAW" | tail -n 1)
+if [ "$HEALTH_CODE" = "200" ] && [ "$HEALTH" = "ok" ]; then
     echo -e "${GREEN}✓${NC} 服务健康检查"
     PASSED=$((PASSED + 1))
 else
-    echo -e "${RED}✗${NC} 服务健康检查失败"
+    echo -e "${RED}✗${NC} 服务健康检查失败 (HTTP=$HEALTH_CODE, msg=$HEALTH)"
     FAILED=$((FAILED + 1))
-    echo "服务可能未启动，请先运行: air"
+    echo "服务可能未启动，请先运行: cd backend && go run . serve"
     exit 1
 fi
 TOTAL=$((TOTAL + 1))
@@ -160,7 +178,9 @@ test_api "未认证 - B端 me 拒绝" "GET" "/b/auth/me" "" "" "missing authoriz
 # Admin 角色测试
 # =====================================================
 echo -e "\n${YELLOW}--- Admin 角色测试 ---${NC}"
-ADMIN_TOKEN=$(login "13800000001" "Test@123")
+ADMIN_LOGIN_RESP=$(api_call "POST" "/b/auth/login" "" '{"phone":"13800000001","password":"Test@123"}')
+ADMIN_TOKEN=$(echo "$ADMIN_LOGIN_RESP" | jq -r '.data.token // empty')
+ADMIN_REFRESH_TOKEN=$(echo "$ADMIN_LOGIN_RESP" | jq -r '.data.refresh_token // empty')
 if [ -z "$ADMIN_TOKEN" ]; then
     echo -e "${RED}✗${NC} Admin 登录失败"
     exit 1
@@ -168,8 +188,10 @@ fi
 echo -e "${GREEN}✓${NC} Admin 登录成功"
 PASSED=$((PASSED + 1))
 TOTAL=$((TOTAL + 1))
+assert_not_empty "Admin - refresh token" "$ADMIN_REFRESH_TOKEN"
 
 test_api "Admin - 获取当前用户" "GET" "/b/auth/me" "$ADMIN_TOKEN" "" "ok"
+test_api "Admin - 刷新Token" "POST" "/b/auth/refresh" "" "{\"refresh_token\":\"$ADMIN_REFRESH_TOKEN\"}" "ok"
 test_api "Admin Token - 访问 C端 me 拒绝" "GET" "/c/auth/me" "$ADMIN_TOKEN" "" "token end type mismatch" "403"
 test_api "Admin - 用户列表" "GET" "/b/users" "$ADMIN_TOKEN" "" "ok"
 test_api "Admin - 用户详情" "GET" "/b/users/1" "$ADMIN_TOKEN" "" "ok"
@@ -188,6 +210,7 @@ test_api "Admin - 我的任务" "GET" "/b/tasks/my" "$ADMIN_TOKEN" "" "ok"
 test_api "Admin - 服务请求列表" "GET" "/b/requests" "$ADMIN_TOKEN" "" "ok"
 test_api "Admin - Banner列表" "GET" "/b/banners" "$ADMIN_TOKEN" "" "ok"
 test_api "Admin - 新闻列表" "GET" "/b/news" "$ADMIN_TOKEN" "" "ok"
+test_api "Admin - 老人档案列表" "GET" "/b/customers" "$ADMIN_TOKEN" "" "ok"
 test_api "Admin - 权限树" "GET" "/b/permissions/tree" "$ADMIN_TOKEN" "" "ok"
 test_api "Admin - 角色权限" "GET" "/b/roles/admin/permissions" "$ADMIN_TOKEN" "" "ok"
 test_api "Admin - 通知列表" "GET" "/b/notifications" "$ADMIN_TOKEN" "" "ok"
@@ -296,6 +319,25 @@ fi
 TEST_PHONE="138${TIMESTAMP: -8}"
 test_api "Admin - 创建用户(staff)" "POST" "/b/users" "$ADMIN_TOKEN" "{\"phone\":\"$TEST_PHONE\",\"password\":\"Test@123\",\"name\":\"测试员工\",\"identity_type\":\"staff\",\"station_id\":1}" "ok"
 
+# --- 老人档案 CRUD ---
+TEST_CUSTOMER_PHONE="136${TIMESTAMP: -8}"
+CUSTOMER_RESP=$(api_call "POST" "/b/customers" "$ADMIN_TOKEN" "{\"name\":\"集成测试老人_${TIMESTAMP}\",\"phone\":\"$TEST_CUSTOMER_PHONE\",\"gender\":\"male\",\"birth_date\":\"1940-01-01\",\"address\":\"北京市昌平区回龙观街道测试地址\",\"station_id\":1,\"health_status\":\"normal\",\"medical_history\":\"高血压\",\"special_needs\":\"需要上门协助\"}")
+TEST_CUSTOMER_ID=$(echo "$CUSTOMER_RESP" | jq -r '.data.id // empty')
+if [ -n "$TEST_CUSTOMER_ID" ] && [ "$TEST_CUSTOMER_ID" != "null" ]; then
+    echo -e "${GREEN}✓${NC} Admin - 老人档案创建 (ID=$TEST_CUSTOMER_ID)"
+    PASSED=$((PASSED + 1))
+else
+    echo -e "${RED}✗${NC} Admin - 老人档案创建失败"
+    FAILED=$((FAILED + 1))
+fi
+TOTAL=$((TOTAL + 1))
+
+if [ -n "$TEST_CUSTOMER_ID" ] && [ "$TEST_CUSTOMER_ID" != "null" ]; then
+    test_api "Admin - 老人档案详情" "GET" "/b/customers/$TEST_CUSTOMER_ID" "$ADMIN_TOKEN" "" "ok"
+    test_api "Admin - 老人档案更新" "PUT" "/b/customers/$TEST_CUSTOMER_ID" "$ADMIN_TOKEN" '{"address":"北京市昌平区霍营街道测试地址-已更新","health_status":"good","special_needs":"无需额外帮助"}' "ok"
+    test_api "Admin - 老人服务记录" "GET" "/b/customers/$TEST_CUSTOMER_ID/service-records" "$ADMIN_TOKEN" "" "ok"
+fi
+
 # --- 请求详情与状态更新 ---
 test_api "Admin - 服务请求详情(ID=1)" "GET" "/b/requests/1" "$ADMIN_TOKEN" "" ""
 TASK_DETAIL_LIST=$(api_call "GET" "/b/tasks?page_size=1" "$ADMIN_TOKEN" "")
@@ -313,8 +355,27 @@ test_api "Admin - 统计趋势" "GET" "/b/statistics/trend" "$ADMIN_TOKEN" "" "o
 test_api "Admin - 统计效率" "GET" "/b/statistics/efficiency" "$ADMIN_TOKEN" "" "ok"
 test_api "Admin - 统计员工排名" "GET" "/b/statistics/staff-ranking" "$ADMIN_TOKEN" "" "ok"
 
+# --- 报表接口 ---
+test_api "Admin - 报表预览" "POST" "/b/reports/generate" "$ADMIN_TOKEN" '{"type":"service","format":"xlsx","start_date":"2026-01-01","end_date":"2026-01-31","preview":true}' "ok"
+test_api "Admin - 生成报表文件" "POST" "/b/reports/generate" "$ADMIN_TOKEN" '{"type":"service","format":"csv","start_date":"2026-01-01","end_date":"2026-01-31"}' ""
+test_api "Admin - 历史报表列表" "GET" "/b/reports?page=1&page_size=10" "$ADMIN_TOKEN" "" "ok"
+REPORT_LIST_RESP=$(api_call "GET" "/b/reports?page=1&page_size=1" "$ADMIN_TOKEN" "")
+TEST_REPORT_ID=$(echo "$REPORT_LIST_RESP" | jq -r '.data.items[0].id // empty')
+if [ -n "$TEST_REPORT_ID" ] && [ "$TEST_REPORT_ID" != "null" ]; then
+    test_api "Admin - 下载历史报表" "GET" "/b/reports/$TEST_REPORT_ID/download" "$ADMIN_TOKEN" "" ""
+    test_api "Admin - 删除历史报表" "DELETE" "/b/reports/$TEST_REPORT_ID" "$ADMIN_TOKEN" "" "ok"
+else
+    echo -e "${YELLOW}⚠${NC} 未找到历史报表，跳过下载/删除测试"
+fi
+
 # --- 通知标记已读 ---
-test_api "Admin - 通知标记已读(ID=1)" "POST" "/b/notifications/1/read" "$ADMIN_TOKEN" "" ""
+ADMIN_NOTIFICATION_LIST=$(api_call "GET" "/b/notifications?page_size=1" "$ADMIN_TOKEN" "")
+ADMIN_NOTIFICATION_ID=$(echo "$ADMIN_NOTIFICATION_LIST" | jq -r '.data.items[0].id // empty')
+if [ -n "$ADMIN_NOTIFICATION_ID" ] && [ "$ADMIN_NOTIFICATION_ID" != "null" ]; then
+    test_api "Admin - 通知标记已读" "POST" "/b/notifications/$ADMIN_NOTIFICATION_ID/read" "$ADMIN_TOKEN" "" "ok"
+else
+    echo -e "${YELLOW}⚠${NC} 未找到管理员通知，跳过已读测试"
+fi
 
 # =====================================================
 # Station Manager 角色测试
@@ -362,16 +423,50 @@ echo -e "\n${YELLOW}--- C端公开 API 测试 ---${NC}"
 test_api "C端 - 新闻列表" "GET" "/c/news" "" "" "ok"
 test_api "C端 - 新闻详情(ID=1)" "GET" "/c/news/1" "" "" ""
 test_api "C端 - Banner列表" "GET" "/c/banners" "" "" "ok"
+test_api "C端 - 站点公开详情(ID=1)" "GET" "/c/stations/1" "" "" "ok"
 test_api "C端 - 站点匹配" "GET" "/c/stations/match?lng=116.4&lat=39.9" "" "" ""
 test_api "C端 - 站点匹配(POST)" "POST" "/c/stations/match" "" '{"latitude":39.9,"longitude":116.4}' ""
 test_api "C端 - 逆地理编码" "GET" "/c/geocode/reverse?lng=116.4&lat=39.9" "" "" ""
 test_api "C端 - 正地理编码" "POST" "/c/geocode" "" '{"address":"北京市昌平区霍营街道"}' ""
 
 # =====================================================
+# C端公开认证流程测试
+# =====================================================
+echo -e "\n${YELLOW}--- C端公开认证流程 ---${NC}"
+QUICKSTART_PHONE="139${TIMESTAMP: -8}"
+test_api "C端 - 发送验证码" "POST" "/c/auth/send-code" "" "{\"phone\":\"$QUICKSTART_PHONE\"}" "验证码已发送"
+
+QUICKSTART_RESP=$(api_call "POST" "/c/auth/quick-start" "" "{\"phone\":\"$QUICKSTART_PHONE\",\"code\":\"000000\",\"name\":\"冒烟测试用户_${TIMESTAMP}\",\"address\":\"北京市昌平区霍营街道华龙苑北里小区\",\"latitude\":40.07,\"longitude\":116.37,\"service_type\":\"meal\",\"description\":\"API 冒烟测试快速开通\",\"contact_name\":\"冒烟测试用户\",\"contact_phone\":\"$QUICKSTART_PHONE\"}")
+QUICKSTART_TOKEN=$(echo "$QUICKSTART_RESP" | jq -r '.data.token // empty')
+QUICKSTART_REFRESH_TOKEN=$(echo "$QUICKSTART_RESP" | jq -r '.data.refresh_token // empty')
+QUICKSTART_REQUEST_ID=$(echo "$QUICKSTART_RESP" | jq -r '.data.request.id // empty')
+if [ -n "$QUICKSTART_TOKEN" ] && [ "$QUICKSTART_TOKEN" != "null" ]; then
+    echo -e "${GREEN}✓${NC} C端 - 快速开通成功"
+    PASSED=$((PASSED + 1))
+else
+    echo -e "${RED}✗${NC} C端 - 快速开通失败"
+    echo "响应体: $QUICKSTART_RESP"
+    FAILED=$((FAILED + 1))
+fi
+TOTAL=$((TOTAL + 1))
+
+if [ -n "$QUICKSTART_TOKEN" ] && [ "$QUICKSTART_TOKEN" != "null" ]; then
+    test_api "QuickStart - 获取当前用户" "GET" "/c/auth/me" "$QUICKSTART_TOKEN" "" "ok"
+    test_api "QuickStart - Token检查" "GET" "/c/auth/check" "$QUICKSTART_TOKEN" "" "ok"
+    test_api "QuickStart - 刷新Token" "POST" "/c/auth/refresh" "" "{\"refresh_token\":\"$QUICKSTART_REFRESH_TOKEN\"}" "ok"
+    if [ -n "$QUICKSTART_REQUEST_ID" ] && [ "$QUICKSTART_REQUEST_ID" != "null" ]; then
+        test_api "QuickStart - 查看服务请求" "GET" "/c/requests/$QUICKSTART_REQUEST_ID" "$QUICKSTART_TOKEN" "" "ok"
+    fi
+    test_api "QuickStart - 登出" "POST" "/c/auth/logout" "$QUICKSTART_TOKEN" "" "logout successful"
+fi
+
+# =====================================================
 # C端认证流程测试
 # =====================================================
 echo -e "\n${YELLOW}--- C端认证流程 ---${NC}"
-C_TOKEN=$(c_login "13800000008" "Test@123")
+C_LOGIN_RESP=$(api_call "POST" "/c/auth/login" "" '{"phone":"13800000008","password":"Test@123","type":"password"}')
+C_TOKEN=$(echo "$C_LOGIN_RESP" | jq -r '.data.token // empty')
+C_REFRESH_TOKEN=$(echo "$C_LOGIN_RESP" | jq -r '.data.refresh_token // empty')
 if [ -z "$C_TOKEN" ]; then
     echo -e "${RED}✗${NC} C端用户(张大爷)登录失败"
     FAILED=$((FAILED + 1))
@@ -384,9 +479,17 @@ TOTAL=$((TOTAL + 1))
 if [ -n "$C_TOKEN" ]; then
     test_api "C端 - 获取当前用户" "GET" "/c/auth/me" "$C_TOKEN" "" "ok"
     test_api "C端 - Token检查" "GET" "/c/auth/check" "$C_TOKEN" "" ""
+    test_api "C端 - 刷新Token" "POST" "/c/auth/refresh" "" "{\"refresh_token\":\"$C_REFRESH_TOKEN\"}" "ok"
     test_api "C端 Token - 访问B端拒绝" "GET" "/b/auth/me" "$C_TOKEN" "" "token end type mismatch" "403"
     test_api "C端 - 更新个人资料" "PUT" "/c/profile" "$C_TOKEN" '{"name":"张大爷","address":"北京市昌平区霍营街道华龙苑北里小区"}' "ok"
     test_api "C端 - 通知列表" "GET" "/c/notifications" "$C_TOKEN" "" "ok"
+    C_NOTIFICATION_LIST=$(api_call "GET" "/c/notifications?page_size=1" "$C_TOKEN" "")
+    C_NOTIFICATION_ID=$(echo "$C_NOTIFICATION_LIST" | jq -r '.data.items[0].id // empty')
+    if [ -n "$C_NOTIFICATION_ID" ] && [ "$C_NOTIFICATION_ID" != "null" ]; then
+        test_api "C端 - 通知标记已读" "POST" "/c/notifications/$C_NOTIFICATION_ID/read" "$C_TOKEN" "" "ok"
+    else
+        echo -e "${YELLOW}⚠${NC} 未找到 C 端通知，跳过已读测试"
+    fi
 
     # =====================================================
     # C端业务流程测试（创建请求 → 查看 → 取消）
@@ -449,6 +552,13 @@ if [ -n "$C_TOKEN" ]; then
     EDIT_REQUEST_ID=$(echo "$EDIT_REQ_RESP" | jq -r '.data.id // empty')
     if [ -n "$EDIT_REQUEST_ID" ] && [ "$EDIT_REQUEST_ID" != "null" ]; then
         test_api "Admin - 更新请求信息" "PUT" "/b/requests/$EDIT_REQUEST_ID" "$ADMIN_TOKEN" '{"description":"补充描述","urgency":"normal"}' ""
+    fi
+
+    STATUS_REQ_RESP=$(api_call "POST" "/c/requests" "$C_TOKEN" '{"service_type":"care","contact_name":"张大爷","contact_phone":"13800000008","address":"北京市昌平区霍营街道","lat":40.07,"lng":116.37}')
+    STATUS_REQUEST_ID=$(echo "$STATUS_REQ_RESP" | jq -r '.data.id // empty')
+    if [ -n "$STATUS_REQUEST_ID" ] && [ "$STATUS_REQUEST_ID" != "null" ]; then
+        test_api "Admin - 更新请求状态" "PUT" "/b/requests/$STATUS_REQUEST_ID/status" "$ADMIN_TOKEN" '{"status":"rejected","reject_reason":"API 冒烟测试拒绝"}' "ok"
+        test_api "Admin - 查看状态更新后的请求" "GET" "/b/requests/$STATUS_REQUEST_ID" "$ADMIN_TOKEN" "" ""
     fi
 
     # C端登出
@@ -529,7 +639,7 @@ if [ -n "$FAMILY_TOKEN" ]; then
         if [ -n "$FAMILY_TASK_ID" ] && [ "$FAMILY_TASK_ID" != "null" ]; then
             test_api "Staff - 认领Family请求任务" "POST" "/b/tasks/$FAMILY_TASK_ID/claim" "$STAFF_TOKEN" "" "ok"
             test_api "Staff - 完成Family请求任务" "POST" "/b/tasks/$FAMILY_TASK_ID/complete" "$STAFF_TOKEN" '{"images":[]}' "ok"
-            test_api "Family - 评价服务" "POST" "/c/requests/$FAMILY_FLOW_ID/rate" "$FAMILY_TOKEN" "{\"rating\":4,\"feedback\":\"$FAMILY_NAME：服务态度好\"}" "ok"
+            test_api "Family - 评价服务" "POST" "/c/requests/$FAMILY_FLOW_ID/rate" "$FAMILY_TOKEN" "{\"rating\":4,\"feedback\":\"${FAMILY_NAME}: 服务态度好\"}" "ok"
         else
             echo -e "${YELLOW}⚠${NC} 未找到Family请求对应任务，跳过认领/完成/评价"
         fi

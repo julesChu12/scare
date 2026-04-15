@@ -170,6 +170,67 @@ func TestCAuthHandler_QuickStart_RequiresAddressOrLocation(t *testing.T) {
 	}
 }
 
+func TestCAuthHandler_QuickStart_InactiveExistingUserForbidden(t *testing.T) {
+	db := openHandlerTestDB(t, "c_auth_quickstart_inactive_user.db")
+	createHandlerTables(t, db)
+
+	user := &model.User{
+		Phone:  "13800138008",
+		Name:   "停用用户",
+		Status: "inactive",
+	}
+	if err := db.Omit("PasswordHash").Create(user).Error; err != nil {
+		t.Fatalf("failed to create user: %v", err)
+	}
+	if err := db.Create(&model.CustomerProfile{
+		UserID:           user.ID,
+		Address:          "旧地址",
+		CustomerType:     "elderly",
+		EmergencyContact: `{}`,
+	}).Error; err != nil {
+		t.Fatalf("failed to create profile: %v", err)
+	}
+	if err := db.Create(&model.UserIdentity{
+		UserID:       user.ID,
+		IdentityType: "elderly",
+		IsPrimary:    true,
+		Status:       "active",
+	}).Error; err != nil {
+		t.Fatalf("failed to create identity: %v", err)
+	}
+
+	smsSvc := service.NewSMSService(nil, "development")
+	authSvc := service.NewAuthService(
+		repository.NewUserRepository(db),
+		repository.NewUserIdentityRepository(db),
+		repository.NewCustomerRepository(db),
+		jwt.NewManager("test-secret", 1, 2),
+		smsSvc,
+		db,
+	)
+	authSvc.SetStationRepo(repository.NewStationRepository(db))
+	authSvc.SetGeofenceService(&service.GeofenceService{})
+
+	handler := NewCAuthHandler(authSvc, repository.NewUserRepository(db), repository.NewCustomerRepository(db), smsSvc)
+	c, w := newJSONTestContext(t, http.MethodPost, "/c/auth/quick-start", map[string]any{
+		"phone":        "13800138008",
+		"code":         "000000",
+		"name":         "停用用户",
+		"address":      "测试地址",
+		"service_type": "meal",
+	})
+
+	handler.QuickStart(c)
+
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("expected 403, got %d", w.Code)
+	}
+	resp := decodeResponseMap(t, w)
+	if resp["msg"] != "user inactive" {
+		t.Fatalf("unexpected message: %v", resp["msg"])
+	}
+}
+
 func TestCAuthHandler_Login_PasswordNotSet(t *testing.T) {
 	db := openHandlerTestDB(t, "c_auth_login_password_not_set.db")
 	createHandlerTables(t, db)

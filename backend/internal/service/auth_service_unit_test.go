@@ -379,6 +379,32 @@ func TestAuthService_QuickStart_RequiresAddress(t *testing.T) {
 	}
 }
 
+func TestAuthService_QuickStart_RejectsInactiveExistingUser(t *testing.T) {
+	authSvc, db, _ := setupAuthUnitService(t)
+	user := seedAuthUnitUser(t, db, "13820000007", "Test@123", "inactive", 0)
+	seedAuthUnitProfile(t, db, user.ID, "旧地址")
+	seedAuthUnitIdentity(t, db, user.ID, consts.IdentityElderly, true, 0)
+
+	_, err := authSvc.QuickStart(QuickStartInput{
+		Phone:       "13820000007",
+		Code:        "000000",
+		Name:        "停用用户",
+		Address:     "测试地址",
+		ServiceType: consts.ServiceTypeMeal,
+	})
+	if !errors.Is(err, ErrUserInactive) {
+		t.Fatalf("expected ErrUserInactive, got %v", err)
+	}
+
+	var requestCount int64
+	if err := db.Model(&model.ServiceRequest{}).Where("user_id = ?", user.ID).Count(&requestCount).Error; err != nil {
+		t.Fatalf("failed to count requests: %v", err)
+	}
+	if requestCount != 0 {
+		t.Fatalf("expected no request to be created, got %d", requestCount)
+	}
+}
+
 func TestAuthService_Register_Success(t *testing.T) {
 	authSvc, db, _ := setupAuthUnitService(t)
 
