@@ -110,6 +110,34 @@ jobs:
         run: |
           echo "SSH_OPTS=-i ~/.ssh/deploy_key -p ${{ secrets.SERVER_PORT || 22 }} -o ServerAliveInterval=30 -o ServerAliveCountMax=20 -o TCPKeepAlive=yes -o StrictHostKeyChecking=yes" >> $GITHUB_ENV
 
+      - name: 初始化服务器部署目录
+        run: |
+          ssh $SSH_OPTS \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "mkdir -p '${{ env.DEPLOY_DIR }}/deployment'"
+
+      - name: 写入服务器部署配置
+        run: |
+          ssh $SSH_OPTS \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
+            "cat > '${{ env.DEPLOY_DIR }}/deployment/.env' <<'EOF'
+          DB_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}
+          DB_NAME=${{ secrets.DB_NAME || 'scare_db' }}
+          DB_USER=${{ secrets.DB_USER || 'scare_user' }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DB_PORT=${{ secrets.DB_PORT || '3306' }}
+          REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+          REDIS_PORT=${{ secrets.REDIS_PORT || '6379' }}
+          BACKEND_PORT=${{ secrets.BACKEND_PORT || '8080' }}
+          NGINX_PORT=${{ secrets.NGINX_PORT || '80' }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          SMTP_HOST=${{ secrets.SMTP_HOST }}
+          SMTP_PORT=${{ secrets.SMTP_PORT || '465' }}
+          SMTP_USER=${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
+          AMAP_KEY=${{ secrets.AMAP_KEY }}
+          EOF"
+
       # 同步项目文件到服务器
       - name: 同步文件到服务器
         run: |
@@ -122,14 +150,14 @@ jobs:
             --exclude='/paper/' \
             --exclude='/database/' \
             -e "ssh $SSH_OPTS" \
-            ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.DEPLOY_DIR }}/ || true
+            ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.DEPLOY_DIR }}/
 
       # 在服务器上执行部署（包含迁移）
       - name: 执行部署与迁移
         run: |
           ssh $SSH_OPTS \
             ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-            "cd ${{ env.DEPLOY_DIR }} && bash deployment/server-deploy.sh"
+            "mkdir -p '${{ env.DEPLOY_DIR }}' && cd '${{ env.DEPLOY_DIR }}' && bash deployment/server-deploy.sh"
 
       # 健康检查
       - name: 健康检查
