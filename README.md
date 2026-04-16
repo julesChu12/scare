@@ -80,12 +80,14 @@ cd community-elderly-care-platform
 cd backend
 cp .env.example .env
 docker compose up -d
+go run . migrate
 ```
 
 说明：
 - `backend/docker-compose.yml` 会启动本地 MySQL 8.0 和 Redis 7.0
-- MySQL 首次启动会自动执行 `database/schema/schema.sql` 和 `database/seeds/*.sql`
-- 如需重建本地数据库，可执行 `docker compose down -v && docker compose up -d`
+- MySQL 首次启动会自动执行 `backend/database/schema/schema.sql` 和 `backend/database/seeds/001~007`
+- 增量结构变更统一通过 `go run . migrate` 执行，迁移记录保存在 `schema_migrations`
+- 如需重建本地数据库，可执行 `docker compose down -v && docker compose up -d && go run . migrate`
 - 当前默认种子数据会初始化 `12` 个用户、`4` 个站点、`6` 个围栏、`4` 条服务请求和 `18` 个菜单
 
 ### 3. 启动后端
@@ -222,10 +224,7 @@ sCare/
 │   ├── PROJECT_STATUS.md      # 项目开发状态
 │   └── planning/              # 历史规划文档
 │
-├── database/                  # 数据库
-│   ├── schema/                # 表结构
-│   ├── seeds/                 # 测试数据
-│   └── docs/                  # 数据库文档
+├── database/                  # 历史兼容目录（仅保留说明性文件）
 │
 ├── deployment/                # 部署配置
 │   └── docs/                  # 部署文档
@@ -239,7 +238,7 @@ sCare/
 backend/
 ├── main.go                    # CLI 入口
 ├── cmd/                       # serve / migrate 等命令
-├── database/                  # schema / seeds / migrations
+├── database/                  # schema / seeds / migrations（数据库唯一真相源）
 ├── internal/
 │   ├── config/                # 配置管理
 │   ├── consts/                # 业务常量
