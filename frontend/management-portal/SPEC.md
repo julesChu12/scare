@@ -680,7 +680,7 @@ func PermissionMiddleware(permService *service.PermissionService) gin.HandlerFun
 
 ### 6.3 权限初始化
 
-权限数据通过 `database/seeds/seed.sql` 初始化到 `permissions`、`roles`、`role_permissions` 三张表中。
+权限数据通过 `backend/database/seeds/seed_all.sql` 初始化到 `permissions`、`roles`、`role_permissions` 三张表中。
 公共权限（如个人信息查看、登出等）已内置于权限表，无需额外配置。
 
 ---

@@ -314,7 +314,7 @@
 
 2. 导入种子数据(测试账号+站点+围栏)
    ```bash
-   mysql -u root -p scare_db < database/seeds/seed.sql
+   mysql -u root -p scare_db < backend/database/seeds/seed_all.sql
    ```
 
 3. 配置环境变量

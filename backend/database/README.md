@@ -51,10 +51,10 @@ DB_PASSWORD=your_password ./init.sh
 mysql -u root -p
 
 # 2. 执行表结构创建
-source /path/to/database/schema/schema.sql
+source /path/to/backend/database/schema/schema.sql
 
 # 3. 导入种子数据
-source /path/to/database/seeds/seed.sql
+source /path/to/backend/database/seeds/seed_all.sql
 ```
 
 ### 方式三: GORM AutoMigrate (开发环境)
