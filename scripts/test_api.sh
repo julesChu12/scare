@@ -89,6 +89,21 @@ assert_not_empty() {
     fi
 }
 
+assert_equals() {
+    local name="$1"
+    local actual="$2"
+    local expected="$3"
+
+    TOTAL=$((TOTAL + 1))
+    if [ "$actual" = "$expected" ]; then
+        echo -e "${GREEN}✓${NC} $name"
+        PASSED=$((PASSED + 1))
+    else
+        echo -e "${RED}✗${NC} $name (expected: $expected, got: $actual)"
+        FAILED=$((FAILED + 1))
+    fi
+}
+
 # 调用 API 并返回响应体（用于提取 ID 等字段）
 api_call() {
     local method="$1"
@@ -454,6 +469,11 @@ if [ -n "$QUICKSTART_TOKEN" ] && [ "$QUICKSTART_TOKEN" != "null" ]; then
     test_api "QuickStart - 获取当前用户" "GET" "/c/auth/me" "$QUICKSTART_TOKEN" "" "ok"
     test_api "QuickStart - Token检查" "GET" "/c/auth/check" "$QUICKSTART_TOKEN" "" "ok"
     test_api "QuickStart - 刷新Token" "POST" "/c/auth/refresh" "" "{\"refresh_token\":\"$QUICKSTART_REFRESH_TOKEN\"}" "ok"
+    QUICKSTART_ME_RESP=$(api_call "GET" "/c/auth/me" "$QUICKSTART_TOKEN" "")
+    QUICKSTART_HAS_PASSWORD=$(echo "$QUICKSTART_ME_RESP" | jq -r '.data.has_password | tostring')
+    QUICKSTART_CUSTOMER_TYPE=$(echo "$QUICKSTART_ME_RESP" | jq -r '.data.customer_type // empty')
+    assert_equals "QuickStart - 默认未设置密码" "$QUICKSTART_HAS_PASSWORD" "false"
+    assert_not_empty "QuickStart - 当前用户返回 customer_type" "$QUICKSTART_CUSTOMER_TYPE"
     if [ -n "$QUICKSTART_REQUEST_ID" ] && [ "$QUICKSTART_REQUEST_ID" != "null" ]; then
         test_api "QuickStart - 查看服务请求" "GET" "/c/requests/$QUICKSTART_REQUEST_ID" "$QUICKSTART_TOKEN" "" "ok"
     fi
@@ -482,6 +502,11 @@ if [ -n "$C_TOKEN" ]; then
     test_api "C端 - 刷新Token" "POST" "/c/auth/refresh" "" "{\"refresh_token\":\"$C_REFRESH_TOKEN\"}" "ok"
     test_api "C端 Token - 访问B端拒绝" "GET" "/b/auth/me" "$C_TOKEN" "" "token end type mismatch" "403"
     test_api "C端 - 更新个人资料" "PUT" "/c/profile" "$C_TOKEN" '{"name":"张大爷","address":"北京市昌平区霍营街道华龙苑北里小区"}' "ok"
+    C_CHECK_AFTER_PROFILE=$(api_call "GET" "/c/auth/check" "$C_TOKEN" "")
+    C_PROFILE_NAME=$(echo "$C_CHECK_AFTER_PROFILE" | jq -r '.data.profile.name // empty')
+    C_PROFILE_ADDRESS=$(echo "$C_CHECK_AFTER_PROFILE" | jq -r '.data.profile.address // empty')
+    assert_equals "C端 - 更新资料后姓名已回写" "$C_PROFILE_NAME" "张大爷"
+    assert_equals "C端 - 更新资料后地址已回写" "$C_PROFILE_ADDRESS" "北京市昌平区霍营街道华龙苑北里小区"
     test_api "C端 - 通知列表" "GET" "/c/notifications" "$C_TOKEN" "" "ok"
     C_NOTIFICATION_LIST=$(api_call "GET" "/c/notifications?page_size=1" "$C_TOKEN" "")
     C_NOTIFICATION_ID=$(echo "$C_NOTIFICATION_LIST" | jq -r '.data.items[0].id // empty')
@@ -559,6 +584,11 @@ if [ -n "$C_TOKEN" ]; then
     if [ -n "$STATUS_REQUEST_ID" ] && [ "$STATUS_REQUEST_ID" != "null" ]; then
         test_api "Admin - 更新请求状态" "PUT" "/b/requests/$STATUS_REQUEST_ID/status" "$ADMIN_TOKEN" '{"status":"rejected","reject_reason":"API 冒烟测试拒绝"}' "ok"
         test_api "Admin - 查看状态更新后的请求" "GET" "/b/requests/$STATUS_REQUEST_ID" "$ADMIN_TOKEN" "" ""
+        STATUS_REQUEST_DETAIL=$(api_call "GET" "/b/requests/$STATUS_REQUEST_ID" "$ADMIN_TOKEN" "")
+        STATUS_REQUEST_STATUS=$(echo "$STATUS_REQUEST_DETAIL" | jq -r '.data.status // empty')
+        STATUS_REQUEST_REASON=$(echo "$STATUS_REQUEST_DETAIL" | jq -r '.data.reject_reason // empty')
+        assert_equals "Admin - 请求状态已更新为 rejected" "$STATUS_REQUEST_STATUS" "rejected"
+        assert_equals "Admin - 请求驳回原因已持久化" "$STATUS_REQUEST_REASON" "API 冒烟测试拒绝"
     fi
 
     # C端登出
@@ -602,6 +632,11 @@ if [ -n "$FAMILY_TOKEN" ]; then
     test_api "Family - Token检查" "GET" "/c/auth/check" "$FAMILY_TOKEN" "" ""
     test_api "Family Token - 访问B端拒绝" "GET" "/b/auth/me" "$FAMILY_TOKEN" "" "token end type mismatch" "403"
     test_api "Family - 更新个人资料" "PUT" "/c/profile" "$FAMILY_TOKEN" "{\"name\":\"$FAMILY_NAME\",\"address\":\"$FAMILY_ADDRESS\"}" "ok"
+    FAMILY_CHECK_AFTER_PROFILE=$(api_call "GET" "/c/auth/check" "$FAMILY_TOKEN" "")
+    FAMILY_PROFILE_NAME=$(echo "$FAMILY_CHECK_AFTER_PROFILE" | jq -r '.data.profile.name // empty')
+    FAMILY_PROFILE_ADDRESS=$(echo "$FAMILY_CHECK_AFTER_PROFILE" | jq -r '.data.profile.address // empty')
+    assert_equals "Family - 更新资料后姓名已回写" "$FAMILY_PROFILE_NAME" "$FAMILY_NAME"
+    assert_equals "Family - 更新资料后地址已回写" "$FAMILY_PROFILE_ADDRESS" "$FAMILY_ADDRESS"
     test_api "Family - 通知列表" "GET" "/c/notifications" "$FAMILY_TOKEN" "" "ok"
 
     # 公开接口（无需 token 也能访问，但 family 访问也应正常）

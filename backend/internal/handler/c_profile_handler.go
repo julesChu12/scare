@@ -3,7 +3,6 @@ package handler
 import (
 	"net/http"
 
-	"community-elderly-care-platform/internal/repository"
 	"community-elderly-care-platform/internal/service"
 
 	"github.com/gin-gonic/gin"
@@ -11,13 +10,13 @@ import (
 
 // CProfileHandler C端个人资料处理器
 type CProfileHandler struct {
-	customerRepo   *repository.CustomerRepository
+	profileService *service.CEndProfileService
 	geocodeService *service.GeocodeService
 }
 
-func NewCProfileHandler(customerRepo *repository.CustomerRepository, geocodeService *service.GeocodeService) *CProfileHandler {
+func NewCProfileHandler(profileService *service.CEndProfileService, geocodeService *service.GeocodeService) *CProfileHandler {
 	return &CProfileHandler{
-		customerRepo:   customerRepo,
+		profileService: profileService,
 		geocodeService: geocodeService,
 	}
 }
@@ -55,26 +54,21 @@ func (h *CProfileHandler) UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	// 获取现有档案
-	profile, err := h.customerRepo.GetByUserID(userID)
+	profile, err := h.profileService.Update(userID, service.CEndProfileUpdateInput{
+		Name:     req.Name,
+		IDNumber: req.IDNumber,
+		Address:  req.Address,
+		UserType: req.UserType,
+	})
 	if err != nil {
-		RespondError(c, http.StatusNotFound, "profile not found")
-		return
-	}
-
-	// 更新字段
-	if req.IDNumber != nil {
-		profile.IDCard = *req.IDNumber
-	}
-	if req.Address != nil {
-		profile.Address = *req.Address
-	}
-	if req.UserType != nil {
-		profile.CustomerType = *req.UserType
-	}
-
-	// 保存更新
-	if err := h.customerRepo.Update(profile); err != nil {
+		if err == service.ErrNoCustomerProfile {
+			RespondError(c, http.StatusNotFound, "profile not found")
+			return
+		}
+		if err == service.ErrUserNotFound {
+			RespondError(c, http.StatusNotFound, "user not found")
+			return
+		}
 		RespondError(c, http.StatusInternalServerError, "update failed")
 		return
 	}

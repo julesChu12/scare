@@ -254,7 +254,7 @@ func (s *TaskService) sendCompleteNotification(requestID int64) {
 	}(req.UserID)
 }
 
-// GetByID 获取任务详情（含关联的服务请求）
+// GetByID 获取任务详情（含关联的服务请求）。
 func (s *TaskService) GetByID(taskID int64) (*repository.TaskWithRequest, error) {
 	if taskID == 0 {
 		return nil, ErrTaskInvalid
@@ -262,7 +262,11 @@ func (s *TaskService) GetByID(taskID int64) (*repository.TaskWithRequest, error)
 	return s.taskRepo.GetByIDWithRequest(taskID)
 }
 
-// ListWithFilter 根据筛选条件查询任务列表（含关联数据）
+// ListWithFilter 根据筛选条件查询任务列表（含关联数据）。
+//
+// 说明：
+// - 管理端可通过 station_id / status / staff_id 组合筛选
+// - 具体可见范围控制由 Handler 层结合当前登录身份收口
 func (s *TaskService) ListWithFilter(filter repository.TaskListFilter, page, pageSize int) ([]*repository.TaskWithRequest, int64, error) {
 	offset := (page - 1) * pageSize
 	return s.taskRepo.ListWithRequest(filter, offset, pageSize)
@@ -332,6 +336,7 @@ func (s *TaskService) Transfer(taskID, newStaffID int64) (*model.TaskAssignment,
 	return &task, nil
 }
 
+// sendTransferNotification 异步通知新接收任务的工作人员。
 func (s *TaskService) sendTransferNotification(requestID, staffID int64) {
 	if s.notifySvc == nil {
 		return

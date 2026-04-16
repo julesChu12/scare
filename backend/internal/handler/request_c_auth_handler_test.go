@@ -10,7 +10,15 @@ import (
 	"community-elderly-care-platform/pkg/jwt"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
+
+func newTestCEndAccountService(db *gorm.DB) *service.CEndAccountService {
+	return service.NewCEndAccountService(
+		repository.NewUserRepository(db),
+		repository.NewCustomerRepository(db),
+	)
+}
 
 func TestRequestHandler_List_BEndStationManagerUsesOwnStationScope(t *testing.T) {
 	db := openHandlerTestDB(t, "request_handler_list_scope.db")
@@ -151,7 +159,7 @@ func TestCAuthHandler_QuickStart_RequiresAddressOrLocation(t *testing.T) {
 	authSvc.SetStationRepo(repository.NewStationRepository(db))
 	authSvc.SetGeofenceService(&service.GeofenceService{})
 
-	handler := NewCAuthHandler(authSvc, repository.NewUserRepository(db), repository.NewCustomerRepository(db), smsSvc)
+	handler := NewCAuthHandler(authSvc, newTestCEndAccountService(db), smsSvc)
 	c, w := newJSONTestContext(t, http.MethodPost, "/c/auth/quick-start", map[string]any{
 		"phone":        "13800138000",
 		"code":         "000000",
@@ -211,7 +219,7 @@ func TestCAuthHandler_QuickStart_InactiveExistingUserForbidden(t *testing.T) {
 	authSvc.SetStationRepo(repository.NewStationRepository(db))
 	authSvc.SetGeofenceService(&service.GeofenceService{})
 
-	handler := NewCAuthHandler(authSvc, repository.NewUserRepository(db), repository.NewCustomerRepository(db), smsSvc)
+	handler := NewCAuthHandler(authSvc, newTestCEndAccountService(db), smsSvc)
 	c, w := newJSONTestContext(t, http.MethodPost, "/c/auth/quick-start", map[string]any{
 		"phone":        "13800138008",
 		"code":         "000000",
@@ -269,7 +277,7 @@ func TestCAuthHandler_Login_PasswordNotSet(t *testing.T) {
 		db,
 	)
 
-	handler := NewCAuthHandler(authSvc, repository.NewUserRepository(db), repository.NewCustomerRepository(db), smsSvc)
+	handler := NewCAuthHandler(authSvc, newTestCEndAccountService(db), smsSvc)
 	c, w := newJSONTestContext(t, http.MethodPost, "/c/auth/login", map[string]any{
 		"phone":    "13800138009",
 		"password": "Test@123",
@@ -310,7 +318,7 @@ func TestCAuthHandler_SetPassword_FirstTimeSuccess(t *testing.T) {
 		db,
 	)
 
-	handler := NewCAuthHandler(authSvc, repository.NewUserRepository(db), repository.NewCustomerRepository(db), smsSvc)
+	handler := NewCAuthHandler(authSvc, newTestCEndAccountService(db), smsSvc)
 	c, w := newJSONTestContext(t, http.MethodPost, "/c/auth/password", map[string]any{
 		"new_password": "NewPass@123",
 	})
@@ -348,7 +356,7 @@ func TestCAuthHandler_SetPassword_RequiresCurrentPasswordWhenExisting(t *testing
 		db,
 	)
 
-	handler := NewCAuthHandler(authSvc, repository.NewUserRepository(db), repository.NewCustomerRepository(db), smsSvc)
+	handler := NewCAuthHandler(authSvc, newTestCEndAccountService(db), smsSvc)
 	c, w := newJSONTestContext(t, http.MethodPost, "/c/auth/password", map[string]any{
 		"new_password": "NewPass@123",
 	})
@@ -398,7 +406,7 @@ func TestCAuthHandler_ResetPassword_Success(t *testing.T) {
 		db,
 	)
 
-	handler := NewCAuthHandler(authSvc, repository.NewUserRepository(db), repository.NewCustomerRepository(db), smsSvc)
+	handler := NewCAuthHandler(authSvc, newTestCEndAccountService(db), smsSvc)
 	c, w := newJSONTestContext(t, http.MethodPost, "/c/auth/reset-password", map[string]any{
 		"phone":        "13800138012",
 		"code":         "123456",
@@ -427,7 +435,7 @@ func TestCAuthHandler_CheckToken_ReturnsUserAndProfile(t *testing.T) {
 		service.NewSMSService(nil, "development"),
 		db,
 	)
-	handler := NewCAuthHandler(authService, userRepo, customerRepo, service.NewSMSService(nil, "development"))
+	handler := NewCAuthHandler(authService, service.NewCEndAccountService(userRepo, customerRepo), service.NewSMSService(nil, "development"))
 
 	c, w := newJSONTestContext(t, http.MethodGet, "/c/auth/check", nil)
 	setCEndClaims(c, 10)
@@ -449,5 +457,43 @@ func TestCAuthHandler_CheckToken_ReturnsUserAndProfile(t *testing.T) {
 	profile := data["profile"].(map[string]any)
 	if profile["address"] != "测试地址" || profile["user_type"] != "elderly" {
 		t.Fatalf("unexpected profile payload: %+v", profile)
+	}
+}
+
+func TestCAuthHandler_Me_ReturnsAccountInfo(t *testing.T) {
+	db := openHandlerTestDB(t, "c_auth_me.db")
+	createHandlerTables(t, db)
+	seedHandlerUserAndProfile(t, db, 11, "13900000002", "李奶奶", "family", "回龙观东大街")
+
+	userRepo := repository.NewUserRepository(db)
+	customerRepo := repository.NewCustomerRepository(db)
+	authService := service.NewAuthService(
+		userRepo,
+		repository.NewUserIdentityRepository(db),
+		customerRepo,
+		jwt.NewManager("test-secret", 1, 2),
+		service.NewSMSService(nil, "development"),
+		db,
+	)
+	handler := NewCAuthHandler(authService, service.NewCEndAccountService(userRepo, customerRepo), service.NewSMSService(nil, "development"))
+
+	c, w := newJSONTestContext(t, http.MethodGet, "/c/auth/me", nil)
+	setCEndClaims(c, 11)
+
+	handler.Me(c)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+	resp := decodeResponseMap(t, w)
+	data := resp["data"].(map[string]any)
+	if data["name"] != "李奶奶" {
+		t.Fatalf("expected name 李奶奶, got %v", data["name"])
+	}
+	if data["customer_type"] != "family" {
+		t.Fatalf("expected customer_type family, got %v", data["customer_type"])
+	}
+	if data["has_password"] != true {
+		t.Fatalf("expected has_password=true, got %v", data["has_password"])
 	}
 }

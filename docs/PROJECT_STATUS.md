@@ -1,6 +1,6 @@
 # 项目开发进度与功能实现状态报告
 
-**更新日期**：2026-04-14
+**更新日期**：2026-04-15
 **检查范围**：全代码审查（后端 5 大模块 + 前端 C/B 两端全部页面，已通过实际代码阅读验证）
 
 ---
@@ -13,7 +13,7 @@
 | **C端前端** | 100% | ✅ 完成 | 16 个页面全部完成，PWA 离线优化完成 |
 | **B端前端** | 100% | ✅ 完成 | 18 个页面全部完成，权限体系四层完整 |
 | **数据库设计** | 100% | ✅ 完成 | 表结构完整，测试数据已就绪 |
-| **权限系统** | 100% | ✅ 完成 | 自定义 RBAC 三表模型，四层权限体系 |
+| **权限系统** | 100% | ✅ 完成 | RBAC 核心三表 + 身份/菜单辅助模型，四层权限体系 |
 | **地理围栏** | 100% | ✅ 完成 | 射线法 + BoundingBox + Haversine 兜底，单元测试覆盖 |
 | **通知系统** | 100% | ✅ 完成 | 站内信 + 邮件通知（goroutine 异步发送） |
 | **部署配置** | 90% | ✅ 基本完成 | Docker Compose 生产配置 + Nginx |
@@ -69,7 +69,7 @@
 - ✅ 老年人档案 CRUD + 服务记录查询
 
 #### 7. 权限系统 (100%)
-- ✅ 自定义 RBAC（permissions/roles/role_permissions 三表）
+- ✅ RBAC 核心三表（permissions/roles/role_permissions）
 - ✅ PermissionService 权限检查
 - ✅ Admin 角色跳过所有权限检查
 - ✅ 角色权限树查询与更新
@@ -139,18 +139,18 @@
 | 围栏管理 | ZoneManagement/index.vue | ✅ 完成 |
 | 用户管理 | UserManagement/index.vue | ✅ 完成 |
 | 角色权限 | RolePermission/index.vue | ✅ 完成 |
-| 服务类型 | ServiceTypeManagement/index.vue | ✅ 完成 |
 | 服务需求 | RequestManagement/index.vue | ✅ 完成 |
 | 任务管理 | TaskManagement/index.vue | ✅ 完成 |
+| 任务详情 | TaskDetail/index.vue | ✅ 完成 |
 | 老年人档案 | ElderlyManagement/index.vue | ✅ 完成 |
+| 老人详情 | ElderlyDetail/index.vue | ✅ 完成 |
+| 统计概览 | StatisticsOverview/index.vue | ✅ 完成 |
+| 报表管理 | StatisticsReports/index.vue | ✅ 完成 |
 | 轮播图管理 | BannerManagement/index.vue | ✅ 完成 |
 | 新闻公告 | NewsManagement/index.vue | ✅ 完成 |
 | 通知管理 | NotificationManagement/index.vue | ✅ 完成 |
 | 菜单管理 | MenuManagement/index.vue | ✅ 完成 |
-| 日志管理 | LogManagement/index.vue | ✅ 完成 |
-| 工单统计 | Statistics/index.vue | ✅ 完成 |
 | 个人中心 | Profile/index.vue | ✅ 完成 |
-| 404 | NotFound.vue | ✅ 完成 |
 
 #### 权限体系（四层完整）
 1. ✅ 路由守卫（meta.permission_code）
@@ -230,13 +230,13 @@
 - ✅ **核心功能**：全部完成，完整业务流程可演示
 - ✅ **管理功能**：18 个管理页面全部完成
 - ✅ **通知系统**：站内信 + 邮件，关键节点自动触发
-- ✅ **权限系统**：自定义 RBAC，四层权限体系完整
+- ✅ **权限系统**：RBAC 核心三表 + 身份/菜单辅助模型，四层权限体系完整
 - ✅ **部署配置**：Docker Compose + Nginx 生产配置
 
 ### 主要成就
 
 1. ✅ 完整的地理围栏匹配系统（射线法 + BoundingBox + Haversine 兜底）
-2. ✅ 完整的自定义 RBAC 权限系统（三表模型 + 缓存 + 四层前端权限）
+2. ✅ 完整的 RBAC 权限系统（核心三表 + 缓存 + 四层前端权限）
 3. ✅ 完整的 C 端用户流程（16 页面 + PWA 离线支持）
 4. ✅ 完整的 B 端管理流程（18 页面 + ECharts 可视化）
 5. ✅ 完整的通知系统（站内信 + 邮件，异步发送）
@@ -244,5 +244,5 @@
 
 ---
 
-**报告更新时间**：2026-04-14（新增服务地址派单收敛与人工复核逻辑验证）
+**报告更新时间**：2026-04-15（同步最新提交、页面清单与权限术语）
 **下次更新建议**：部署上线后更新

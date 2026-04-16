@@ -75,6 +75,12 @@ type ReportPreviewData struct {
 	StationCount          int64   `json:"station_count"`
 }
 
+// GenerateReport 生成并持久化报表文件。
+//
+// 说明：
+// 1. station_id=0 表示管理员全局视角
+// 2. 报表文件会先落本地存储，再写入 reports 表
+// 3. 当前支持 xlsx / csv，两者共用同一份统计口径
 func (s *ReportService) GenerateReport(input GenerateReportInput) (*GenerateReportOutput, error) {
 	reportName := s.generateReportName(input.Type, input.StartDate, input.EndDate)
 	filePath := s.generateFilePath(input.Type, input.Format)
@@ -131,6 +137,7 @@ func (s *ReportService) GetReport(id int64) (*model.Report, error) {
 	return s.reportRepo.GetByID(id)
 }
 
+// GetPreview 返回报表生成前的摘要预览数据，用于前端二次确认。
 func (s *ReportService) GetPreview(input GenerateReportInput) (*ReportPreviewData, error) {
 	isAdmin := input.StationID == 0
 	totalRequests, err := s.requestRepo.CountBetween(input.StationID, isAdmin, input.StartDate, input.EndDate)
@@ -183,11 +190,13 @@ func (s *ReportService) GetPreview(input GenerateReportInput) (*ReportPreviewDat
 	return preview, nil
 }
 
+// ListReports 分页查询报表记录。
 func (s *ReportService) ListReports(filter repository.ReportFilter, page, pageSize int) ([]*model.Report, int64, error) {
 	offset := (page - 1) * pageSize
 	return s.reportRepo.List(filter, offset, pageSize)
 }
 
+// DeleteReport 删除报表记录，并尽力删除本地文件。
 func (s *ReportService) DeleteReport(id int64) error {
 	report, err := s.reportRepo.GetByID(id)
 	if err != nil {
@@ -202,6 +211,7 @@ func (s *ReportService) DeleteReport(id int64) error {
 	return nil
 }
 
+// cleanupOldReports 清理超过 30 天的历史报表文件与记录。
 func (s *ReportService) cleanupOldReports() {
 	filePaths, err := s.reportRepo.DeleteOlderThan(30)
 	if err != nil {

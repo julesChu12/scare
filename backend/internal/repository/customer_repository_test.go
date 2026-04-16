@@ -17,6 +17,7 @@ func TestCustomerRepository_CreateAndGetByUserID(t *testing.T) {
 	profile := &model.CustomerProfile{
 		UserID:           1,
 		Address:          "北京市朝阳区幸福小区1号楼101",
+		CustomerType:     "elderly",
 		EmergencyContact: "13800000001",
 		CreatedAt:        now,
 		UpdatedAt:        now,
@@ -38,6 +39,9 @@ func TestCustomerRepository_CreateAndGetByUserID(t *testing.T) {
 	}
 	if got.Address != profile.Address {
 		t.Fatalf("expected address %q, got %q", profile.Address, got.Address)
+	}
+	if got.CustomerType != profile.CustomerType {
+		t.Fatalf("expected customer_type %q, got %q", profile.CustomerType, got.CustomerType)
 	}
 }
 

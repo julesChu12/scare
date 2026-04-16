@@ -215,6 +215,27 @@ func TestRequestService_UpdateStatus_InvalidStatus(t *testing.T) {
 	}
 }
 
+func TestRequestService_UpdateStatus_SuccessPersistsRejectReason(t *testing.T) {
+	svc, db := setupRequestServiceForTest(t)
+	req, _ := createRequestWithTask(t, db, consts.RequestStatusPending, 401)
+
+	err := svc.UpdateStatus(req.ID, consts.RequestStatusRejected, "资料不完整")
+	if err != nil {
+		t.Fatalf("update status failed: %v", err)
+	}
+
+	updated, err := svc.GetByID(req.ID)
+	if err != nil {
+		t.Fatalf("failed to reload request: %v", err)
+	}
+	if updated.Status != consts.RequestStatusRejected {
+		t.Fatalf("expected status rejected, got %s", updated.Status)
+	}
+	if updated.RejectReason != "资料不完整" {
+		t.Fatalf("expected reject reason to persist, got %q", updated.RejectReason)
+	}
+}
+
 func TestRequestService_Cancel_SuccessAndIdempotent(t *testing.T) {
 	svc, db := setupRequestServiceForTest(t)
 	req, _ := createRequestWithTask(t, db, consts.RequestStatusDispatched, 101)

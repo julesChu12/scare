@@ -293,6 +293,9 @@ func TestAuthService_QuickStart_CreatesUserProfileRequestByNearestStation(t *tes
 	if result.Profile.Address != "高纬地址" {
 		t.Fatalf("expected profile address updated, got %q", result.Profile.Address)
 	}
+	if result.Profile.CustomerType != consts.IdentityElderly {
+		t.Fatalf("expected customer_type %q, got %q", consts.IdentityElderly, result.Profile.CustomerType)
+	}
 
 	var passwordHash sql.NullString
 	if err := db.Raw("SELECT password_hash FROM users WHERE id = ?", result.User.ID).Scan(&passwordHash).Error; err != nil {

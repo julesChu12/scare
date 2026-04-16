@@ -45,6 +45,8 @@ type Deps struct {
 	BannerService       *service.BannerService
 	GeocodeService      *service.GeocodeService
 	GeofenceService     *service.GeofenceService
+	CEndAccountService  *service.CEndAccountService
+	CEndProfileService  *service.CEndProfileService
 	StationService      *service.StationService
 	ZoneService         *service.ZoneService
 	RequestService      *service.RequestService
@@ -137,6 +139,8 @@ func NewDeps(db *database.DB, rdb *redis.Client, cfg *config.Config) (*Deps, err
 	d.AuthService.SetGeofenceService(d.GeofenceService)
 	d.AuthService.SetGeocodeService(d.GeocodeService)
 	d.AuthService.SetStationRepo(d.StationRepo)
+	d.CEndAccountService = service.NewCEndAccountService(d.UserRepo, d.CustomerRepo)
+	d.CEndProfileService = service.NewCEndProfileService(db.DB, d.UserRepo, d.CustomerRepo)
 
 	// 初始化邮件发送器
 	var mailSender notify.MailSender
@@ -178,8 +182,8 @@ func NewDeps(db *database.DB, rdb *redis.Client, cfg *config.Config) (*Deps, err
 	d.CustomerHandler = handler.NewCustomerHandler(d.ElderlyService)
 	d.BannerHandler = handler.NewBannerHandler(d.BannerService)
 	d.BAuthHandler = handler.NewBAuthHandler(d.AuthService, d.UserRepo, d.UserIdentityRepo, d.PermissionService)
-	d.CAuthHandler = handler.NewCAuthHandler(d.AuthService, d.UserRepo, d.CustomerRepo, d.SMSService)
-	d.CProfileHandler = handler.NewCProfileHandler(d.CustomerRepo, d.GeocodeService)
+	d.CAuthHandler = handler.NewCAuthHandler(d.AuthService, d.CEndAccountService, d.SMSService)
+	d.CProfileHandler = handler.NewCProfileHandler(d.CEndProfileService, d.GeocodeService)
 	d.StationHandler = handler.NewStationHandler(d.StationService)
 	d.ZoneHandler = handler.NewZoneHandler(d.ZoneService)
 	d.RequestHandler = handler.NewRequestHandler(d.RequestService)

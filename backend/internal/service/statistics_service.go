@@ -70,7 +70,12 @@ func NewStatisticsService(
 	}
 }
 
-// GetDashboardStats 获取工作台统计数据
+// GetDashboardStats 获取工作台统计数据。
+//
+// 说明：
+// - stationID=0 且 isAdmin=true 时返回全局视角
+// - 非管理员视角下，调用方应提前传入已收口后的站点范围
+// - 工作人员额外返回“我的任务”统计，管理员不返回该字段
 func (s *StatisticsService) GetDashboardStats(userID, stationID int64, isAdmin bool) (*DashboardStats, error) {
 	taskStats, err := s.GetTaskStats(stationID, isAdmin)
 	if err != nil {
@@ -104,7 +109,7 @@ func (s *StatisticsService) GetDashboardStats(userID, stationID int64, isAdmin b
 	return stats, nil
 }
 
-// GetTaskStats 获取任务统计
+// GetTaskStats 获取任务统计。
 func (s *StatisticsService) GetTaskStats(stationID int64, isAdmin bool) (*TaskStats, error) {
 	stats := &TaskStats{}
 
@@ -138,7 +143,7 @@ func (s *StatisticsService) GetTaskStats(stationID int64, isAdmin bool) (*TaskSt
 	return stats, nil
 }
 
-// GetRequestStats 获取需求统计
+// GetRequestStats 获取需求统计。
 func (s *StatisticsService) GetRequestStats(stationID int64, isAdmin bool) (*RequestStats, error) {
 	stats := &RequestStats{}
 
@@ -177,7 +182,11 @@ func (s *StatisticsService) GetRequestStats(stationID int64, isAdmin bool) (*Req
 	return stats, nil
 }
 
-// GetTodayStats 获取今日统计
+// GetTodayStats 获取今日统计。
+//
+// 说明：
+// - NewUsers 目前仅在管理员全局视角下返回
+// - AvgResponseTime 字段预留在返回结构中，当前尚未计算写入
 func (s *StatisticsService) GetTodayStats(stationID int64, isAdmin bool) (*TodayStats, error) {
 	stats := &TodayStats{}
 
@@ -204,7 +213,7 @@ func (s *StatisticsService) GetTodayStats(stationID int64, isAdmin bool) (*Today
 	return stats, nil
 }
 
-// GetMyTaskStats 获取我的任务统计
+// GetMyTaskStats 获取我的任务统计。
 func (s *StatisticsService) GetMyTaskStats(userID int64) (*MyTaskStats, error) {
 	stats := &MyTaskStats{}
 

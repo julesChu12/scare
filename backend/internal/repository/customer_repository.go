@@ -26,7 +26,10 @@ func (r *CustomerRepository) GetByUserID(userID int64) (*model.CustomerProfile, 
 // Create 创建档案
 func (r *CustomerRepository) Create(profile *model.CustomerProfile) error {
 	c := r.q.CustomerProfile
-	return c.Select(c.UserID, c.Address, c.EmergencyContact, c.CreatedAt, c.UpdatedAt).Create(profile)
+	if profile.BirthDate.IsZero() {
+		return c.Omit(c.BirthDate).Create(profile)
+	}
+	return c.Create(profile)
 }
 
 // Update 更新档案
@@ -42,4 +45,3 @@ func (r *CustomerRepository) Exists(userID int64) (bool, error) {
 	count, err := c.Where(c.UserID.Eq(userID)).Count()
 	return count > 0, err
 }
-

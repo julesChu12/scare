@@ -194,10 +194,15 @@ type UpdateInput struct {
 	Address      string `json:"address"`
 	Description  string `json:"description"`
 	Urgency      string `json:"urgency"`
-	StationID   *int64 `json:"station_id"`
+	StationID    *int64 `json:"station_id"`
 }
 
 // Update B端编辑服务请求（仅 pending/dispatched 状态可编辑）
+//
+// 说明：
+// 1. 仅允许更新基础资料与人工纠偏字段，不在此处重跑派单逻辑
+// 2. 空值字段保持原值，只有显式传入的非空字段才会落库
+// 3. station_id 允许人工改派，但不会自动生成或重建任务
 func (s *RequestService) Update(id int64, input UpdateInput) (*model.ServiceRequest, error) {
 	req, err := s.repo.GetByID(id)
 	if err != nil {
@@ -247,6 +252,11 @@ func (s *RequestService) Update(id int64, input UpdateInput) (*model.ServiceRequ
 }
 
 // CancelByAdmin B端取消服务请求
+//
+// 业务规则：
+// 1. 已完成需求不可取消，避免破坏已闭环数据
+// 2. 已取消需求视为幂等请求，直接返回当前状态
+// 3. 取消时同步取消关联任务，并通知站点管理员
 func (s *RequestService) CancelByAdmin(id int64) (*model.ServiceRequest, error) {
 	req, err := s.repo.GetByID(id)
 	if err != nil {
@@ -284,12 +294,19 @@ func (s *RequestService) CancelByAdmin(id int64) (*model.ServiceRequest, error) 
 }
 
 // ListAll B端查询所有需求
+//
+// 说明：
+// - admin 可通过 stationID=0 查看全局数据
+// - 非 admin 的站点范围约束由 Handler 层在进入 Service 前收口
 func (s *RequestService) ListAll(stationID int64, status string, page, pageSize int) ([]*repository.RequestWithStation, int64, error) {
 	offset := (page - 1) * pageSize
 	return s.repo.ListAll(stationID, status, offset, pageSize)
 }
 
 // UpdateStatus B端更新状态
+//
+// 适用场景：后台人工审核、驳回或纠偏状态时使用。
+// 这里只做状态值合法性校验，具体状态落库规则由 Repository 层统一处理。
 func (s *RequestService) UpdateStatus(id int64, status string, rejectReason string) error {
 	if !consts.IsValidRequestStatus(status) {
 		return ErrInvalidRequest
@@ -297,6 +314,7 @@ func (s *RequestService) UpdateStatus(id int64, status string, rejectReason stri
 	return s.repo.UpdateStatusByAdmin(id, status, rejectReason)
 }
 
+// GetByID 获取单个服务需求详情。
 func (s *RequestService) GetByID(id int64) (*model.ServiceRequest, error) {
 	if id == 0 {
 		return nil, ErrInvalidRequest
@@ -304,6 +322,13 @@ func (s *RequestService) GetByID(id int64) (*model.ServiceRequest, error) {
 	return s.repo.GetByID(id)
 }
 
+// Cancel C端取消自己的服务请求。
+//
+// 业务规则：
+// 1. 仅需求所属用户可取消
+// 2. 已完成需求不可取消
+// 3. 已取消需求视为幂等请求
+// 4. 取消时同步取消任务，并通知站点管理员
 func (s *RequestService) Cancel(id int64, userID int64) (*model.ServiceRequest, bool, error) {
 	req, err := s.repo.GetByID(id)
 	if err != nil {
@@ -345,6 +370,12 @@ func (s *RequestService) Cancel(id int64, userID int64) (*model.ServiceRequest, 
 	return req, true, nil
 }
 
+// Rate 对已完成的服务请求进行评价。
+//
+// 业务规则：
+// 1. 仅需求所属用户可评价
+// 2. 仅 completed 状态允许评价
+// 3. 每个需求只允许评价一次
 func (s *RequestService) Rate(id int64, userID int64, rating int, feedback string) (*model.ServiceRequest, error) {
 	if rating < 1 || rating > 5 {
 		return nil, ErrInvalidRequest

@@ -533,6 +533,7 @@ func (s *AuthService) QuickStart(input QuickStartInput) (*QuickStartResult, erro
 			newProfile := &model.CustomerProfile{
 				UserID:           user.ID,
 				Address:          decision.ResolvedAddress,
+				CustomerType:     consts.IdentityElderly,
 				EmergencyContact: `{}`, // JSON 列不能为空字符串，用空对象替代
 			}
 			if err := customerRepoTx.Create(newProfile); err != nil {
@@ -542,6 +543,9 @@ func (s *AuthService) QuickStart(input QuickStartInput) (*QuickStartResult, erro
 		} else {
 			if decision.ResolvedAddress != "" {
 				existingProfile.Address = decision.ResolvedAddress
+			}
+			if existingProfile.CustomerType == "" {
+				existingProfile.CustomerType = consts.IdentityElderly
 			}
 			if err := customerRepoTx.Update(existingProfile); err != nil {
 				return err

@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"community-elderly-care-platform/internal/dao/model"
-	"community-elderly-care-platform/internal/repository"
 	"community-elderly-care-platform/internal/service"
 
 	"github.com/gin-gonic/gin"
@@ -12,18 +11,16 @@ import (
 
 // CAuthHandler C端认证处理器
 type CAuthHandler struct {
-	authService  *service.AuthService
-	userRepo     *repository.UserRepository
-	customerRepo *repository.CustomerRepository
-	smsService   *service.SMSService
+	authService    *service.AuthService
+	accountService *service.CEndAccountService
+	smsService     *service.SMSService
 }
 
-func NewCAuthHandler(authService *service.AuthService, userRepo *repository.UserRepository, customerRepo *repository.CustomerRepository, smsService *service.SMSService) *CAuthHandler {
+func NewCAuthHandler(authService *service.AuthService, accountService *service.CEndAccountService, smsService *service.SMSService) *CAuthHandler {
 	return &CAuthHandler{
-		authService:  authService,
-		userRepo:     userRepo,
-		customerRepo: customerRepo,
-		smsService:   smsService,
+		authService:    authService,
+		accountService: accountService,
+		smsService:     smsService,
 	}
 }
 
@@ -122,23 +119,30 @@ func (h *CAuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	// 获取客户档案信息
-	profile, err := h.customerRepo.GetByUserID(user.ID)
-	var customerType string
-	if err == nil && profile.CustomerType != "" {
-		customerType = profile.CustomerType
+	accountInfo, err := h.accountService.GetAccountInfo(user.ID)
+	if err != nil {
+		if err == service.ErrNoCustomerProfile {
+			RespondError(c, http.StatusForbidden, "user has no customer profile")
+			return
+		}
+		if err == service.ErrUserNotFound {
+			RespondError(c, http.StatusNotFound, "用户不存在")
+			return
+		}
+		RespondError(c, http.StatusInternalServerError, "load current user failed")
+		return
 	}
 
 	data := gin.H{
 		"token":         tokens.AccessToken,
 		"refresh_token": tokens.RefreshToken,
-		"user_id":       user.ID,
-		"type":          "c_end",
-		"customer_type": customerType,
-		"name":          user.Name,
-		"phone":         user.Phone,
-		"status":        user.Status,
-		"has_password":  service.HasPasswordHash(user.PasswordHash),
+		"user_id":       accountInfo.UserID,
+		"type":          accountInfo.Type,
+		"customer_type": accountInfo.CustomerType,
+		"name":          accountInfo.Name,
+		"phone":         accountInfo.Phone,
+		"status":        accountInfo.Status,
+		"has_password":  accountInfo.HasPassword,
 	}
 	Respond(c, http.StatusOK, "ok", data)
 }
@@ -246,32 +250,28 @@ func (h *CAuthHandler) Me(c *gin.Context) {
 		return
 	}
 
-	user, err := h.userRepo.GetByID(userID)
+	accountInfo, err := h.accountService.GetAccountInfo(userID)
 	if err != nil {
-		RespondError(c, http.StatusNotFound, "user not found")
+		if err == service.ErrUserNotFound {
+			RespondError(c, http.StatusNotFound, "user not found")
+			return
+		}
+		if err == service.ErrNoCustomerProfile {
+			RespondError(c, http.StatusNotFound, "customer profile not found")
+			return
+		}
+		RespondError(c, http.StatusInternalServerError, "load current user failed")
 		return
-	}
-
-	// 获取客户档案信息
-	profile, err := h.customerRepo.GetByUserID(userID)
-	if err != nil {
-		RespondError(c, http.StatusNotFound, "customer profile not found")
-		return
-	}
-
-	var customerType string
-	if profile.CustomerType != "" {
-		customerType = profile.CustomerType
 	}
 
 	Respond(c, http.StatusOK, "ok", gin.H{
-		"user_id":       user.ID,
-		"type":          "c_end",
-		"customer_type": customerType,
-		"name":          user.Name,
-		"phone":         user.Phone,
-		"status":        user.Status,
-		"has_password":  service.HasPasswordHash(user.PasswordHash),
+		"user_id":       accountInfo.UserID,
+		"type":          accountInfo.Type,
+		"customer_type": accountInfo.CustomerType,
+		"name":          accountInfo.Name,
+		"phone":         accountInfo.Phone,
+		"status":        accountInfo.Status,
+		"has_password":  accountInfo.HasPassword,
 	})
 }
 
@@ -494,28 +494,35 @@ func (h *CAuthHandler) CheckToken(c *gin.Context) {
 		return
 	}
 
-	user, err := h.userRepo.GetByID(userID)
+	payload, err := h.accountService.GetCheckPayload(userID)
 	if err != nil {
-		RespondError(c, http.StatusNotFound, "user not found")
+		if err == service.ErrUserNotFound {
+			RespondError(c, http.StatusNotFound, "user not found")
+			return
+		}
+		RespondError(c, http.StatusInternalServerError, "load current user failed")
 		return
 	}
 
-	// 获取客户档案信息（可能不存在）
-	profile, err := h.customerRepo.GetByUserID(userID)
-	var profileData *gin.H
-	if err == nil {
-		profileData = &gin.H{
-			"name":      user.Name,
-			"id_number": profile.IDCard,
-			"address":   profile.Address,
-			"user_type": profile.CustomerType,
+	response := gin.H{
+		"user": gin.H{
+			"id":           payload.User.ID,
+			"phone":        payload.User.Phone,
+			"role":         payload.User.Role,
+			"has_password": payload.User.HasPassword,
+		},
+		"profile": nil,
+	}
+	if payload.Profile != nil {
+		response["profile"] = gin.H{
+			"name":      payload.Profile.Name,
+			"id_number": payload.Profile.IDNumber,
+			"address":   payload.Profile.Address,
+			"user_type": payload.Profile.UserType,
 		}
 	}
 
-	Respond(c, http.StatusOK, "ok", gin.H{
-		"user":    buildCEndUserPayload(user),
-		"profile": profileData,
-	})
+	Respond(c, http.StatusOK, "ok", response)
 }
 
 // SetPassword 设置或更新当前登录用户的密码
