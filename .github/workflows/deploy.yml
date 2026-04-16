@@ -85,6 +85,28 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
+      - name: 校验部署 Secrets
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+          DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        run: |
+          missing=0
+          for key in SERVER_HOST SERVER_USER SERVER_SSH_KEY DB_ROOT_PASSWORD DB_PASSWORD REDIS_PASSWORD JWT_SECRET; do
+            if [ -z "${!key}" ]; then
+              echo "❌ 缺少必填 GitHub Secret: $key"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            echo "请先在 GitHub 仓库 Settings -> Secrets and variables -> Actions 中补齐以上 Secret。"
+            exit 1
+          fi
+
       # 下载前端构建产物
       - name: 下载 C 端产物
         uses: actions/download-artifact@v4
