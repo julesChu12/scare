@@ -39,6 +39,7 @@
             <el-image
               :src="getImageUrl(row.image_url)"
               :preview-src-list="[getImageUrl(row.image_url)]"
+              preview-teleported
               fit="cover"
               style="width: 120px; height: 60px; border-radius: 4px"
             />

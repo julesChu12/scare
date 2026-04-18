@@ -70,6 +70,7 @@
               v-if="row.cover_url"
               :src="getImageUrl(row.cover_url)"
               :preview-src-list="[getImageUrl(row.cover_url)]"
+              preview-teleported
               fit="cover"
               style="width: 60px; height: 40px; border-radius: 4px"
             />

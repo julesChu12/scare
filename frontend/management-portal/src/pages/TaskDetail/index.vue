@@ -139,6 +139,7 @@
               :src="getImageUrl(img)"
               :preview-src-list="task.images.map(i => getImageUrl(i))"
               :initial-index="index"
+              preview-teleported
               fit="cover"
               class="service-image"
             />
