@@ -132,6 +132,7 @@ func (h *UploadHandler) Upload(c *gin.Context) {
 	// 增加频率计数
 	_ = h.incrementRateLimit(c, identifier, userType)
 
+	// 返回相对路径给前端，前端存相对路径到数据库，API 返回时再动态拼接完整 URL
 	Respond(c, http.StatusOK, "ok", gin.H{
 		"url": url,
 		"key": key,

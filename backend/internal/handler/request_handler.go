@@ -105,9 +105,11 @@ func (h *RequestHandler) Create(c *gin.Context) {
 	}
 
 	if !created {
+		enrichImagesURL(c, request)
 		Respond(c, http.StatusOK, "ok", request)
 		return
 	}
+	enrichImagesURL(c, request)
 	Respond(c, http.StatusOK, "ok", request)
 }
 
@@ -158,6 +160,9 @@ func (h *RequestHandler) List(c *gin.Context) {
 			RespondError(c, http.StatusInternalServerError, "list requests failed")
 			return
 		}
+		for _, r := range requests {
+			enrichImagesURL(c, &r.ServiceRequest)
+		}
 		RespondPage(c, http.StatusOK, "ok", requests, page, pageSize, total)
 		return
 	}
@@ -172,6 +177,9 @@ func (h *RequestHandler) List(c *gin.Context) {
 	if err != nil {
 		RespondError(c, http.StatusInternalServerError, "list requests failed")
 		return
+	}
+	for _, r := range requests {
+		enrichImagesURL(c, r)
 	}
 	RespondPage(c, http.StatusOK, "ok", requests, page, pageSize, total)
 }
@@ -224,6 +232,7 @@ func (h *RequestHandler) Get(c *gin.Context) {
 			}
 		}
 	}
+	enrichImagesURL(c, request)
 	Respond(c, http.StatusOK, "ok", request)
 }
 
@@ -263,9 +272,11 @@ func (h *RequestHandler) Cancel(c *gin.Context) {
 		return
 	}
 	if !changed {
+		enrichImagesURL(c, request)
 		Respond(c, http.StatusOK, "ok", request)
 		return
 	}
+	enrichImagesURL(c, request)
 	Respond(c, http.StatusOK, "ok", request)
 }
 
@@ -328,6 +339,7 @@ func (h *RequestHandler) Update(c *gin.Context) {
 		return
 	}
 
+	enrichImagesURL(c, result)
 	Respond(c, http.StatusOK, "ok", result)
 }
 
@@ -467,5 +479,6 @@ func (h *RequestHandler) Rate(c *gin.Context) {
 		return
 	}
 
+	enrichImagesURL(c, request)
 	Respond(c, http.StatusOK, "ok", request)
 }

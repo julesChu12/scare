@@ -80,7 +80,17 @@ const loadNewsDetail = async () => {
 
   loading.value = true
   try {
-    news.value = await newsAPI.getDetail(id)
+    const result = await newsAPI.getDetail(id)
+    // 规范化图片 URL 为相对路径，交给 Vite proxy 代理到后端
+    if (result) {
+      result.cover_url = result.cover_url?.replace(/^https?:\/\/[^\/]+/, '') || ''
+      // 处理正文 HTML 中的 img src
+      result.content = result.content?.replace(
+        /src="https?:\/\/[^"]+(\/static\/[^"]+)"/g,
+        'src="$1"'
+      ) || ''
+    }
+    news.value = result
   } catch (error) {
     console.error('加载新闻详情失败:', error)
     news.value = null

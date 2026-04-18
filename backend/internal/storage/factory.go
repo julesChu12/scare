@@ -2,6 +2,7 @@ package storage
 
 import (
 	"errors"
+	"net/url"
 	"strings"
 
 	"community-elderly-care-platform/internal/config"
@@ -13,7 +14,8 @@ func NewProvider(cfg config.StorageConfig) (Provider, error) {
 	driver := strings.ToLower(cfg.Driver)
 	switch driver {
 	case "local":
-		return local.New(cfg.Local.BasePath, cfg.Local.BaseURL)
+		urlPrefix := extractPathPrefix(cfg.Local.BaseURL)
+		return local.New(cfg.Local.BasePath, urlPrefix)
 	case "oss":
 		return oss.New(oss.Config{
 			Endpoint:        cfg.OSS.Endpoint,
@@ -25,4 +27,17 @@ func NewProvider(cfg config.StorageConfig) (Provider, error) {
 	default:
 		return nil, errors.New("unsupported storage driver")
 	}
+}
+
+// extractPathPrefix 从完整 URL 中提取路径部分
+// 例如: http://localhost:8080/static -> /static
+func extractPathPrefix(fullURL string) string {
+	if fullURL == "" {
+		return "/static"
+	}
+	u, err := url.Parse(fullURL)
+	if err != nil {
+		return "/static"
+	}
+	return u.Path
 }

@@ -48,6 +48,11 @@ client.interceptors.response.use(
   (response) => {
     const body = response.data as any
 
+    // 上传接口返回的 url 去掉域名，只存相对路径（与 B 端保持一致）
+    if (body?.data?.url && typeof body.data.url === 'string') {
+      body.data.url = body.data.url.replace(/^https?:\/\/[^\/]+/, '')
+    }
+
     // Backend uses unified wrapper: { msg, data }
     // 只要包含 data 字段就尝试解包，不再强制要求 msg 字段
     if (body && typeof body === 'object' && 'data' in body) {

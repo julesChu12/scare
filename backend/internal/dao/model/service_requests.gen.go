@@ -27,7 +27,7 @@ type ServiceRequest struct {
 	ContactName       string         `gorm:"column:contact_name;type:varchar(50)" json:"contact_name"`
 	ContactPhone      string         `gorm:"column:contact_phone;type:varchar(20)" json:"contact_phone"`
 	Address           string         `gorm:"column:address;type:varchar(200)" json:"address"`
-	AppointmentTime   time.Time      `gorm:"column:appointment_time;type:datetime" json:"appointment_time"`
+	AppointmentTime   *time.Time     `gorm:"column:appointment_time;type:datetime" json:"appointment_time"`
 	Urgency           string         `gorm:"column:urgency;type:varchar(20);default:normal" json:"urgency"`
 	SourceStationID   int64          `gorm:"column:source_station_id;type:bigint;index:idx_service_requests_source_station_id,priority:1" json:"source_station_id"`
 	StationID         int64          `gorm:"column:station_id;type:bigint;index:idx_service_requests_station_id,priority:1;index:idx_station_id,priority:1" json:"station_id"`

@@ -226,12 +226,20 @@ const getServiceIcon = (type: string) => {
   return getServiceTypeIcon(type)
 }
 
-// 解析图片字符串为数组
+// 解析图片字符串为数组，并转换为相对路径供 Vite proxy 代理
 const parsedImages = computed(() => {
   if (!request.value?.images) return []
   try {
     const parsed = JSON.parse(request.value.images)
-    return Array.isArray(parsed) ? parsed : []
+    if (!Array.isArray(parsed)) return []
+    return parsed.map((url: string) => {
+      try {
+        const u = new URL(url)
+        return u.pathname // 转为相对路径，如 /static/c_end/20260418/xxx.jpg
+      } catch {
+        return url
+      }
+    })
   } catch {
     return request.value.images ? [request.value.images] : []
   }

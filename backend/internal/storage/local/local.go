@@ -11,15 +11,15 @@ import (
 )
 
 type Provider struct {
-	basePath string
-	baseURL  string
+	basePath   string
+	urlPrefix  string // 相对路径前缀，如 /static
 }
 
-func New(basePath, baseURL string) (*Provider, error) {
-	if basePath == "" || baseURL == "" {
-		return nil, errors.New("base path and base url are required")
+func New(basePath, urlPrefix string) (*Provider, error) {
+	if basePath == "" || urlPrefix == "" {
+		return nil, errors.New("base path and url prefix are required")
 	}
-	return &Provider{basePath: basePath, baseURL: strings.TrimRight(baseURL, "/")}, nil
+	return &Provider{basePath: basePath, urlPrefix: strings.TrimRight(urlPrefix, "/")}, nil
 }
 
 func (p *Provider) Put(ctx context.Context, key string, r io.Reader, size int64, contentType string) (string, error) {
@@ -42,7 +42,7 @@ func (p *Provider) Put(ctx context.Context, key string, r io.Reader, size int64,
 	if _, err := io.Copy(file, r); err != nil {
 		return "", err
 	}
-	return p.baseURL + "/" + clean, nil
+	return p.urlPrefix + "/" + clean, nil
 }
 
 func (p *Provider) SignedURL(ctx context.Context, key string, expire time.Duration) (string, error) {
@@ -50,7 +50,7 @@ func (p *Provider) SignedURL(ctx context.Context, key string, expire time.Durati
 		return "", errors.New("object key required")
 	}
 	clean := filepath.Clean(key)
-	return p.baseURL + "/" + clean, nil
+	return p.urlPrefix + "/" + clean, nil
 }
 
 func (p *Provider) Delete(ctx context.Context, key string) error {

@@ -190,7 +190,11 @@ const banners = ref<Banner[]>([])
 const fetchBanners = async () => {
   try {
     const result = await bannerAPI.getBanners()
-    banners.value = result || []
+    banners.value = (result || []).map(b => ({
+      ...b,
+      // 统一转为相对路径，交给 Vite proxy 代理到后端
+      image_url: b.image_url?.replace(/^https?:\/\/[^\/]+/, '') || ''
+    }))
   } catch (error) {
     console.warn('获取轮播图失败:', error)
   }

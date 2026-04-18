@@ -11,7 +11,7 @@ import (
 
 func TestProviderPutSignedURLDelete(t *testing.T) {
 	basePath := t.TempDir()
-	provider, err := New(basePath, "http://localhost/static")
+	provider, err := New(basePath, "/static")
 	if err != nil {
 		t.Fatalf("new provider failed: %v", err)
 	}
@@ -20,7 +20,7 @@ func TestProviderPutSignedURLDelete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("put failed: %v", err)
 	}
-	if url != "http://localhost/static/uploads/test.txt" {
+	if url != "/static/uploads/test.txt" {
 		t.Fatalf("unexpected url: %s", url)
 	}
 
@@ -37,7 +37,7 @@ func TestProviderPutSignedURLDelete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("signed url failed: %v", err)
 	}
-	if signed != "http://localhost/static/uploads/test.txt" {
+	if signed != "/static/uploads/test.txt" {
 		t.Fatalf("unexpected signed url: %s", signed)
 	}
 
@@ -50,7 +50,7 @@ func TestProviderPutSignedURLDelete(t *testing.T) {
 }
 
 func TestProviderRejectsTraversal(t *testing.T) {
-	provider, err := New(t.TempDir(), "http://localhost/static")
+	provider, err := New(t.TempDir(), "/static")
 	if err != nil {
 		t.Fatalf("new provider failed: %v", err)
 	}
