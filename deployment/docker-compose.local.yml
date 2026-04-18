@@ -1,0 +1,66 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: scare_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: sroot_2024
+      MYSQL_DATABASE: scare_db
+      MYSQL_USER: scare_user
+      MYSQL_PASSWORD: scare_pass
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ../backend/database/schema/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ../backend/database/seeds/001_seed_permissions.sql:/docker-entrypoint-initdb.d/02-001_seed_permissions.sql
+      - ../backend/database/seeds/002_seed_users.sql:/docker-entrypoint-initdb.d/03-002_seed_users.sql
+      - ../backend/database/seeds/003_seed_stations.sql:/docker-entrypoint-initdb.d/04-003_seed_stations.sql
+      - ../backend/database/seeds/004_seed_requests.sql:/docker-entrypoint-initdb.d/05-004_seed_requests.sql
+      - ../backend/database/seeds/005_seed_notifications.sql:/docker-entrypoint-initdb.d/06-005_seed_notifications.sql
+      - ../backend/database/seeds/006_seed_news.sql:/docker-entrypoint-initdb.d/07-006_seed_news.sql
+      - ../backend/database/seeds/007_seed_menus.sql:/docker-entrypoint-initdb.d/08-007_seed_menus.sql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-time-zone='+08:00'
+    networks:
+      - scare-network
+
+  redis:
+    image: redis:7.0-alpine
+    container_name: scare_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: >
+      redis-server
+      --requirepass ""
+      --appendonly yes
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    networks:
+      - scare-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: scare_nginx
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    ports:
+      - "8090:80"
+    volumes:
+      - ./nginx/default.local.conf:/etc/nginx/conf.d/default.conf
+      - ./dist/c-end:/var/www/c-end
+      - ./dist/management-portal:/var/www/management-portal
+    networks:
+      - scare-network
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  scare-network:
+    external: true
