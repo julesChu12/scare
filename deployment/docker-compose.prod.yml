@@ -28,7 +28,7 @@ services:
       - scare-network
 
   redis:
-    image: redis:7.0-alpine
+    image: redis:7-alpine
     container_name: scare_redis
     restart: unless-stopped
     ports:
