@@ -67,12 +67,12 @@ INSERT INTO `user_identities` (`user_id`, `identity_type`, `is_primary`, `statio
 -- =====================================================
 -- C端客户档案（C端登录依赖此表）
 -- =====================================================
-INSERT INTO `customer_profiles` (`user_id`, `id_card`, `address`, `customer_type`, `gender`, `birth_date`, `health_status`, `emergency_contact`) VALUES
-(8, '110105194503101234', '北京市昌平区霍营街道华龙苑北里小区1号楼3单元501', 'elderly', 'male', '1945-03-10', '高血压', '{"name":"张小华","phone":"13800000011","relation":"子女","user_id":11}'),
-(9, '110105194807221234', '北京市昌平区霍营街道龙锦苑东一区2号楼2单元302', 'elderly', 'female', '1948-07-22', '糖尿病', '{"name":"李小勇","phone":"13800000012","relation":"子女","user_id":12}'),
-(10, '110105195012051234', '北京市昌平区龙泽园街道龙泽苑西区5号楼1单元102', 'elderly', 'male', '1950-12-05', '健康', NULL),
-(11, '110105197508151234', '北京市昌平区霍营街道华龙苑北里小区2号楼', 'family', 'female', '1975-08-15', NULL, NULL),
-(12, '110105197804201234', '北京市昌平区霍营街道龙锦苑东一区3号楼', 'family', 'male', '1978-04-20', NULL, NULL);
+INSERT INTO `customer_profiles` (`user_id`, `id_card`, `address`, `latitude`, `longitude`, `customer_type`, `gender`, `birth_date`, `health_status`, `disability_level`, `medical_history`, `special_needs`, `emergency_contact`) VALUES
+(8, '110105194503101234', '北京市昌平区霍营街道华龙苑北里小区1号楼3单元501', 40.0500, 116.3800, 'elderly', 'male', '1945-03-10', '高血压', '轻度', '高血压病史10年，服用降压药控制良好', '饮食需少油少盐，行动缓慢需注意防摔', '{"name":"张小华","phone":"13800000011","relation":"子女","user_id":11}'),
+(9, '110105194807221234', '北京市昌平区霍营街道龙锦苑东一区2号楼2单元302', 40.0550, 116.3850, 'elderly', 'female', '1948-07-22', '糖尿病', '中度', '二型糖尿病8年，注射胰岛素，骨质疏松', '需协助洗浴，轮椅出行，定期复查骨密度', '{"name":"李小勇","phone":"13800000012","relation":"子女","user_id":12}'),
+(10, '110105195012051234', '北京市昌平区龙泽园街道龙泽苑西区5号楼1单元102', 40.0620, 116.3920, 'elderly', 'male', '1950-12-05', '健康', '自理', '无重大疾病史，身体健康', '无特殊需求', NULL),
+(11, '110105197508151234', '北京市昌平区霍营街道华龙苑北里小区2号楼', 40.0510, 116.3810, 'family', 'female', '1975-08-15', NULL, NULL, NULL, NULL, NULL),
+(12, '110105197804201234', '北京市昌平区霍营街道龙锦苑东一区3号楼', 40.0540, 116.3840, 'family', 'male', '1978-04-20', NULL, NULL, NULL, NULL, NULL);
 
 -- 验证数据
 SELECT '用户数据' AS 'Table', COUNT(*) AS 'Count' FROM `users`

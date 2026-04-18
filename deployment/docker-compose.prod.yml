@@ -23,6 +23,7 @@ services:
       - ../backend/database/seeds/005_seed_notifications.sql:/docker-entrypoint-initdb.d/06-005_seed_notifications.sql
       - ../backend/database/seeds/006_seed_news.sql:/docker-entrypoint-initdb.d/07-006_seed_news.sql
       - ../backend/database/seeds/007_seed_menus.sql:/docker-entrypoint-initdb.d/08-007_seed_menus.sql
+      - ../backend/database/seeds/008_seed_reports.sql:/docker-entrypoint-initdb.d/09-008_seed_reports.sql
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-time-zone='+08:00'
     networks:
       - scare-network
