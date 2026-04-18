@@ -48,10 +48,10 @@ fi
 run_mysql() {
     if [ -f /.dockerenv ] || grep -q docker /proc/1/cgroup 2>/dev/null; then
         # 容器内
-        mysql -u "$MYSQL_CLI_USER" -p"$MYSQL_CLI_PASS" "$MYSQL_DB" --default-character-set=utf8mb4 "$@"
+        mysql -h127.0.0.1 -u "$MYSQL_CLI_USER" -p"$MYSQL_CLI_PASS" "$MYSQL_DB" --default-character-set=utf8mb4 "$@"
     else
         # 容器外，通过 docker exec
-        docker exec scare_mysql mysql -u "$MYSQL_CLI_USER" -p"$MYSQL_CLI_PASS" "$MYSQL_DB" --default-character-set=utf8mb4 "$@"
+        docker exec scare_mysql mysql -h127.0.0.1 -u "$MYSQL_CLI_USER" -p"$MYSQL_CLI_PASS" "$MYSQL_DB" --default-character-set=utf8mb4 "$@"
     fi
 }
 

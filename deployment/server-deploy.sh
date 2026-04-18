@@ -92,6 +92,23 @@ for i in $(seq 1 30); do
     [ "$i" -eq 30 ] && err "MySQL 启动超时"
 done
 
+# 等待应用库账号可用（迁移脚本优先使用 DB_USER/DB_PASSWORD）
+log "  等待数据库业务账号就绪..."
+for i in $(seq 1 30); do
+    if docker exec scare_mysql mysql -h127.0.0.1 -u"${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" -e "SELECT 1" >/dev/null 2>&1; then
+        echo -e " ${GREEN}DB User ✅${NC}"
+        break
+    fi
+    echo -n "."
+    sleep 2
+    [ "$i" -eq 30 ] && {
+        echo ""
+        log "数据库业务账号检查失败详情："
+        docker exec scare_mysql mysql -h127.0.0.1 -u"${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" -e "SELECT 1" 2>&1 || true
+        err "数据库业务账号启动超时或密码不正确"
+    }
+done
+
 # 等待 Redis 健康
 log "  等待 Redis 就绪..."
 for i in $(seq 1 15); do
