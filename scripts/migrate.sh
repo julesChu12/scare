@@ -8,6 +8,8 @@ set -euo pipefail
 
 # 配置
 MYSQL_DB="${DB_NAME:-scare_db}"
+MYSQL_APP_USER="${DB_USER:-}"
+MYSQL_APP_PASS="${DB_PASSWORD:-}"
 
 # 脚本位于 /scripts/migrate.sh，迁移文件位于 /backend/database/migrations/
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -18,24 +20,38 @@ else
     MIGRATIONS_DIR="$SCRIPT_DIR/database/migrations"
 fi
 
-# 在 Docker 容器内执行，使用容器内置的 MYSQL_ROOT_PASSWORD 环境变量
-# 优先使用 MYSQL_ROOT_PASSWORD（容器内），否则使用 DB_ROOT_PASSWORD（.env）
-if [ -n "${MYSQL_ROOT_PASSWORD:-}" ]; then
-    _MYSQL_ROOT_PASS="$MYSQL_ROOT_PASSWORD"
+# 连接凭据选择策略：
+# 1. 优先使用应用库用户（DB_USER/DB_PASSWORD），避免部署依赖 root 密码与旧数据卷保持一致
+# 2. 仅在应用库用户缺失时，回退到 root
+MYSQL_CLI_USER=""
+MYSQL_CLI_PASS=""
+MYSQL_AUTH_SOURCE=""
+
+if [ -n "$MYSQL_APP_USER" ] && [ -n "$MYSQL_APP_PASS" ]; then
+    MYSQL_CLI_USER="$MYSQL_APP_USER"
+    MYSQL_CLI_PASS="$MYSQL_APP_PASS"
+    MYSQL_AUTH_SOURCE="app_user"
+elif [ -n "${MYSQL_ROOT_PASSWORD:-}" ]; then
+    MYSQL_CLI_USER="root"
+    MYSQL_CLI_PASS="$MYSQL_ROOT_PASSWORD"
+    MYSQL_AUTH_SOURCE="mysql_root_password"
 elif [ -n "${DB_ROOT_PASSWORD:-}" ]; then
-    _MYSQL_ROOT_PASS="$DB_ROOT_PASSWORD"
+    MYSQL_CLI_USER="root"
+    MYSQL_CLI_PASS="$DB_ROOT_PASSWORD"
+    MYSQL_AUTH_SOURCE="db_root_password"
 else
-    echo -e "\033[0;31m[ERROR]\033[0m 未设置 MySQL root 密码，请设置 MYSQL_ROOT_PASSWORD 或 DB_ROOT_PASSWORD 环境变量"
+    echo -e "\033[0;31m[ERROR]\033[0m 未设置可用数据库连接凭据，请至少提供 DB_USER/DB_PASSWORD，或回退提供 MYSQL_ROOT_PASSWORD/DB_ROOT_PASSWORD"
     exit 1
 fi
+
 # 执行 MySQL 命令的函数
 run_mysql() {
     if [ -f /.dockerenv ] || grep -q docker /proc/1/cgroup 2>/dev/null; then
         # 容器内
-        mysql -u root -p"$_MYSQL_ROOT_PASS" "$MYSQL_DB" --default-character-set=utf8mb4 "$@"
+        mysql -u "$MYSQL_CLI_USER" -p"$MYSQL_CLI_PASS" "$MYSQL_DB" --default-character-set=utf8mb4 "$@"
     else
         # 容器外，通过 docker exec
-        docker exec scare_mysql mysql -u root -p"$_MYSQL_ROOT_PASS" "$MYSQL_DB" --default-character-set=utf8mb4 "$@"
+        docker exec scare_mysql mysql -u "$MYSQL_CLI_USER" -p"$MYSQL_CLI_PASS" "$MYSQL_DB" --default-character-set=utf8mb4 "$@"
     fi
 }
 
@@ -53,7 +69,7 @@ log_skip()  { echo -e "${BLUE}[SKIP]${NC} $1"; }
 
 log_info "===== sCare 数据库迁移 ====="
 log_info "迁移目录: $MIGRATIONS_DIR"
-log_info "MySQL 用户: root (密码来源: ${_MYSQL_ROOT_PASS:0:1}***)"
+log_info "MySQL 用户: $MYSQL_CLI_USER (凭据来源: $MYSQL_AUTH_SOURCE)"
 
 # 检查迁移目录
 if [ ! -d "$MIGRATIONS_DIR" ]; then
@@ -64,7 +80,7 @@ fi
 # 测试连接
 log_info "测试数据库连接..."
 if ! run_mysql -e "SELECT 1" >/dev/null 2>&1; then
-    log_error "无法连接数据库，请确认 MYSQL_ROOT_PASSWORD 环境变量正确"
+    log_error "无法连接数据库，请确认当前使用的连接凭据正确"
     log_error "错误信息: $(run_mysql -e "SELECT 1" 2>&1 | grep -v "Enter password" | head -3)"
     exit 1
 fi
