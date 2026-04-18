@@ -26,7 +26,7 @@ type SMSService struct {
 	env      string // "development" or "production"
 }
 
-// NewSMSService 创建短信服务
+// NewSMSService 创建短信验证码服务
 func NewSMSService(rdb *redis.Client, env string) *SMSService {
 	svc := &SMSService{
 		rdb: rdb,

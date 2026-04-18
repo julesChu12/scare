@@ -49,6 +49,7 @@ type RequestInput struct {
 	Images          []string `json:"images"`            // 图片列表
 }
 
+// NewRequestService 创建 RequestService
 func NewRequestService(db *gorm.DB, repo *repository.RequestRepository, taskRepo *repository.TaskRepository, stationRepo *repository.StationRepository, geofenceSvc *GeofenceService, geocodeSvc *GeocodeService, notifySvc *NotificationService, userIdentityRepo *repository.UserIdentityRepository) *RequestService {
 	return &RequestService{
 		db:               db,
@@ -178,6 +179,7 @@ func (s *RequestService) Create(input RequestInput) (*model.ServiceRequest, bool
 	return request, true, nil
 }
 
+// ListByUser 获取用户的服务请求列表（分页）
 func (s *RequestService) ListByUser(userID int64, status string, page, pageSize int) ([]*model.ServiceRequest, int64, error) {
 	if userID == 0 {
 		return nil, 0, ErrInvalidRequest
@@ -214,7 +216,7 @@ func (s *RequestService) Update(id int64, input UpdateInput) (*model.ServiceRequ
 		return nil, ErrRequestConflict
 	}
 
-	updates := map[string]interface{}{}
+	updates := map[string]any{}
 	if input.ServiceType != "" {
 		if !consts.IsValidServiceType(input.ServiceType) {
 			return nil, ErrInvalidRequest

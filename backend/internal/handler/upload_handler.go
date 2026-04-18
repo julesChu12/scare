@@ -20,12 +20,13 @@ type UploadHandler struct {
 	rdb     *redis.Client
 }
 
+// NewUploadHandler 创建 UploadHandler
 func NewUploadHandler(service *service.StorageService, rdb *redis.Client) *UploadHandler {
 	return &UploadHandler{service: service, rdb: rdb}
 }
 
 // checkRateLimit 检查上传频率限制（C端：IP维度，每分钟20次；B端：用户维度，每分钟50次）
-func (h *UploadHandler) checkRateLimit(c *gin.Context, userID int64, userType string) error {
+func (h *UploadHandler) checkRateLimit(_ *gin.Context, userID int64, userType string) error {
 	ctx := context.Background()
 	key := fmt.Sprintf("upload_rate:%s:%d", userType, userID)
 
@@ -46,7 +47,7 @@ func (h *UploadHandler) checkRateLimit(c *gin.Context, userID int64, userType st
 }
 
 // incrementRateLimit 增加上传频率计数
-func (h *UploadHandler) incrementRateLimit(c *gin.Context, userID int64, userType string) error {
+func (h *UploadHandler) incrementRateLimit(_ *gin.Context, userID int64, userType string) error {
 	if h.rdb == nil {
 		return nil
 	}
@@ -138,4 +139,3 @@ func (h *UploadHandler) Upload(c *gin.Context) {
 		"key": key,
 	})
 }
-

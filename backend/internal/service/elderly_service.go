@@ -27,6 +27,7 @@ type ElderlyService struct {
 	taskRepo     *repository.TaskRepository
 }
 
+// NewElderlyService 创建老人档案服务
 func NewElderlyService(
 	db *gorm.DB,
 	userRepo *repository.UserRepository,
@@ -251,7 +252,7 @@ func (s *ElderlyService) Update(userID int64, input ElderlyInput) (*ElderlyInfo,
 
 	err = s.db.Transaction(func(tx *gorm.DB) error {
 		// 更新 users 表字段
-		userUpdates := map[string]interface{}{}
+		userUpdates := map[string]any{}
 		if input.Name != "" {
 			userUpdates["name"] = input.Name
 		}
@@ -274,7 +275,7 @@ func (s *ElderlyService) Update(userID int64, input ElderlyInput) (*ElderlyInfo,
 		}
 
 		// 更新 customer_profiles 表字段
-		profileUpdates := map[string]interface{}{}
+		profileUpdates := map[string]any{}
 		if input.Address != "" {
 			profileUpdates["address"] = input.Address
 		}

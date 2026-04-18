@@ -12,6 +12,7 @@ type RequestHandler struct {
 	service *service.RequestService
 }
 
+// NewRequestHandler 创建 RequestHandler
 func NewRequestHandler(service *service.RequestService) *RequestHandler {
 	return &RequestHandler{service: service}
 }

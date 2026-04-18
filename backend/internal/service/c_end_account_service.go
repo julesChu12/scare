@@ -48,6 +48,7 @@ type CEndCheckProfile struct {
 	UserType string
 }
 
+// NewCEndAccountService 创建 C 端账户服务
 func NewCEndAccountService(userRepo *repository.UserRepository, customerRepo *repository.CustomerRepository) *CEndAccountService {
 	return &CEndAccountService{
 		userRepo:     userRepo,

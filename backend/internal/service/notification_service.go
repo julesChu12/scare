@@ -38,6 +38,7 @@ type NotificationListFilter struct {
 	IsRead *bool
 }
 
+// NewNotificationService 创建通知服务
 func NewNotificationService(repo *repository.NotificationRepository, userRepo *repository.UserRepository, mailSender notify.MailSender) *NotificationService {
 	return &NotificationService{
 		repo:       repo,
@@ -46,10 +47,12 @@ func NewNotificationService(repo *repository.NotificationRepository, userRepo *r
 	}
 }
 
+// SendInApp 发送站内通知
 func (s *NotificationService) SendInApp(ctx context.Context, userID int64, title, body string) error {
 	return s.SendInAppWithOptions(ctx, userID, title, body, NotificationSendOptions{})
 }
 
+// SendInAppWithOptions 发送站内通知（带扩展选项）
 func (s *NotificationService) SendInAppWithOptions(ctx context.Context, userID int64, title, body string, opts NotificationSendOptions) error {
 	if userID == 0 || title == "" {
 		return ErrNotificationInvalid
@@ -67,10 +70,12 @@ func (s *NotificationService) SendInAppWithOptions(ctx context.Context, userID i
 	return s.repo.Create(notification)
 }
 
+// SendEmail 发送邮件通知
 func (s *NotificationService) SendEmail(ctx context.Context, userID int64, subject, body string) error {
 	return s.SendEmailWithOptions(ctx, userID, subject, body, NotificationSendOptions{})
 }
 
+// SendEmailWithOptions 发送邮件通知（带扩展选项）
 func (s *NotificationService) SendEmailWithOptions(ctx context.Context, userID int64, subject, body string, opts NotificationSendOptions) error {
 	if userID == 0 || subject == "" {
 		return ErrNotificationInvalid
@@ -101,6 +106,7 @@ func (s *NotificationService) SendEmailWithOptions(ctx context.Context, userID i
 	return s.repo.Create(notification)
 }
 
+// List 获取用户的通知列表（分页）
 func (s *NotificationService) List(userID int64, page, pageSize int, filter NotificationListFilter) ([]*model.Notification, int64, error) {
 	if userID == 0 {
 		return nil, 0, ErrNotificationInvalid
@@ -123,6 +129,7 @@ func (s *NotificationService) List(userID int64, page, pageSize int, filter Noti
 	return notifications, total, nil
 }
 
+// MarkRead 标记通知为已读
 func (s *NotificationService) MarkRead(userID, id int64) error {
 	if userID == 0 || id == 0 {
 		return ErrNotificationInvalid

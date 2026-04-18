@@ -34,7 +34,7 @@ func NewUserIdentityService(identityRepo *repository.UserIdentityRepository, bla
 	}
 }
 
-// GrantIdentity 授予用户身份
+// GrantIdentity 授予用户指定身份
 func (s *UserIdentityService) GrantIdentity(userID int64, identityType string, isPrimary bool, stationID int64, grantedBy int64) error {
 	// 检查身份是否已存在
 	exists, err := s.identityRepo.ExistsByUserIDAndType(userID, identityType)

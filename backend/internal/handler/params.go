@@ -5,6 +5,7 @@ import (
 	"strconv"
 )
 
+// parseInt64Param 将字符串参数解析为 int64
 func parseInt64Param(value string) (int64, error) {
 	if value == "" {
 		return 0, errors.New("empty")

@@ -13,6 +13,7 @@ type StatisticsHandler struct {
 	service *service.StatisticsService
 }
 
+// NewStatisticsHandler 创建 StatisticsHandler
 func NewStatisticsHandler(service *service.StatisticsService) *StatisticsHandler {
 	return &StatisticsHandler{service: service}
 }

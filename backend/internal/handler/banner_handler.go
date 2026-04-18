@@ -12,6 +12,7 @@ type BannerHandler struct {
 	service *service.BannerService
 }
 
+// NewBannerHandler 创建 BannerHandler
 func NewBannerHandler(service *service.BannerService) *BannerHandler {
 	return &BannerHandler{service: service}
 }

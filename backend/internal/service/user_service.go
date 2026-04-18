@@ -63,6 +63,7 @@ type UserWithIdentities struct {
 	CEndIdentities  []string              // C端身份列表
 }
 
+// NewUserService 创建 UserService
 func NewUserService(repo *repository.UserRepository, identityRepo *repository.UserIdentityRepository) *UserService {
 	return &UserService{
 		repo:         repo,
@@ -70,6 +71,7 @@ func NewUserService(repo *repository.UserRepository, identityRepo *repository.Us
 	}
 }
 
+// Create 创建用户（同时创建用户身份）
 func (s *UserService) Create(input UserInput) (*UserWithIdentities, error) {
 	if input.Phone == "" || input.Password == "" || input.IdentityType == "" {
 		return nil, ErrInvalidUser
@@ -118,6 +120,7 @@ func (s *UserService) Create(input UserInput) (*UserWithIdentities, error) {
 	return s.buildUserWithIdentities(user)
 }
 
+// Update 更新用户信息
 func (s *UserService) Update(input UserInput) (*UserWithIdentities, error) {
 	if input.ID == 0 {
 		return nil, ErrInvalidUser
@@ -197,6 +200,7 @@ func (s *UserService) ListWithFilter(page, pageSize int, filter UserFilter) ([]*
 	return result, total, nil
 }
 
+// GetByID 根据 ID 获取用户详情（包含身份信息）
 func (s *UserService) GetByID(id int64) (*UserWithIdentities, error) {
 	if id == 0 {
 		return nil, ErrInvalidUser

@@ -10,6 +10,7 @@ type NewsService struct {
 	repo *repository.NewsRepository
 }
 
+// NewNewsService 创建新闻服务
 func NewNewsService(repo *repository.NewsRepository) *NewsService {
 	return &NewsService{repo: repo}
 }
@@ -19,7 +20,7 @@ func (s *NewsService) ListPublished(page, pageSize int, newsType string, station
 	return s.repo.ListPublished(page, pageSize, newsType, stationID)
 }
 
-// GetByID 根据ID获取新闻
+// GetByID 根据 ID 获取新闻详情
 func (s *NewsService) GetByID(id int64) (*model.News, error) {
 	return s.repo.GetByID(id)
 }

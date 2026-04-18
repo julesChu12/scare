@@ -16,6 +16,7 @@ type ReportHandler struct {
 	service *service.ReportService
 }
 
+// NewReportHandler 创建 ReportHandler
 func NewReportHandler(service *service.ReportService) *ReportHandler {
 	return &ReportHandler{service: service}
 }

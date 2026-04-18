@@ -14,6 +14,7 @@ type RoleHandler struct {
 	userIdentityService *service.UserIdentityService
 }
 
+// NewRoleHandler 创建 RoleHandler
 func NewRoleHandler(permissionService *service.PermissionService, userIdentityService *service.UserIdentityService) *RoleHandler {
 	return &RoleHandler{
 		permissionService:   permissionService,

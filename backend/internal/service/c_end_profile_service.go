@@ -26,6 +26,7 @@ type CEndProfileUpdateInput struct {
 	UserType *string
 }
 
+// NewCEndProfileService 创建 CEndProfileService
 func NewCEndProfileService(db *gorm.DB, userRepo *repository.UserRepository, customerRepo *repository.CustomerRepository) *CEndProfileService {
 	return &CEndProfileService{
 		db:           db,

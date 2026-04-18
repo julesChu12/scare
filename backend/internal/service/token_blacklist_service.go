@@ -15,6 +15,7 @@ type TokenBlacklistService struct {
 	fallback *expiringStore
 }
 
+// NewTokenBlacklistService 创建 Token 黑名单服务
 func NewTokenBlacklistService(redis *redis.Client) *TokenBlacklistService {
 	svc := &TokenBlacklistService{
 		redis: redis,

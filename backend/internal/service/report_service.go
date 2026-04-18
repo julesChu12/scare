@@ -31,6 +31,7 @@ type ReportService struct {
 	storagePath string
 }
 
+// NewReportService 创建报表服务
 func NewReportService(
 	reportRepo *repository.ReportRepository,
 	requestRepo *repository.RequestRepository,
@@ -133,6 +134,7 @@ func (s *ReportService) GenerateReport(input GenerateReportInput) (*GenerateRepo
 	}, nil
 }
 
+// GetReport 根据 ID 获取报表记录
 func (s *ReportService) GetReport(id int64) (*model.Report, error) {
 	return s.reportRepo.GetByID(id)
 }
@@ -354,7 +356,7 @@ func (s *ReportService) generateServiceReport(f *excelize.File, input GenerateRe
 	pendingRequests, _ := s.requestRepo.CountByStatusBetween(input.StationID, "pending", isAdmin, input.StartDate, input.EndDate)
 	completionRate := calculateCompletionRate(totalRequests, completedRequests)
 
-	data := [][]interface{}{
+	data := [][]any{
 		{"总需求数", totalRequests},
 		{"已完成", completedRequests},
 		{"待处理", pendingRequests},

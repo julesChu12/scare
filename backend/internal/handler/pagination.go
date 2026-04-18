@@ -11,6 +11,7 @@ const (
 	maxPageSize     = 100
 )
 
+// GetPagination 解析并返回分页参数
 func GetPagination(c *gin.Context) (int, int) {
 	page := parseInt(c.Query("page"), 1)
 	pageSize := parseInt(c.Query("page_size"), defaultPageSize)

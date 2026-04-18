@@ -16,6 +16,7 @@ type CAuthHandler struct {
 	smsService     *service.SMSService
 }
 
+// NewCAuthHandler 创建 CAuthHandler
 func NewCAuthHandler(authService *service.AuthService, accountService *service.CEndAccountService, smsService *service.SMSService) *CAuthHandler {
 	return &CAuthHandler{
 		authService:    authService,
@@ -35,6 +36,7 @@ type cRefreshRequest struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
 }
 
+// buildCEndUserPayload 构建 C 端用户信息负载
 func buildCEndUserPayload(user *model.User) gin.H {
 	return gin.H{
 		"id":           user.ID,

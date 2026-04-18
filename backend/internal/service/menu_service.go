@@ -9,6 +9,7 @@ type MenuService struct {
 	menuRepo *repository.MenuRepository
 }
 
+// NewMenuService 创建菜单服务
 func NewMenuService(menuRepo *repository.MenuRepository) *MenuService {
 	return &MenuService{menuRepo: menuRepo}
 }
@@ -31,7 +32,7 @@ func (s *MenuService) GetUserMenus(permissionCodes []string) ([]consts.Menu, err
 	return s.buildTree(menus, 0), nil
 }
 
-// GetByID 获取单个菜单
+// GetByID 根据 ID 获取菜单详情
 func (s *MenuService) GetByID(id int64) (*consts.Menu, error) {
 	return s.menuRepo.GetByID(id)
 }
@@ -67,7 +68,7 @@ func (s *MenuService) Delete(id int64) error {
 	return s.menuRepo.Delete(id)
 }
 
-// BatchUpdateSort 批量更新排序
+// BatchUpdateSort 批量更新菜单排序
 func (s *MenuService) BatchUpdateSort(updates []struct {
 	ID   int64
 	Sort int

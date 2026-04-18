@@ -33,8 +33,8 @@ func init() {
 }
 
 // allModels 返回所有需要 AutoMigrate 的模型
-func allModels() []interface{} {
-	return []interface{}{
+func allModels() []any {
+	return []any{
 		&model.User{},
 		&model.UserIdentity{},
 		&model.Role{},

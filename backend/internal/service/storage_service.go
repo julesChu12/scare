@@ -18,10 +18,12 @@ type StorageService struct {
 	provider storage.Provider
 }
 
+// NewStorageService 创建 StorageService
 func NewStorageService(provider storage.Provider) *StorageService {
 	return &StorageService{provider: provider}
 }
 
+// Upload 上传文件到存储服务，返回公开访问 URL 和存储路径（key）
 func (s *StorageService) Upload(ctx context.Context, module string, file *multipart.FileHeader) (string, string, error) {
 	if s.provider == nil || file == nil {
 		return "", "", ErrStorageInvalid

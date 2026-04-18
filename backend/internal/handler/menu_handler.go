@@ -17,6 +17,7 @@ type MenuHandler struct {
 	permissionService *service.PermissionService
 }
 
+// NewMenuHandler 创建 MenuHandler
 func NewMenuHandler(menuService *service.MenuService, userRepo *repository.UserRepository, userIdentityRepo *repository.UserIdentityRepository, permissionService *service.PermissionService) *MenuHandler {
 	return &MenuHandler{
 		menuService:       menuService,

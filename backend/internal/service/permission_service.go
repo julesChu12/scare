@@ -260,7 +260,7 @@ func (s *PermissionService) GetUserPermissionCodes(roleCodes []string) ([]string
 	return codes, nil
 }
 
-// GetUserPermissions 兼容旧接口，返回权限码列表
+// GetUserPermissions 获取用户的权限码列表（兼容旧接口）
 func (s *PermissionService) GetUserPermissions(roleCodes []string) ([]string, error) {
 	return s.GetUserPermissionCodes(roleCodes)
 }
@@ -345,7 +345,7 @@ func (s *PermissionService) CheckAPIPermission(roleCodes []string, path, method 
 	return false, nil
 }
 
-// IsPublicAPI 检查是否为公共API
+// IsPublicAPI 检查指定 API 路径和方法是否为公共接口
 func (s *PermissionService) IsPublicAPI(path, method string) bool {
 	s.cacheMu.RLock()
 	publicPerms := s.publicAPIsCache

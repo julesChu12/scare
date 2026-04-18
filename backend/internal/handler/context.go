@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// GetUserID 获取当前请求上下文中的用户ID
 func GetUserID(c *gin.Context) (int64, bool) {
 	value, ok := c.Get("user_id")
 	if !ok {
@@ -20,6 +21,7 @@ func GetUserID(c *gin.Context) (int64, bool) {
 	return id, ok
 }
 
+// GetUserType 获取当前请求上下文中的用户类型
 func GetUserType(c *gin.Context) (string, bool) {
 	value, ok := c.Get("user_type")
 	if !ok {
@@ -29,6 +31,7 @@ func GetUserType(c *gin.Context) (string, bool) {
 	return userType, ok
 }
 
+// GetStationID 获取当前请求上下文中的站点ID
 func GetStationID(c *gin.Context) (int64, bool) {
 	value, ok := c.Get("station_id")
 	if !ok {

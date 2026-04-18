@@ -24,6 +24,7 @@ type UserHandler struct {
 	encryptKey     []byte // AES-256 加密密钥（32 字节）
 }
 
+// NewUserHandler 创建 UserHandler
 func NewUserHandler(service *service.UserService, tokenSecret string, encryptKeyBase64 string) *UserHandler {
 	if tokenSecret == "" {
 		tokenSecret = "scare-default-id-card-token-secret"
@@ -275,6 +276,7 @@ func (h *UserHandler) GetByID(c *gin.Context) {
 	Respond(c, http.StatusOK, "ok", h.toUserResponse(user))
 }
 
+// toUserResponse 将用户对象转换为 API 响应格式
 func (h *UserHandler) toUserResponse(user *service.UserWithIdentities) gin.H {
 	var primaryIdentity string
 	if user.PrimaryIdentity != nil {
@@ -336,6 +338,7 @@ func parseInt64Query(c *gin.Context, key string) int64 {
 	return id
 }
 
+// calculateAge 根据出生日期计算年龄
 func calculateAge(birthDate time.Time, now time.Time) int {
 	age := now.Year() - birthDate.Year()
 	if now.Month() < birthDate.Month() || (now.Month() == birthDate.Month() && now.Day() < birthDate.Day()) {
@@ -353,6 +356,7 @@ type idCardTokenPayload struct {
 	Exp    int64  `json:"exp"`
 }
 
+// generateIDCardToken 生成身份证 Token
 func (h *UserHandler) generateIDCardToken(userID int64, idCardHash string) (string, error) {
 	payload := idCardTokenPayload{
 		UserID: userID,
@@ -369,6 +373,7 @@ func (h *UserHandler) generateIDCardToken(userID int64, idCardHash string) (stri
 	return payloadEncoded + "." + signatureEncoded, nil
 }
 
+// verifyIDCardToken 验证身份证 Token
 func (h *UserHandler) verifyIDCardToken(userID int64, idCardHash string, token string) bool {
 	if idCardHash == "" {
 		return false
@@ -412,6 +417,7 @@ func (h *UserHandler) verifyIDCardToken(userID int64, idCardHash string, token s
 	return true
 }
 
+// idCardDigest 计算身份证 HMAC 摘要
 func (h *UserHandler) idCardDigest(idCard string) string {
 	mac := hmac.New(sha256.New, h.idCardTokenKey)
 	mac.Write([]byte("id_card:"))
@@ -419,12 +425,14 @@ func (h *UserHandler) idCardDigest(idCard string) string {
 	return hex.EncodeToString(mac.Sum(nil))
 }
 
+// sign 生成 HMAC 签名
 func (h *UserHandler) sign(payloadEncoded string) []byte {
 	mac := hmac.New(sha256.New, h.idCardTokenKey)
 	mac.Write([]byte(payloadEncoded))
 	return mac.Sum(nil)
 }
 
+// secureStringEqual 安全字符串比较（防时序攻击）
 func secureStringEqual(a string, b string) bool {
 	aBytes := []byte(a)
 	bBytes := []byte(b)
@@ -434,6 +442,7 @@ func secureStringEqual(a string, b string) bool {
 	return subtle.ConstantTimeCompare(aBytes, bBytes) == 1
 }
 
+// maskIDCard 脱敏身份证号
 func maskIDCard(idCard string) string {
 	if idCard == "" {
 		return ""

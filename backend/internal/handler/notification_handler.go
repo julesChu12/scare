@@ -12,6 +12,7 @@ type NotificationHandler struct {
 	service *service.NotificationService
 }
 
+// NewNotificationHandler 创建 NotificationHandler
 func NewNotificationHandler(service *service.NotificationService) *NotificationHandler {
 	return &NotificationHandler{service: service}
 }

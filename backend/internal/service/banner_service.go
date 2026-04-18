@@ -16,6 +16,7 @@ type BannerService struct {
 	repo *repository.BannerRepository
 }
 
+// NewBannerService 创建 BannerService
 func NewBannerService(repo *repository.BannerRepository) *BannerService {
 	return &BannerService{repo: repo}
 }
@@ -47,7 +48,7 @@ type BannerInput struct {
 	Status    string `json:"status"`     // 状态
 }
 
-// Create 创建 Banner
+// Create 创建轮播图
 func (s *BannerService) Create(input BannerInput) (*model.Banner, error) {
 	if input.ImageURL == "" {
 		return nil, ErrInvalidBanner
@@ -76,7 +77,7 @@ func (s *BannerService) Create(input BannerInput) (*model.Banner, error) {
 	return banner, nil
 }
 
-// Update 更新 Banner
+// Update 更新轮播图
 func (s *BannerService) Update(input BannerInput) (*model.Banner, error) {
 	if input.ID == 0 {
 		return nil, ErrInvalidBanner
@@ -105,7 +106,7 @@ func (s *BannerService) Update(input BannerInput) (*model.Banner, error) {
 	return banner, nil
 }
 
-// Delete 删除 Banner
+// Delete 删除轮播图
 func (s *BannerService) Delete(id int64) error {
 	return s.repo.Delete(id)
 }

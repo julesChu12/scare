@@ -17,6 +17,7 @@ type BAuthHandler struct {
 	permissionService *service.PermissionService
 }
 
+// NewBAuthHandler 创建 BAuthHandler
 func NewBAuthHandler(authService *service.AuthService, userRepo *repository.UserRepository, userIdentityRepo *repository.UserIdentityRepository, permissionService *service.PermissionService) *BAuthHandler {
 	return &BAuthHandler{
 		authService:       authService,

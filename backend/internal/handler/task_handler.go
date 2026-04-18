@@ -13,6 +13,7 @@ type TaskHandler struct {
 	service *service.TaskService
 }
 
+// NewTaskHandler 创建 TaskHandler
 func NewTaskHandler(service *service.TaskService) *TaskHandler {
 	return &TaskHandler{service: service}
 }

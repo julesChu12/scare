@@ -13,6 +13,7 @@ type StationHandler struct {
 	service *service.StationService
 }
 
+// NewStationHandler 创建 StationHandler
 func NewStationHandler(service *service.StationService) *StationHandler {
 	return &StationHandler{service: service}
 }

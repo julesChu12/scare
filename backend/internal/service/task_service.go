@@ -26,6 +26,7 @@ type TaskService struct {
 	notifySvc   *NotificationService
 }
 
+// NewTaskService 创建 TaskService
 func NewTaskService(db *gorm.DB, taskRepo *repository.TaskRepository, requestRepo *repository.RequestRepository, notifySvc *NotificationService) *TaskService {
 	return &TaskService{
 		db:          db,
@@ -51,6 +52,7 @@ func (s *TaskService) ListPoolWithFilter(filter TaskPoolFilter, page, pageSize i
 	return s.taskRepo.ListPool(repoFilter, offset, pageSize)
 }
 
+// ListByStaff 获取工作人员的任务列表（分页）
 func (s *TaskService) ListByStaff(staffID int64, page, pageSize int) ([]*repository.TaskWithRequest, int64, error) {
 	if staffID == 0 {
 		return nil, 0, ErrTaskInvalid
@@ -59,6 +61,7 @@ func (s *TaskService) ListByStaff(staffID int64, page, pageSize int) ([]*reposit
 	return s.taskRepo.ListByStaff(staffID, offset, pageSize)
 }
 
+// ListByStaffWithFilter 根据筛选条件获取工作人员的任务列表
 func (s *TaskService) ListByStaffWithFilter(filter repository.TaskListFilter, page, pageSize int) ([]*repository.TaskWithRequest, int64, error) {
 	if filter.StaffID == 0 {
 		return nil, 0, ErrTaskInvalid
@@ -113,7 +116,7 @@ func (s *TaskService) Claim(taskID, staffID int64) (*model.TaskAssignment, bool,
 		task.StaffID = staffID
 		task.Status = consts.TaskStatusClaimed
 		task.ClaimedAt = claimedAt
-		if err := tx.Model(&task).Updates(map[string]interface{}{
+		if err := tx.Model(&task).Updates(map[string]any{
 			"staff_id":   staffID,
 			"status":     consts.TaskStatusClaimed,
 			"claimed_at": claimedAt,
@@ -190,7 +193,7 @@ func (s *TaskService) Complete(taskID, staffID int64, images []string) (*model.T
 		task.Status = consts.TaskStatusCompleted
 		task.Images = string(payload)
 		task.CompletedAt = completedAt
-		if err := tx.Model(&task).Updates(map[string]interface{}{
+		if err := tx.Model(&task).Updates(map[string]any{
 			"status":       consts.TaskStatusCompleted,
 			"images":       string(payload),
 			"completed_at": completedAt,
@@ -311,7 +314,7 @@ func (s *TaskService) Transfer(taskID, newStaffID int64) (*model.TaskAssignment,
 		task.Status = consts.TaskStatusClaimed
 		task.ClaimedAt = claimedAt
 		// 使用 Updates 只更新指定字段，避免零值时间字段问题
-		if err := tx.Model(&task).Updates(map[string]interface{}{
+		if err := tx.Model(&task).Updates(map[string]any{
 			"staff_id":   newStaffID,
 			"status":     consts.TaskStatusClaimed,
 			"claimed_at": claimedAt,

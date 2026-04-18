@@ -57,17 +57,17 @@ func NewAuthService(userRepo *repository.UserRepository, identityRepo *repositor
 	}
 }
 
-// SetGeofenceService sets the geofence service (optional dependency)
+// SetGeofenceService 设置地理围栏服务（可选依赖，用于登录时定位最近站点）
 func (s *AuthService) SetGeofenceService(geofenceSvc *GeofenceService) {
 	s.geofenceSvc = geofenceSvc
 }
 
-// SetGeocodeService sets the geocode service (optional dependency)
+// SetGeocodeService 设置地理编码服务（可选依赖，用于解析地址坐标）
 func (s *AuthService) SetGeocodeService(geocodeSvc *GeocodeService) {
 	s.geocodeSvc = geocodeSvc
 }
 
-// SetStationRepo sets the station repository (optional dependency)
+// SetStationRepo 设置站点仓库（可选依赖，用于登录时定位最近站点）
 func (s *AuthService) SetStationRepo(stationRepo *repository.StationRepository) {
 	s.stationRepo = stationRepo
 }
@@ -236,6 +236,7 @@ func (s *AuthService) LoginCEndByCode(phone, code string) (*Tokens, *model.User,
 	return &Tokens{AccessToken: access, RefreshToken: refresh}, user, nil
 }
 
+// Refresh 使用刷新令牌获取新的访问令牌和刷新令牌。
 func (s *AuthService) Refresh(refreshToken string) (*Tokens, error) {
 	claims, err := s.jwtManager.ParseToken(refreshToken)
 	if err != nil {
@@ -457,7 +458,31 @@ type QuickStartResult struct {
 	Request      *model.ServiceRequest
 }
 
-// QuickStart 快速开通服务
+// QuickStart 快速开通服务（注册 + 建档 + 自动派单一体化）
+//
+// 适用场景：C 端老年用户通过手机号验证码即可快速开通服务，无需手动注册账号。
+// 整个流程在一个数据库事务中完成，保证数据一致性。
+//
+// 执行流程：
+//   1. 短信验证码校验
+//   2. 调用 resolveDispatch() 做派单决策（核心：射线法围栏匹配）
+//   3. 数据库事务：
+//      a. 新用户 → 创建 User + ElderlyIdentity + CustomerProfile
+//      b. 老用户 → 更新姓名/地址
+//      c. 创建 ServiceRequest（记录派单依据 dispatch_basis）
+//      d. 若自动派单成功 → 同时创建 TaskAssignment
+//   4. 生成 JWT Token 返回
+//
+// 与射线法的关系：
+//   resolveDispatch() 内部调用 resolveAssignedStation() → GeofenceService.Match()
+//   → PointInPolygon()（射线法），射线法结果写入 request.DispatchBasis：
+//     - "service_geofence"  → 射线法命中，自动派单
+//     - "service_nearest"   → Haversine 兜底派单
+//     - "service_address_manual_review" → 需人工审核派单
+//
+// 幂等性：
+//   手机号已存在的用户 → 更新姓名和地址，不重复创建（复用已有账号）
+//
 func (s *AuthService) QuickStart(input QuickStartInput) (*QuickStartResult, error) {
 	if err := s.smsService.VerifyCode(input.Phone, input.Code); err != nil {
 		return nil, err

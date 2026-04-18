@@ -12,6 +12,7 @@ type PermissionHandler struct {
 	permissionService *service.PermissionService
 }
 
+// NewPermissionHandler 创建 PermissionHandler
 func NewPermissionHandler(permissionService *service.PermissionService) *PermissionHandler {
 	return &PermissionHandler{
 		permissionService: permissionService,

@@ -9,6 +9,7 @@ type Response struct {
 	Data any    `json:"data"`
 }
 
+// Respond 返回标准 JSON 响应
 func Respond(c *gin.Context, status int, msg string, data any) {
 	c.PureJSON(status, Response{
 		Msg:  msg,
@@ -23,6 +24,7 @@ type PageData struct {
 	Total    int64 `json:"total"`
 }
 
+// RespondPage 返回分页 JSON 响应
 func RespondPage(c *gin.Context, status int, msg string, items any, page, pageSize int, total int64) {
 	c.PureJSON(status, Response{
 		Msg: msg,
@@ -35,6 +37,7 @@ func RespondPage(c *gin.Context, status int, msg string, items any, page, pageSi
 	})
 }
 
+// RespondError 返回错误 JSON 响应
 func RespondError(c *gin.Context, status int, msg string) {
 	c.PureJSON(status, Response{
 		Msg:  msg,

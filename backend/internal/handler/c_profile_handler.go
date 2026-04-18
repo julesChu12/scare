@@ -14,6 +14,7 @@ type CProfileHandler struct {
 	geocodeService *service.GeocodeService
 }
 
+// NewCProfileHandler 创建 CProfileHandler
 func NewCProfileHandler(profileService *service.CEndProfileService, geocodeService *service.GeocodeService) *CProfileHandler {
 	return &CProfileHandler{
 		profileService: profileService,

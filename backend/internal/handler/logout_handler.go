@@ -15,6 +15,7 @@ type LogoutHandler struct {
 	blacklistService *service.TokenBlacklistService
 }
 
+// NewLogoutHandler 创建 LogoutHandler
 func NewLogoutHandler(blacklistService *service.TokenBlacklistService) *LogoutHandler {
 	return &LogoutHandler{
 		blacklistService: blacklistService,

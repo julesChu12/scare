@@ -14,6 +14,7 @@ type CustomerHandler struct {
 	service *service.ElderlyService
 }
 
+// NewCustomerHandler 创建 CustomerHandler
 func NewCustomerHandler(service *service.ElderlyService) *CustomerHandler {
 	return &CustomerHandler{service: service}
 }

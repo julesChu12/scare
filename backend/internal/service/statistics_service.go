@@ -58,6 +58,7 @@ type StatisticsService struct {
 	userRepo    *repository.UserRepository
 }
 
+// NewStatisticsService 创建统计服务
 func NewStatisticsService(
 	taskRepo *repository.TaskRepository,
 	requestRepo *repository.RequestRepository,
@@ -269,7 +270,7 @@ type EfficiencyStats struct {
 // StaffRankingItem 服务人员排行项
 type StaffRankingItem = repository.StaffRankingItem
 
-// GetOverviewStats 获取统计概览数据
+// GetOverviewStats 获取统计概览数据（总需求数、各状态数量等）
 func (s *StatisticsService) GetOverviewStats(stationID int64, isAdmin bool, days int) (*OverviewStats, error) {
 	stats := &OverviewStats{}
 
@@ -339,7 +340,7 @@ func (s *StatisticsService) GetServiceTypeStats(stationID int64, isAdmin bool, d
 	return result, nil
 }
 
-// GetRequestTrend 获取需求趋势数据
+// GetRequestTrend 获取需求趋势数据（每日需求量）
 func (s *StatisticsService) GetRequestTrend(stationID int64, isAdmin bool, days int) ([]TrendItem, error) {
 	trend, err := s.requestRepo.GetDailyTrend(stationID, isAdmin, days)
 	if err != nil {
@@ -371,7 +372,7 @@ func (s *StatisticsService) GetRequestTrend(stationID int64, isAdmin bool, days 
 	return result, nil
 }
 
-// GetEfficiencyStats 获取处理效率统计
+// GetEfficiencyStats 获取处理效率统计（平均响应时间、满意度等）
 func (s *StatisticsService) GetEfficiencyStats(stationID int64, isAdmin bool, days int) (*EfficiencyStats, error) {
 	startDate := time.Now().AddDate(0, 0, -days)
 
@@ -399,7 +400,7 @@ func (s *StatisticsService) GetEfficiencyStats(stationID int64, isAdmin bool, da
 	return stats, nil
 }
 
-// GetStaffRanking 获取服务人员排行
+// GetStaffRanking 获取服务人员绩效排行
 func (s *StatisticsService) GetStaffRanking(stationID int64, isAdmin bool, days int, limit int) ([]StaffRankingItem, error) {
 	startDate := time.Now().AddDate(0, 0, -days)
 

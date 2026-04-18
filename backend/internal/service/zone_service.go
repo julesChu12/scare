@@ -30,10 +30,12 @@ type ZoneListFilter struct {
 	StationID int64 `json:"station_id"`
 }
 
+// NewZoneService 创建 ZoneService
 func NewZoneService(repo *repository.ZoneRepository, geofenceSvc *GeofenceService) *ZoneService {
 	return &ZoneService{repo: repo, geofenceSvc: geofenceSvc}
 }
 
+// Create 创建服务围栏
 func (s *ZoneService) Create(input ZoneInput) (*model.ServiceZone, error) {
 	if input.StationID == 0 || input.Name == "" || len(input.Points) < 3 {
 		return nil, ErrInvalidZone
@@ -60,6 +62,7 @@ func (s *ZoneService) Create(input ZoneInput) (*model.ServiceZone, error) {
 	return zone, nil
 }
 
+// Update 更新服务围栏
 func (s *ZoneService) Update(input ZoneInput) (*model.ServiceZone, error) {
 	if input.ID == 0 || input.StationID == 0 || input.Name == "" || len(input.Points) < 3 {
 		return nil, ErrInvalidZone
@@ -87,6 +90,7 @@ func (s *ZoneService) Update(input ZoneInput) (*model.ServiceZone, error) {
 	return zone, nil
 }
 
+// GetByID 根据 ID 获取围栏详情
 func (s *ZoneService) GetByID(id int64) (*model.ServiceZone, error) {
 	if id == 0 {
 		return nil, ErrInvalidZone
@@ -94,6 +98,7 @@ func (s *ZoneService) GetByID(id int64) (*model.ServiceZone, error) {
 	return s.repo.GetByID(id)
 }
 
+// Delete 删除服务围栏
 func (s *ZoneService) Delete(id int64) error {
 	if id == 0 {
 		return ErrInvalidZone
@@ -105,6 +110,7 @@ func (s *ZoneService) Delete(id int64) error {
 	return nil
 }
 
+// List 分页获取围栏列表
 func (s *ZoneService) List(page, pageSize int, filter ZoneListFilter) ([]*model.ServiceZone, int64, error) {
 	offset := (page - 1) * pageSize
 	return s.repo.List(offset, pageSize, repository.ZoneListFilter{

@@ -13,6 +13,7 @@ type ZoneHandler struct {
 	service *service.ZoneService
 }
 
+// NewZoneHandler 创建 ZoneHandler
 func NewZoneHandler(service *service.ZoneService) *ZoneHandler {
 	return &ZoneHandler{service: service}
 }
