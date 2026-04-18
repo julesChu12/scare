@@ -28,6 +28,7 @@
             <el-select v-model="filters.status" placeholder="全部状态" clearable style="width: 150px">
               <el-option label="已分发" value="dispatched" />
               <el-option label="已认领" value="claimed" />
+              <el-option label="服务中" value="processing" />
               <el-option label="已完成" value="completed" />
               <el-option label="已取消" value="cancelled" />
             </el-select>
@@ -35,19 +36,27 @@
           <el-form-item label="服务类型">
              <el-select v-model="filters.service_type" placeholder="全部类型" clearable style="width: 150px">
               <el-option label="送餐服务" value="meal" />
-              <el-option label="医疗服务" value="medical" />
-              <el-option label="清洁服务" value="cleaning" />
-              <el-option label="代购服务" value="shopping" />
-              <el-option label="陪护服务" value="accompany" />
+              <el-option label="就医陪护" value="medical" />
+              <el-option label="日常照护" value="care" />
+              <el-option label="居家维修" value="repair" />
+              <el-option label="家政保洁" value="cleaning" />
+              <el-option label="陪伴聊天" value="company" />
+              <el-option label="紧急救助" value="emergency" />
+              <el-option label="代买代购" value="shopping" />
+              <el-option label="出行接送" value="transport" />
+              <el-option label="康复理疗" value="rehab" />
+              <el-option label="心理慰藉" value="psychology" />
+              <el-option label="法律援助" value="legal_aid" />
+              <el-option label="其他服务" value="other" />
             </el-select>
           </el-form-item>
           <el-form-item label="所属站点" v-if="isSystemAdmin">
              <el-select v-model="filters.station_id" placeholder="全部站点" clearable filterable style="width: 200px">
               <el-option
-                v-for="station in stationList"
-                :key="station.id"
-                :label="station.name"
-                :value="station.id"
+                v-for="[id, name] in Object.entries(stationNameMap)"
+                :key="Number(id)"
+                :label="name"
+                :value="Number(id)"
               />
             </el-select>
           </el-form-item>
@@ -222,9 +231,9 @@ import { ref, onMounted, reactive, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
-import { taskApi, stationApi, userApi } from '@/api'
+import { taskApi, userApi } from '@/api'
 import { useAuthStore } from '@/store/modules/auth'
-import type { Task, ServiceRequest, Station, User } from '@/types/api'
+import type { Task, ServiceRequest, User } from '@/types/api'
 import dayjs from 'dayjs'
 
 const router = useRouter()
@@ -255,7 +264,8 @@ interface TaskWithRequest extends Task {
   staff_name?: string // 暂无后端返回，预留
 }
 const taskList = ref<TaskWithRequest[]>([])
-const stationList = ref<Station[]>([])
+// 站点 ID → 名称映射，从任务列表数据中提取（避免单独请求 stations API）
+const stationNameMap = ref<Record<number, string>>({})
 
 // 筛选参数
 const filters = reactive({
@@ -379,15 +389,16 @@ async function submitAssign() {
 }
 
 /**
- * 加载站点列表
+ * 从任务列表中提取站点映射
  */
-async function loadStations() {
-  try {
-    const res = await stationApi.getStations({ page: 1, page_size: 100 })
-    stationList.value = res.data.items
-  } catch (error) {
-    console.error('Failed to load stations:', error)
+function extractStationNames(tasks: TaskWithRequest[]) {
+  const map: Record<number, string> = {}
+  for (const task of tasks) {
+    if (task.station_id && task.request?.station_name) {
+      map[task.station_id] = task.request.station_name
+    }
   }
+  stationNameMap.value = { ...stationNameMap.value, ...map }
 }
 
 /**
@@ -419,6 +430,7 @@ async function loadTasks() {
 
     // 后端已返回 TaskWithRequest，包含 request 数据，直接使用
     taskList.value = items
+    extractStationNames(items)
   } catch (error) {
     console.error('Failed to load tasks:', error)
   } finally {
@@ -481,10 +493,18 @@ function handlePageChange(page: number) {
 function getServiceTypeText(type?: string): string {
   const typeMap: Record<string, string> = {
     meal: '送餐服务',
-    medical: '医疗服务',
-    cleaning: '清洁服务',
-    shopping: '代购服务',
-    accompany: '陪护服务',
+    medical: '就医陪护',
+    care: '日常照护',
+    repair: '居家维修',
+    cleaning: '家政保洁',
+    company: '陪伴聊天',
+    emergency: '紧急救助',
+    shopping: '代买代购',
+    transport: '出行接送',
+    rehab: '康复理疗',
+    psychology: '心理慰藉',
+    legal_aid: '法律援助',
+    other: '其他服务',
   }
   return typeMap[type || ''] || type || '未知'
 }
@@ -496,9 +516,17 @@ function getServiceTypeTag(type?: string): string {
   const tagMap: Record<string, string> = {
     meal: 'success',
     medical: 'danger',
-    cleaning: 'warning',
+    care: 'info',
+    repair: 'warning',
+    cleaning: '',
+    company: '',
+    emergency: '',
     shopping: 'primary',
-    accompany: 'info',
+    transport: '',
+    rehab: '',
+    psychology: '',
+    legal_aid: '',
+    other: '',
   }
   return tagMap[type || ''] || ''
 }
@@ -510,6 +538,7 @@ function getStatusText(status?: string): string {
   const map: Record<string, string> = {
     dispatched: '已分发',
     claimed: '已认领',
+    processing: '服务中',
     completed: '已完成',
     cancelled: '已取消'
   }
@@ -523,6 +552,7 @@ function getStatusTag(status?: string): string {
   const map: Record<string, string> = {
     dispatched: 'info',
     claimed: 'primary',
+    processing: 'warning',
     completed: 'success',
     cancelled: 'danger'
   }
@@ -534,8 +564,7 @@ function getStatusTag(status?: string): string {
  */
 function getStationName(stationId?: number): string {
   if (!stationId) return '-'
-  const station = stationList.value.find(s => s.id === stationId)
-  return station?.name || String(stationId)
+  return stationNameMap.value[stationId] || String(stationId)
 }
 
 /**
@@ -549,7 +578,6 @@ function formatDateTime(dateTime?: string): string {
 // 组件挂载时加载数据
 onMounted(() => {
   loadTasks()
-  loadStations()
 })
 </script>
 

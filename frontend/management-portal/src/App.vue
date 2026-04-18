@@ -28,4 +28,27 @@ onMounted(() => {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* 图片预览弹窗强制置顶，不被任何父级 overflow/clip 裁剪 */
+.el-image-viewer__wrapper {
+  z-index: 9999 !important;
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  overflow: visible !important;
+}
+.el-image-viewer__mask {
+  z-index: 1 !important;
+  position: absolute !important;
+}
+.el-image-viewer__canvas {
+  z-index: 2 !important;
+  position: relative !important;
+}
+.el-image-viewer__btn {
+  z-index: 3 !important;
+  position: absolute !important;
+}
 </style>
