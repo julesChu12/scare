@@ -143,7 +143,7 @@ fi
 # ============================================
 log "[4/5] 构建并启动后端服务..."
 cd "$SCRIPT_DIR"
-docker_compose up -d --build backend
+docker_compose up -d --build
 
 # ============================================
 # 步骤 5: 健康检查
