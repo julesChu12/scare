@@ -354,7 +354,11 @@ const handleSubmit = async () => {
         })
 
         ElMessage.success('服务申请已提交！')
-        router.push(`/requests/${result.id}`)
+        router.push({
+          name: 'RequestDetail',
+          params: { id: result.id },
+          query: { from: 'submit' }
+        })
       } else {
         // 未登录用户：调用快速开通API（自动注册+登录+创建请求）
         const result = await authAPI.quickStart({
@@ -379,7 +383,11 @@ const handleSubmit = async () => {
         userStore.setProfile(result.profile)
 
         ElMessage.success('服务申请已提交！')
-        router.push(`/requests/${result.request.id}`)
+        router.push({
+          name: 'RequestDetail',
+          params: { id: result.request.id },
+          query: { from: 'submit' }
+        })
       }
     } catch (error) {
       if (error === 'cancel' || error === 'close') {

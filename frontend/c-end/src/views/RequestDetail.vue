@@ -119,6 +119,15 @@
 
         <!-- 底部操作区 -->
         <div class="action-area">
+          <el-button
+            v-if="showReturnHome"
+            size="large"
+            class="action-btn"
+            @click="goHome"
+          >
+            返回首页
+          </el-button>
+
           <!-- 评价按钮（已完成但未评价） -->
           <el-button
             v-if="canRate"
@@ -201,8 +210,16 @@ const canCancel = computed(() => {
   return request.value?.status === 'dispatched'
 })
 
+const showReturnHome = computed(() => {
+  return route.query.from === 'submit' && canCancel.value
+})
+
 const goBack = () => {
   router.back()
+}
+
+const goHome = () => {
+  router.push({ name: 'Home' })
 }
 
 const getServiceIcon = (type: string) => {
