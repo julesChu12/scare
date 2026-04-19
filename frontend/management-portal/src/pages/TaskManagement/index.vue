@@ -152,6 +152,17 @@
         <el-table-column label="操作" width="180" fixed="right">
           <template #default="{ row }">
             <el-button
+              v-if="activeTab === 'pool' && row.status === 'dispatched'"
+              v-permission="'service:task:claim'"
+              type="primary"
+              size="small"
+              link
+              :loading="claimingTaskId === row.id"
+              @click="handleClaim(row)"
+            >
+              认领
+            </el-button>
+            <el-button
               type="primary"
               size="small"
               link
@@ -229,7 +240,7 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
 import { taskApi, userApi } from '@/api'
 import { useAuthStore } from '@/store/modules/auth'
@@ -257,6 +268,7 @@ const isRegularStaff = computed(() => {
 
 // 加载状态
 const loading = ref(false)
+const claimingTaskId = ref<number | null>(null)
 
 // 任务列表（扩展类型包含 request 信息）
 interface TaskWithRequest extends Task {
@@ -385,6 +397,31 @@ async function submitAssign() {
     ElMessage.error('操作失败')
   } finally {
     assignLoading.value = false
+  }
+}
+
+/**
+ * 认领任务
+ */
+async function handleClaim(task: TaskWithRequest) {
+  try {
+    await ElMessageBox.confirm('确定要认领该任务吗？', '认领任务', {
+      confirmButtonText: '确定认领',
+      cancelButtonText: '取消',
+      type: 'info',
+    })
+
+    claimingTaskId.value = task.id
+    await taskApi.claimTask(task.id)
+    ElMessage.success('认领成功')
+    await loadTasks()
+  } catch (error) {
+    if (error !== 'cancel' && error !== 'close') {
+      console.error('Failed to claim task:', error)
+      ElMessage.error('认领失败')
+    }
+  } finally {
+    claimingTaskId.value = null
   }
 }
 

@@ -351,7 +351,8 @@ async function navigateAfterComplete() {
 function getStatusText(status: string): string {
   const statusMap: Record<string, string> = {
     dispatched: '待认领',
-    claimed: '进行中',
+    claimed: '已认领',
+    processing: '服务中',
     completed: '已完成',
     cancelled: '已取消',
   }
@@ -365,6 +366,7 @@ function getStatusType(status: string): string {
   const typeMap: Record<string, string> = {
     dispatched: 'warning',
     claimed: 'primary',
+    processing: 'warning',
     completed: 'success',
     cancelled: 'info',
   }

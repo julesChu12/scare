@@ -327,7 +327,7 @@ const resolveCEndBaseUrl = () => {
   }
 
   if (import.meta.env.DEV) {
-    return `${window.location.protocol}//${window.location.hostname}:5174`
+    return `https://${window.location.hostname}:5174`
   }
 
   return window.location.origin
