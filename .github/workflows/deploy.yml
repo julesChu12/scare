@@ -130,19 +130,60 @@ jobs:
 
       - name: 生成 SSH 连接参数
         run: |
-          echo "SSH_OPTS=-i ~/.ssh/deploy_key -p ${{ secrets.SERVER_PORT || 22 }} -o ServerAliveInterval=30 -o ServerAliveCountMax=20 -o TCPKeepAlive=yes -o StrictHostKeyChecking=yes" >> $GITHUB_ENV
+          echo "SSH_OPTS=-i ~/.ssh/deploy_key -p ${{ secrets.SERVER_PORT || 22 }} -o BatchMode=yes -o ConnectTimeout=10 -o ConnectionAttempts=1 -o PreferredAuthentications=publickey -o PubkeyAuthentication=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=20 -o TCPKeepAlive=yes -o StrictHostKeyChecking=yes" >> $GITHUB_ENV
+          echo "SSH_TARGET=${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}" >> $GITHUB_ENV
+          echo "SSH_RETRY_ATTEMPTS=5" >> $GITHUB_ENV
+          echo "SSH_RETRY_DELAY_SECONDS=5" >> $GITHUB_ENV
+
+      - name: SSH 连接探活
+        run: |
+          set -euo pipefail
+          for i in $(seq 1 "$SSH_RETRY_ATTEMPTS"); do
+            echo "SSH 连接探活 ($i/$SSH_RETRY_ATTEMPTS)"
+            if ssh $SSH_OPTS "$SSH_TARGET" "echo ssh-ok"; then
+              exit 0
+            fi
+
+            status=$?
+            echo "本次 SSH 连接失败，exit code: $status"
+
+            if [ "$i" -lt "$SSH_RETRY_ATTEMPTS" ]; then
+              sleep $((SSH_RETRY_DELAY_SECONDS * i))
+              continue
+            fi
+
+            echo "最后一次执行详细 SSH 诊断..."
+            ssh -vvv $SSH_OPTS "$SSH_TARGET" "true" || true
+            echo "❌ SSH 探活失败，请检查服务器防火墙、sshd MaxStartups、部署账号与公钥配置。"
+            exit "$status"
+          done
 
       - name: 初始化服务器部署目录
         run: |
-          ssh $SSH_OPTS \
-            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-            "mkdir -p '${{ env.DEPLOY_DIR }}/deployment'"
+          set -euo pipefail
+          for i in $(seq 1 "$SSH_RETRY_ATTEMPTS"); do
+            echo "初始化服务器部署目录 ($i/$SSH_RETRY_ATTEMPTS)"
+            if ssh $SSH_OPTS "$SSH_TARGET" "mkdir -p '${{ env.DEPLOY_DIR }}/deployment'"; then
+              exit 0
+            fi
+
+            status=$?
+            echo "目录初始化失败，exit code: $status"
+
+            if [ "$i" -lt "$SSH_RETRY_ATTEMPTS" ]; then
+              sleep $((SSH_RETRY_DELAY_SECONDS * i))
+              continue
+            fi
+
+            exit "$status"
+          done
 
       - name: 写入服务器部署配置
         run: |
-          ssh $SSH_OPTS \
-            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-            "cat > '${{ env.DEPLOY_DIR }}/deployment/.env' <<'EOF'
+          set -euo pipefail
+          for i in $(seq 1 "$SSH_RETRY_ATTEMPTS"); do
+            echo "写入服务器部署配置 ($i/$SSH_RETRY_ATTEMPTS)"
+            if ssh $SSH_OPTS "$SSH_TARGET" "cat > '${{ env.DEPLOY_DIR }}/deployment/.env' <<'EOF'
           DB_ROOT_PASSWORD=${{ secrets.DB_ROOT_PASSWORD }}
           DB_NAME=${{ secrets.DB_NAME || 'scare_db' }}
           DB_USER=${{ secrets.DB_USER || 'scare_user' }}
@@ -158,28 +199,71 @@ jobs:
           SMTP_USER=${{ secrets.SMTP_USER }}
           SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
           AMAP_KEY=${{ secrets.AMAP_KEY }}
-          EOF"
+          EOF"; then
+              exit 0
+            fi
+
+            status=$?
+            echo "写入部署配置失败，exit code: $status"
+
+            if [ "$i" -lt "$SSH_RETRY_ATTEMPTS" ]; then
+              sleep $((SSH_RETRY_DELAY_SECONDS * i))
+              continue
+            fi
+
+            exit "$status"
+          done
 
       # 同步项目文件到服务器
       - name: 同步文件到服务器
         run: |
-          rsync -azP --delete --ignore-errors \
-            --exclude='/.git' \
-            --exclude='node_modules' \
-            --exclude='/frontend/*/dist' \
-            --exclude='/.env' \
-            --exclude='/deployment/.env' \
-            --exclude='/paper/' \
-            --exclude='/database/' \
-            -e "ssh $SSH_OPTS" \
-            ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ env.DEPLOY_DIR }}/
+          set -euo pipefail
+          for i in $(seq 1 "$SSH_RETRY_ATTEMPTS"); do
+            echo "同步文件到服务器 ($i/$SSH_RETRY_ATTEMPTS)"
+            if rsync -azP --delete --ignore-errors \
+              --exclude='/.git' \
+              --exclude='node_modules' \
+              --exclude='/frontend/*/dist' \
+              --exclude='/.env' \
+              --exclude='/deployment/.env' \
+              --exclude='/paper/' \
+              --exclude='/database/' \
+              -e "ssh $SSH_OPTS" \
+              ./ "${SSH_TARGET}:${{ env.DEPLOY_DIR }}/"; then
+              exit 0
+            fi
+
+            status=$?
+            echo "文件同步失败，exit code: $status"
+
+            if [ "$i" -lt "$SSH_RETRY_ATTEMPTS" ]; then
+              sleep $((SSH_RETRY_DELAY_SECONDS * i))
+              continue
+            fi
+
+            exit "$status"
+          done
 
       # 在服务器上执行部署（包含迁移）
       - name: 执行部署与迁移
         run: |
-          ssh $SSH_OPTS \
-            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-            "mkdir -p '${{ env.DEPLOY_DIR }}' && cd '${{ env.DEPLOY_DIR }}' && bash deployment/server-deploy.sh"
+          set -euo pipefail
+          for i in $(seq 1 "$SSH_RETRY_ATTEMPTS"); do
+            echo "执行部署与迁移 ($i/$SSH_RETRY_ATTEMPTS)"
+            if ssh $SSH_OPTS "$SSH_TARGET" "mkdir -p '${{ env.DEPLOY_DIR }}' && cd '${{ env.DEPLOY_DIR }}' && bash deployment/server-deploy.sh"; then
+              exit 0
+            fi
+
+            status=$?
+            echo "执行部署失败，exit code: $status"
+
+            if [ "$i" -lt "$SSH_RETRY_ATTEMPTS" ]; then
+              sleep $((SSH_RETRY_DELAY_SECONDS * i))
+              continue
+            fi
+
+            exit "$status"
+          done
 
       # 健康检查
       - name: 健康检查
@@ -187,9 +271,7 @@ jobs:
           echo "等待服务启动..."
           sleep 15
           for i in $(seq 1 10); do
-            if ssh $SSH_OPTS \
-              ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} \
-              "curl -sf http://localhost:8080/api/v1/health > /dev/null 2>&1"; then
+            if ssh $SSH_OPTS "$SSH_TARGET" "curl -sf http://localhost:8080/api/v1/health > /dev/null 2>&1"; then
               echo "✅ 服务启动成功"
               exit 0
             fi
