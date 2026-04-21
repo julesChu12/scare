@@ -30,6 +30,9 @@ type User struct {
 	DeletedAt    gorm.DeletedAt `gorm:"column:deleted_at;type:datetime(3);index:idx_deleted_at,priority:1;index:idx_users_deleted_at,priority:1" json:"deleted_at"`
 	IDCardHmac   string         `gorm:"column:id_card_hmac;type:varchar(64);index:idx_users_id_card_hmac,priority:1;comment:身份证号HMAC摘要" json:"id_card_hmac"` // 身份证号HMAC摘要
 	IDCardMasked string         `gorm:"column:id_card_masked;type:varchar(20);comment:身份证号脱敏值" json:"id_card_masked"`                                        // 身份证号脱敏值
+
+	// Additional fields
+	StationName string `gorm:"->;column:station_name" json:"station_name"` // 所属站点名称
 }
 
 // TableName User's table name

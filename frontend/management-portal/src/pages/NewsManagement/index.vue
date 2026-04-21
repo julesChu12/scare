@@ -81,6 +81,14 @@
         <!-- 标题 -->
         <el-table-column prop="title" label="标题" min-width="200" show-overflow-tooltip />
 
+        <!-- 所属站点 -->
+        <el-table-column label="所属站点" min-width="120">
+          <template #default="{ row }">
+            <el-tag v-if="row.station_id === 0" type="warning" size="small">全局</el-tag>
+            <span v-else>{{ row.station_name || row.station_id }}</span>
+          </template>
+        </el-table-column>
+
         <!-- 类型 -->
         <el-table-column label="类型" width="90">
           <template #default="{ row }">
@@ -181,6 +189,27 @@
           <el-col :span="6" style="height: 100%; overflow-y: auto; padding-right: 10px; border-right: 1px solid #f0f0f0;">
             <el-form-item label="标题" prop="title">
               <el-input v-model="formData.title" placeholder="请输入新闻标题" maxlength="200" show-word-limit />
+            </el-form-item>
+
+            <el-form-item label="所属站点" prop="station_id">
+              <el-select
+                v-model="formData.station_id"
+                placeholder="请选择所属站点"
+                style="width: 100%"
+                filterable
+                :disabled="!isSystemAdmin"
+              >
+                <el-option label="全局(所有站点可见)" :value="0" />
+                <el-option
+                  v-for="item in stationList"
+                  :key="item.id"
+                  :label="item.name"
+                  :value="item.id"
+                />
+              </el-select>
+              <p class="form-tip" v-if="!isSystemAdmin" style="margin: 4px 0 0; font-size: 11px; color: #909399; line-height: 1.4;">
+                非系统管理员仅可发布所属站点的新闻
+              </p>
             </el-form-item>
 
             <el-row :gutter="12">
@@ -287,14 +316,16 @@
 import { ref, reactive, onMounted, computed, shallowRef, onBeforeUnmount } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadProps } from 'element-plus'
 import { Plus, Refresh, Upload, UploadFilled } from '@element-plus/icons-vue'
-import { newsApi } from '@/api'
+import { newsApi, stationApi } from '@/api'
 import { useAuthStore } from '@/store/modules/auth'
-import type { News, NewsRequest, NewsType, NewsStatus } from '@/types/api'
+import type { News, NewsRequest, NewsType, NewsStatus, Station } from '@/types/api'
 import dayjs from 'dayjs'
 import '@wangeditor/editor/dist/css/style.css' // 引入 css
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 
 const authStore = useAuthStore()
+
+const isSystemAdmin = computed(() => authStore.hasRole('admin'))
 
 // 编辑器实例，必须用 shallowRef
 const editorRef = shallowRef()
@@ -362,6 +393,22 @@ const submitting = ref(false)
 // 新闻列表
 const newsList = ref<News[]>([])
 
+// 站点列表
+const stationList = ref<Station[]>([])
+
+/**
+ * 加载站点列表
+ */
+async function fetchStations() {
+  if (!isSystemAdmin.value) return
+  try {
+    const res = await stationApi.getStations({ page: 1, page_size: 100 })
+    stationList.value = res.data.items
+  } catch (error) {
+    console.error('加载站点列表失败:', error)
+  }
+}
+
 // 筛选表单
 const filterForm = reactive({
   type: '' as NewsType | '',
@@ -381,16 +428,18 @@ const isEdit = ref(false)
 const editingId = ref<number | null>(null)
 const formRef = ref<FormInstance>()
 
-// 表单数据
-const formData = reactive<NewsRequest>({
+const createDefaultFormData = (): NewsRequest => ({
   title: '',
   summary: '',
   content: '',
   cover_url: '',
   type: 'news',
   status: 'draft',
-  station_id: 0,
+  station_id: isSystemAdmin.value ? 0 : (authStore.user?.station_id || 0),
 })
+
+// 表单数据
+const formData = reactive<NewsRequest>(createDefaultFormData())
 
 // 表单验证规则
 const formRules: FormRules = {
@@ -400,6 +449,7 @@ const formRules: FormRules = {
   ],
   type: [{ required: true, message: '请选择新闻类型', trigger: 'change' }],
   status: [{ required: true, message: '请选择状态', trigger: 'change' }],
+  station_id: [{ required: true, message: '请选择所属站点', trigger: 'change' }],
 }
 
 /**
@@ -596,15 +646,7 @@ async function handleSubmit() {
  * 重置表单
  */
 function resetForm() {
-  Object.assign(formData, {
-    title: '',
-    summary: '',
-    content: '',
-    cover_url: '',
-    type: 'news',
-    status: 'draft',
-    station_id: 0,
-  })
+  Object.assign(formData, createDefaultFormData())
   formRef.value?.resetFields()
 }
 
@@ -729,6 +771,7 @@ function handlePageChange(page: number) {
 
 onMounted(() => {
   loadNewsList()
+  fetchStations()
 })
 </script>
 

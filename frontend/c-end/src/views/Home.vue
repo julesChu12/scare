@@ -187,9 +187,9 @@ const stationDialogVisible = ref(false)
 const banners = ref<Banner[]>([])
 
 // 获取轮播图
-const fetchBanners = async () => {
+const fetchBanners = async (stationId?: number) => {
   try {
-    const result = await bannerAPI.getBanners()
+    const result = await bannerAPI.getBanners(stationId)
     banners.value = (result || []).map(b => ({
       ...b,
       // 统一转为相对路径，交给 Vite proxy 代理到后端
@@ -214,9 +214,9 @@ const homeServices = ref([
 const newsList = ref<NewsItem[]>([])
 
 // 获取新闻列表
-const fetchNews = async () => {
+const fetchNews = async (stationId?: number) => {
   try {
-    const result = await newsAPI.getList({ page_size: 3 })
+    const result = await newsAPI.getList({ page_size: 5, station_id: stationId })
     newsList.value = result.items
   } catch (error) {
     console.warn('获取新闻失败:', error)
@@ -276,11 +276,11 @@ const fetchLocation = async () => {
   }
 }
 
-// 匹配服务站点
-const fetchStation = async () => {
+// 匹配服务站点，返回站点 ID（失败返回 undefined）
+const fetchStation = async (): Promise<number | undefined> => {
   try {
     if (currentLat.value === undefined || currentLng.value === undefined) {
-      return
+      return undefined
     }
     const result = await stationAPI.matchStation({
       latitude: currentLat.value,
@@ -288,20 +288,20 @@ const fetchStation = async () => {
     })
     currentStation.value = result
     stationName.value = result.name
-    // 每次获取站点后刷新 Banner，因为 Banner 可能跟站点有关
-    fetchBanners()
+    return result.id
   } catch (error) {
     console.warn('匹配站点失败:', error)
     stationName.value = '暂无站点'
-    // 即使没有站点，也尝试获取通用 Banner
-    fetchBanners()
+    return undefined
   }
 }
 
 // 刷新定位
 const refreshLocation = async () => {
   await fetchLocation()
-  await fetchStation()
+  const stationId = await fetchStation()
+  fetchBanners(stationId)
+  fetchNews(stationId)
 }
 
 const showStationInfo = () => {
@@ -348,8 +348,9 @@ const goToMine = () => { router.push('/mine') }
 // 页面加载时获取定位、站点和新闻
 onMounted(async () => {
   await fetchLocation()
-  await fetchStation()
-  fetchNews() // 不阻塞，异步加载新闻
+  const stationId = await fetchStation()
+  fetchBanners(stationId)
+  fetchNews(stationId)
 })
 </script>
 

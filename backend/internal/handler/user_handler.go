@@ -322,6 +322,7 @@ func (h *UserHandler) toUserResponse(user *service.UserWithIdentities) gin.H {
 		"c_end_identities": user.CEndIdentities,
 		"primary_identity": primaryIdentity,
 		"station_id":       user.StationID,
+		"station_name":     user.StationName,
 		"status":           user.Status,
 		"created_at":       user.CreatedAt,
 		"updated_at":       user.UpdatedAt,

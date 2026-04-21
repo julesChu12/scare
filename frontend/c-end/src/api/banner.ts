@@ -14,9 +14,9 @@ export interface Banner {
 export const bannerAPI = {
     /**
      * 获取轮播图列表
-     * GET /api/v1/c/banners
+     * GET /api/v1/c/banners?station_id=1
      */
-    getBanners: () => {
-        return client.get<any, Banner[]>('/c/banners')
+    getBanners: (stationId?: number) => {
+        return client.get<any, Banner[]>('/c/banners', { params: { station_id: stationId } })
     }
 }

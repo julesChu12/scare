@@ -27,6 +27,7 @@ export interface NewsListParams {
   page?: number
   page_size?: number
   type?: string
+  station_id?: number
 }
 
 export const newsAPI = {
@@ -34,14 +35,7 @@ export const newsAPI = {
    * 获取新闻列表
    */
   async getList(params: NewsListParams = {}): Promise<NewsListResponse> {
-    const { page = 1, page_size = 10, type } = params
-    const queryParams = new URLSearchParams()
-    queryParams.append('page', String(page))
-    queryParams.append('page_size', String(page_size))
-    if (type) {
-      queryParams.append('type', type)
-    }
-    return client.get(`/c/news?${queryParams.toString()}`)
+    return client.get('/c/news', { params })
   },
 
   /**

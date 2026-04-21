@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"community-elderly-care-platform/internal/dao/model"
@@ -46,6 +47,7 @@ func (h *NewsHandler) List(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
 	newsType := c.Query("type")
+	status := c.Query("status") // B端筛选状态
 
 	if page < 1 {
 		page = 1
@@ -54,15 +56,29 @@ func (h *NewsHandler) List(c *gin.Context) {
 		pageSize = 10
 	}
 
-	// 获取用户关联的站点ID（如果有）
+	// 获取站点ID，优先从 Query 参数获取，其次从 Context 获取（JWT）
 	var stationID *int64
-	if sid, exists := c.Get("station_id"); exists {
-		if id, ok := sid.(int64); ok {
-			stationID = &id
-		}
+	if sid, err := strconv.ParseInt(c.Query("station_id"), 10, 64); err == nil && sid >= 0 {
+		stationID = &sid
+	} else if id, exists := GetStationID(c); exists {
+		stationID = &id
 	}
 
-	news, total, err := h.newsService.ListPublished(page, pageSize, newsType, stationID)
+	var news []*model.News
+	var total int64
+	var err error
+
+	// 根据路由判断是 B端还是 C端
+	isBEnd := strings.HasPrefix(c.Request.URL.Path, "/api/v1/b")
+
+	if isBEnd {
+		// B端管理列表：包含草稿，有站点名称
+		news, total, err = h.newsService.List(page, pageSize, newsType, status, stationID)
+	} else {
+		// C端公开列表：仅发布，按站点+时间排序
+		news, total, err = h.newsService.ListPublished(page, pageSize, newsType, stationID)
+	}
+
 	if err != nil {
 		Respond(c, http.StatusInternalServerError, "获取新闻列表失败", nil)
 		return

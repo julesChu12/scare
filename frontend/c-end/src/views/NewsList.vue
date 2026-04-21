@@ -39,8 +39,14 @@
         <p class="empty-text">暂无动态</p>
       </div>
 
-      <!-- 新闻列表 -->
-      <div v-else class="news-list">
+      <!-- 新闻列表 (瀑布流/无限滚动) -->
+      <div
+        v-else
+        class="news-list"
+        v-infinite-scroll="loadMore"
+        :infinite-scroll-disabled="loading || noMore"
+        :infinite-scroll-distance="20"
+      >
         <div
           v-for="news in newsList"
           :key="news.id"
@@ -57,14 +63,13 @@
         </div>
       </div>
 
-      <!-- 加载更多 -->
+      <!-- 加载状态提示 -->
       <div v-if="newsList.length > 0" class="load-more">
         <span v-if="loading" class="loading-text">
           <el-icon class="is-loading"><Loading /></el-icon>
           加载中...
         </span>
         <span v-else-if="noMore" class="no-more-text">没有更多了</span>
-        <span v-else class="load-more-text" @click="loadMore">加载更多</span>
       </div>
     </div>
 
@@ -99,6 +104,8 @@ import {
   Document
 } from '@element-plus/icons-vue'
 import { newsAPI, type NewsItem } from '@/api/news'
+import { stationAPI } from '@/api'
+import { getCurrentPosition } from '@/utils/coordTransform'
 
 const router = useRouter()
 
@@ -116,6 +123,7 @@ const page = ref(1)
 const pageSize = 10
 const total = ref(0)
 const noMore = computed(() => newsList.value.length >= total.value && total.value > 0)
+const stationId = ref<number | undefined>()
 
 const goBack = () => {
   router.back()
@@ -129,6 +137,20 @@ const selectType = (type: string) => {
   fetchNews()
 }
 
+// 获取站点ID（通过定位）
+const fetchStationId = async () => {
+  try {
+    const pos = await getCurrentPosition()
+    const result = await stationAPI.matchStation({
+      latitude: pos.lat,
+      longitude: pos.lng
+    })
+    stationId.value = result.id
+  } catch (error) {
+    console.warn('NewsList: 匹配站点失败，显示全局新闻', error)
+  }
+}
+
 const fetchNews = async (isLoadMore = false) => {
   if (loading.value) return
   loading.value = true
@@ -137,7 +159,8 @@ const fetchNews = async (isLoadMore = false) => {
     const result = await newsAPI.getList({
       page: page.value,
       page_size: pageSize,
-      type: currentType.value || undefined
+      type: currentType.value || undefined,
+      station_id: stationId.value
     })
 
     if (isLoadMore) {
@@ -182,7 +205,8 @@ const goToHome = () => router.push('/home')
 const goToServices = () => router.push('/services')
 const goToMine = () => router.push('/mine')
 
-onMounted(() => {
+onMounted(async () => {
+  await fetchStationId()
   fetchNews()
 })
 </script>

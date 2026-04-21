@@ -25,6 +25,9 @@ type Banner struct {
 	CreatedAt time.Time      `gorm:"column:created_at;type:datetime(3);not null;default:CURRENT_TIMESTAMP(3);comment:åˆ›å»ºæ—¶é—´" json:"created_at"`                                  // åˆ›å»ºæ—¶é—´
 	UpdatedAt time.Time      `gorm:"column:updated_at;type:datetime(3);not null;default:CURRENT_TIMESTAMP(3);comment:æ›´æ–°æ—¶é—´" json:"updated_at"`                                  // æ›´æ–°æ—¶é—´
 	DeletedAt gorm.DeletedAt `gorm:"column:deleted_at;type:datetime(3);index:idx_banners_deleted_at,priority:1;comment:åˆ é™¤æ—¶é—´(è½¯åˆ é™¤)" json:"deleted_at"`                     // åˆ é™¤æ—¶é—´(è½¯åˆ é™¤)
+
+	// Additional fields
+	StationName string `gorm:"->;column:station_name" json:"station_name"` // 所属站点名称
 }
 
 // TableName Banner's table name

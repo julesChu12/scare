@@ -39,8 +39,17 @@ func (r *UserRepository) CreateWithoutPassword(user *model.User) error {
 
 // GetByID 根据ID获取用户
 func (r *UserRepository) GetByID(id int64) (*model.User, error) {
-	u := r.q.User
-	return u.Where(u.ID.Eq(id)).First()
+	var user model.User
+	err := r.db.Model(&model.User{}).
+		Select("users.id, users.phone, users.name, users.email, users.avatar, users.gender, users.birth_date, users.id_card, users.id_card_hmac, users.id_card_masked, users.station_id, users.status, users.created_at, users.updated_at, users.deleted_at, CASE WHEN users.station_id = 0 THEN '全局' ELSE service_stations.name END as station_name").
+		Joins("LEFT JOIN service_stations ON users.station_id = service_stations.id").
+		Where("users.id = ?", id).
+		Where("users.deleted_at IS NULL").
+		Scan(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
 
 // GetByPhone 根据手机号获取用户
@@ -58,27 +67,27 @@ func (r *UserRepository) ListWithFilter(offset, limit int, filter UserFilter) ([
 
 	// 按身份筛选：通过子查询从 user_identities 表筛选
 	if filter.Role != "" {
-		db = db.Where("id IN (SELECT user_id FROM user_identities WHERE identity_type = ? AND status = 'active' AND deleted_at IS NULL)", filter.Role)
+		db = db.Where("users.id IN (SELECT user_id FROM user_identities WHERE identity_type = ? AND status = 'active' AND deleted_at IS NULL)", filter.Role)
 	}
 
 	// 按状态筛选
 	if filter.Status != "" {
-		db = db.Where("status = ?", filter.Status)
+		db = db.Where("users.status = ?", filter.Status)
 	}
 
 	// 按站点筛选
 	if filter.StationID > 0 {
-		db = db.Where("station_id = ?", filter.StationID)
+		db = db.Where("users.station_id = ?", filter.StationID)
 	}
 
 	// 关键词搜索（姓名或手机号）
 	if filter.Keyword != "" {
 		keyword := "%" + filter.Keyword + "%"
-		db = db.Where("name LIKE ? OR phone LIKE ?", keyword, keyword)
+		db = db.Where("users.name LIKE ? OR users.phone LIKE ?", keyword, keyword)
 	}
 
 	// 排除软删除
-	db = db.Where("deleted_at IS NULL")
+	db = db.Where("users.deleted_at IS NULL")
 
 	// 获取总数
 	var total int64
@@ -88,7 +97,10 @@ func (r *UserRepository) ListWithFilter(offset, limit int, filter UserFilter) ([
 
 	// 分页查询
 	var users []*model.User
-	if err := db.Order("id DESC").Offset(offset).Limit(limit).Find(&users).Error; err != nil {
+	db = db.Select("users.id, users.phone, users.name, users.email, users.avatar, users.gender, users.birth_date, users.id_card, users.id_card_hmac, users.id_card_masked, users.station_id, users.status, users.created_at, users.updated_at, users.deleted_at, CASE WHEN users.station_id = 0 THEN '全局' ELSE service_stations.name END as station_name").
+		Joins("LEFT JOIN service_stations ON users.station_id = service_stations.id")
+	
+	if err := db.Order("users.id DESC").Offset(offset).Limit(limit).Scan(&users).Error; err != nil {
 		return nil, 0, err
 	}
 

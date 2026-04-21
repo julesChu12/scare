@@ -174,9 +174,9 @@ INSERT INTO `banners` (
   `station_id`, `title`, `image_url`, `link_type`, `link_value`, `sort`, `status`,
   `created_at`, `updated_at`, `deleted_at`
 ) VALUES
-(0, '社区养老服务正式上线', '/static/b_end/20260329/服务中心正式启动.png', 'none', NULL, 10, 'active',
+(0, '社区养老服务正式上线', '/static/b_end/20260329/服务中心正式启动.png', 'news', '/news/1', 10, 'active',
  DATE_SUB(NOW(), INTERVAL 30 DAY), DATE_SUB(NOW(), INTERVAL 30 DAY), NULL),
-(0, '暖心助餐服务预约中', '/static/b_end/20260329/上门送饭.jpg', 'none', NULL, 9, 'active',
+(0, '暖心助餐服务预约中', '/static/b_end/20260329/上门送饭.jpg', 'news', '/news/2', 9, 'active',
  DATE_SUB(NOW(), INTERVAL 30 DAY), DATE_SUB(NOW(), INTERVAL 30 DAY), NULL),
 (0, '春季健康义诊活动', '/static/b_end/20260329/开会.jpg', 'none', NULL, 8, 'active',
  DATE_SUB(NOW(), INTERVAL 30 DAY), DATE_SUB(NOW(), INTERVAL 30 DAY), NULL),

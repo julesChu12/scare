@@ -49,6 +49,14 @@
         <!-- 标题 -->
         <el-table-column prop="title" label="标题" min-width="150" />
 
+        <!-- 所属站点 -->
+        <el-table-column label="所属站点" min-width="120">
+          <template #default="{ row }">
+            <el-tag v-if="row.station_id === 0" type="warning" size="small">全局</el-tag>
+            <span v-else>{{ row.station_name || row.station_id }}</span>
+          </template>
+        </el-table-column>
+
         <!-- 链接类型 -->
         <el-table-column label="链接类型" width="100">
           <template #default="{ row }">
@@ -122,6 +130,27 @@
           <el-col :span="12">
             <el-form-item label="标题" prop="title">
               <el-input v-model="formData.title" placeholder="请输入标题" />
+            </el-form-item>
+
+            <el-form-item label="所属站点" prop="station_id">
+              <el-select
+                v-model="formData.station_id"
+                placeholder="请选择所属站点"
+                style="width: 100%"
+                filterable
+                :disabled="!isSystemAdmin"
+              >
+                <el-option label="全局(所有站点可见)" :value="0" />
+                <el-option
+                  v-for="item in stationList"
+                  :key="item.id"
+                  :label="item.name"
+                  :value="item.id"
+                />
+              </el-select>
+              <p class="form-tip" v-if="!isSystemAdmin" style="margin: 4px 0 0; font-size: 12px; color: #909399; line-height: 1.4;">
+                非系统管理员仅可管理所属站点的轮播图
+              </p>
             </el-form-item>
 
             <el-form-item label="链接类型" prop="link_type">
@@ -200,12 +229,14 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules, type UploadProps } from 'element-plus'
 import { Plus, Refresh, Upload, UploadFilled } from '@element-plus/icons-vue'
-import { bannerApi } from '@/api'
+import { bannerApi, stationApi } from '@/api'
 import { useAuthStore } from '@/store/modules/auth'
-import type { Banner, BannerRequest } from '@/types/api'
+import type { Banner, BannerRequest, Station } from '@/types/api'
 import dayjs from 'dayjs'
 
 const authStore = useAuthStore()
+
+const isSystemAdmin = computed(() => authStore.hasRole('admin'))
 
 // 上传配置
 const uploadUrl = computed(() => `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api/v1'}/b/upload`)
@@ -219,6 +250,22 @@ const submitting = ref(false)
 
 // 轮播图列表
 const bannerList = ref<Banner[]>([])
+
+// 站点列表
+const stationList = ref<Station[]>([])
+
+/**
+ * 加载站点列表
+ */
+async function fetchStations() {
+  if (!isSystemAdmin.value) return
+  try {
+    const res = await stationApi.getStations({ page: 1, page_size: 100 })
+    stationList.value = res.data.items
+  } catch (error) {
+    console.error('加载站点列表失败:', error)
+  }
+}
 
 // 分页参数
 const pagination = reactive({
@@ -240,7 +287,7 @@ const createDefaultFormData = (): BannerRequest => ({
   link_value: '',
   sort: 0,
   status: 'active',
-  station_id: 0,
+  station_id: isSystemAdmin.value ? 0 : (authStore.user?.station_id || 0),
 })
 
 // 表单数据
@@ -251,6 +298,7 @@ const formRules: FormRules = {
   title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
   image_url: [{ required: true, message: '请输入图片URL', trigger: 'blur' }],
   link_type: [{ required: true, message: '请选择链接类型', trigger: 'change' }],
+  station_id: [{ required: true, message: '请选择所属站点', trigger: 'change' }],
 }
 
 /**
@@ -451,6 +499,7 @@ function handlePageChange(page: number) {
 
 onMounted(() => {
   loadBanners()
+  fetchStations()
 })
 </script>
 

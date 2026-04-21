@@ -41,10 +41,12 @@ func (r *BannerRepository) ListGlobal() ([]*model.Banner, error) {
 // List 分页获取所有 Banner（管理端）
 func (r *BannerRepository) List(page, pageSize int, stationID *int64) ([]*model.Banner, int64, error) {
 	b := r.q.Banner
-	db := b.UnderlyingDB().Model(&model.Banner{})
+	db := b.UnderlyingDB().Model(&model.Banner{}).
+		Select("banners.id, banners.station_id, banners.title, banners.image_url, banners.link_type, banners.link_value, banners.sort, banners.status, banners.created_at, banners.updated_at, banners.deleted_at, CASE WHEN banners.station_id = 0 THEN '全局' ELSE service_stations.name END as station_name").
+		Joins("left join service_stations on banners.station_id = service_stations.id")
 
-	if stationID != nil {
-		db = db.Where("station_id = ?", *stationID)
+	if stationID != nil && *stationID > 0 {
+		db = db.Where("banners.station_id = ?", *stationID)
 	}
 
 	var total int64
@@ -54,8 +56,8 @@ func (r *BannerRepository) List(page, pageSize int, stationID *int64) ([]*model.
 
 	var banners []*model.Banner
 	offset := (page - 1) * pageSize
-	if err := db.Order("station_id DESC, sort DESC, id DESC").
-		Offset(offset).Limit(pageSize).Find(&banners).Error; err != nil {
+	if err := db.Order("banners.station_id DESC, banners.sort DESC, banners.id DESC").
+		Offset(offset).Limit(pageSize).Scan(&banners).Error; err != nil {
 		return nil, 0, err
 	}
 

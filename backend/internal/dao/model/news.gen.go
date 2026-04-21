@@ -28,6 +28,9 @@ type News struct {
 	CreatedAt time.Time      `gorm:"column:created_at;type:datetime(3)" json:"created_at"`
 	UpdatedAt time.Time      `gorm:"column:updated_at;type:datetime(3)" json:"updated_at"`
 	DeletedAt gorm.DeletedAt `gorm:"column:deleted_at;type:datetime(3);index:idx_news_deleted_at,priority:1" json:"deleted_at"`
+
+	// Additional fields
+	StationName string `gorm:"->;column:station_name" json:"station_name"` // 所属站点名称
 }
 
 // TableName News's table name

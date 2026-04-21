@@ -20,6 +20,11 @@ func (s *NewsService) ListPublished(page, pageSize int, newsType string, station
 	return s.repo.ListPublished(page, pageSize, newsType, stationID)
 }
 
+// List 获取新闻列表（管理端）
+func (s *NewsService) List(page, pageSize int, newsType string, status string, stationID *int64) ([]*model.News, int64, error) {
+	return s.repo.List(page, pageSize, newsType, status, stationID)
+}
+
 // GetByID 根据 ID 获取新闻详情
 func (s *NewsService) GetByID(id int64) (*model.News, error) {
 	return s.repo.GetByID(id)

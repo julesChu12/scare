@@ -343,6 +343,7 @@ export interface Banner {
   sort: number
   status: string
   station_id: number
+  station_name?: string
 }
 
 /**
@@ -435,6 +436,7 @@ export interface News {
   type: NewsType
   status: NewsStatus
   station_id: number
+  station_name?: string
   author_id: number
   publish_at: string
   view_count: number
