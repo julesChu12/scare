@@ -46,7 +46,7 @@ export default defineConfig({
       },
       workbox: {
         cleanupOutdatedCaches: true,
-        navigateFallback: '/offline.html',
+        navigateFallback: 'index.html',
         navigateFallbackDenylist: [
           /^\/api\//,
           /^\/manage\//,
@@ -54,20 +54,6 @@ export default defineConfig({
           /^\/static\//,
           /^\/assets\//,
           /^\/swagger\//,
-          /^\/home$/,
-          /^\/news$/,
-          /^\/services$/,
-          /^\/profile$/,
-          /^\/notifications$/,
-          /^\/requests$/,
-          /^\/mine$/,
-          /^\/login$/,
-          /^\/register$/,
-          /^\/password$/,
-          /^\/contact$/,
-          /^\/address$/,
-          /^\/health$/,
-          /^\/reset-password$/,
         ],
         runtimeCaching: [
           {
