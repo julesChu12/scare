@@ -519,7 +519,7 @@ async function submitCreate() {
         name: createForm.name,
         phone: createForm.phone,
         password: createForm.password,
-        role: createForm.role,
+        identity_type: createForm.role,
         station_id: createForm.station_id || undefined,
         status: createForm.status,
       });

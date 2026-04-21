@@ -141,7 +141,7 @@ func (s *StationService) MatchStation(input MatchStationInput) (*model.ServiceSt
 		if s.geofenceService != nil {
 			if stationID, ok := s.geofenceService.Match(lat, lng); ok && stationID > 0 {
 				station, err := s.repo.GetByID(stationID)
-				if err == nil && station != nil {
+				if err == nil && station != nil && station.Status == "active" {
 					return station, nil
 				}
 			}

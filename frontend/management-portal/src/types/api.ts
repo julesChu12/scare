@@ -240,7 +240,7 @@ export interface UserCreateRequest {
   password: string
   name?: string
   email?: string
-  role: string
+  identity_type: string
   station_id?: number | null
   status?: string
 }

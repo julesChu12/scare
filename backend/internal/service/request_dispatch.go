@@ -192,7 +192,14 @@ func resolveAssignedStation(lat, lng float64, stationRepo *repository.StationRep
 	// 第一级：射线法围栏匹配
 	if geofenceSvc != nil {
 		if stationID, matched := geofenceSvc.Match(lat, lng); matched {
-			return stationID, true, nil // 命中，返回 StationID
+			if stationRepo == nil {
+				return stationID, true, nil
+			}
+
+			station, err := stationRepo.GetByID(stationID)
+			if err == nil && station != nil && station.Status == "active" {
+				return stationID, true, nil // 命中且站点可用，直接返回
+			}
 		}
 		// 未命中，继续第二级
 	}
