@@ -45,7 +45,7 @@ jobs:
         working-directory: frontend/c-end
         run: npm run build
         env:
-          VITE_API_BASE_URL: /api
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL || '/api/v1' }}
 
       # B 端管理门户构建
       - name: 安装管理门户依赖
@@ -56,8 +56,9 @@ jobs:
         working-directory: frontend/management-portal
         run: npm run build
         env:
-          VITE_API_BASE_URL: /api
-          VITE_AMAP_KEY: ${{ secrets.AMAP_KEY }}
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL || '/api/v1' }}
+          VITE_AMAP_KEY: ${{ secrets.VITE_AMAP_KEY || secrets.AMAP_KEY }}
+          VITE_AMAP_SECURITY_JS_CODE: ${{ secrets.VITE_AMAP_SECURITY_JS_CODE }}
 
       # 上传构建产物
       - name: 上传 C 端产物
